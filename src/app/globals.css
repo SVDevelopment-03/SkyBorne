@@ -15,12 +15,66 @@
   src: url('../../public/fonts/Satoshi-Medium.woff2') format('woff2'),
        url('../../public/fonts/Satoshi-Medium.woff') format('woff'),
        url('../../public/fonts/Satoshi-Medium.ttf') format('truetype');
-       font-weight: 400;
+       font-weight: 500;
        font-display: swap;
        font-style: normal;
 }
 
+@font-face {
+  font-family: 'Satoshi-Bold';
+  src: url('../../public/fonts/Satoshi-Bold.woff2') format('woff2'),
+       url('../../public/fonts/Satoshi-Bold.woff') format('woff'),
+       url('../../public/fonts/Satoshi-Bold.ttf') format('truetype');
+       font-weight: 700;
+       font-display: swap;
+       font-style: normal;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+
 @custom-variant dark (&:is(.dark *));
+
+.scroll-container {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 300px; /* adjust as needed */
+}
+
+.scroll-content {
+  display: flex;
+  flex-direction: column;
+  animation: scroll-up 8s linear infinite;
+}
+
+@keyframes scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-50%);
+  }
+}
+
+.animate-scroll-up {
+  animation: scroll-up 8s linear infinite; 
+}
 
 .hero-gradient {
   background: linear-gradient(115.01deg, #FFF7DD -14.18%, rgba(255, 207, 189, 0.55) 39.1%, #FFFFFF 92.37%);
@@ -41,6 +95,14 @@
 .font-satoshi-500 {
   font-family: "Satoshi-Medium", sans-serif;
 }
+.font-satoshi-700 {
+  font-family: "Satoshi-Bold", sans-serif;
+}
+
+.font-arial {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
