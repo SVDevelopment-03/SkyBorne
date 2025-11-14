@@ -37,7 +37,7 @@ const Explore = () => {
           <div className="flex flex-col gap-4 md:gap-5 items-start">
             <Button
               variant={"outline"}
-              className="text-[#FFF7DD] border-[#FFF7DD] py-2"
+              className="text-[#FFF7DD] border-[#FFF7DD] py-2 hover hover:text-[#FFF7DD] hover:border-[#FFF7DD] hover:bg-transparent cursor-default"
             >
               How it works
             </Button>
@@ -62,10 +62,7 @@ const Explore = () => {
             {imageCards.map((img, index) => (
               <motion.div
                 key={img.id}
-                className="absolute cursor-pointer"
-                onMouseEnter={() => setActive(img.id)} // Hovering on image highlights number
-                onClick={() => setActive(img.id)}
-                whileHover={{ scale: 1.05, zIndex: 50 }}
+                className="absolute"
                 animate={{
                   y: active === img.id ? 0 : (index - 1) * 60,
                   scale: active === img.id ? 1.05 : 1,
@@ -91,7 +88,8 @@ const Explore = () => {
             {imageCards.map((img, i) => (
               <motion.h4
                 key={img.id}
-                onMouseEnter={() => setActive(img.id)} // Hovering on number highlights image
+                onMouseEnter={() => setActive(img.id)}
+                // Hovering on number highlights image
                 onClick={() => setActive(img.id)}
                 className={`cursor-pointer text-sm md:text-[22px] leading-normal transition-all duration-300 ${
                   active === img.id

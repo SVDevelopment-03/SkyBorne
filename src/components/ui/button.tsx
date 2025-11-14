@@ -26,6 +26,11 @@ const buttonVariants = cva(
           "bg-[#B95E82] rounded-[265px] font-semibold text-white hover:bg-[#B95E82]/90",
         theme:
           "bg-[#B95E82] rounded-[265px] font-normal text-white hover:bg-[#B95E82]/90",
+        themeOutline:
+          "rounded-[265px] border border-[#B95E82] font-normal text-black",
+          white:"rounded-[265px] bg-[#FFFFFF] text-[#B95E82] font-semibold",
+        yellow:
+          "border border-[#FBEFD8] bg-[#FBEFD8] text-[#494949] shadow-xs rounded-[265px] font-medium hover:text-white hover:border-[#B95E82] hover:bg-[#B95E82] dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
       },
       size: {
         default: "px-5.5 md:px-8 py-2.5 md:py-3 has-[>svg]:px-3",

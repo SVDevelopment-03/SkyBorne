@@ -218,7 +218,6 @@ export const footerSections = [
     links: [
       { title: "Help Center", llink: null },
       { title: "Accessibility", link: null },
-      { title: "Help Center", link: null }, // duplicate kept as per original
     ],
   },
 ];

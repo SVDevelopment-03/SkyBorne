@@ -5,18 +5,25 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center justify-center rounded-full border px-[32px] py-3 text-base font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
+  "inline-flex items-center justify-center rounded-full border px-5 md:px-[32px] py-2 md:py-3 text-xs md:text-base font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive transition-[color,box-shadow] overflow-hidden",
   {
     variants: {
       variant: {
         default:
           "border-transparent bg-[#FFE8E8] text-[#B95E82] [a&]:hover:bg-primary/90 font-montserrat backdrop-blur-[20px] font-semibold",
         secondary:
-          "border-transparent bg-white/20 text-[#FFFFFF] [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px]",
+          "bg-white/20 text-[#494949] [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px] border-[#494949] font-semibold",
+        black:
+          "border-transparent bg-[#494949] text-white [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px] border-[#494949] font-semibold",
+        blur: "border-transparent bg-white/20 text-white [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px]",
         destructive:
           "border-transparent bg-destructive text-white [a&]:hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "text-foreground [a&]:hover:bg-accent [a&]:hover:text-accent-foreground",
+          "border-white [a&]:hover:bg-accent [a&]:hover:text-accent-foreground text-white",
+        filled:
+          "border-[#B95E82] bg-[#B95E82] text-white [a&]:hover:bg-white/90",
+        yellow:
+          "border-[#FFF7DD] bg-[#FFF7DD] text-[#B95E82] [a&]:hover:bg-white/90 font-montserrat",
       },
     },
     defaultVariants: {
