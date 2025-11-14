@@ -1,9 +1,10 @@
 import Header from "@/components/layout/header";
 import { InnerBlogDetail } from "@/components/pages/inner-blog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import { Input2 } from "@/components/ui/input";
-import { Rocket } from "@/icons/helpIcon";
+import { Copy, Facebook, LinkedIn, Rocket, Twitter } from "@/icons/helpIcon";
 import Image from "next/image";
 
 const yogaDetails = [
@@ -188,15 +189,15 @@ export default async function BlogSingle({ params }: PageProps) {
             it with grace and composure.`}
           </p>
         </div>
-        <div className="rounded-[26px] overflow-hidden shadow-[0_4px_30px_rgba(0,0,0,0.08)] mb-14">
+        <div className="rounded-[26px] overflow-hidden border border-[#F0CCC4] shadow-[0_4px_30px_rgba(0,0,0,0.08)] mb-17.5">
           <div className="bg-[linear-gradient(180deg,#C5658F_0%,#DA88AD_100%)] py-6 px-8">
             <h2 className="text-white text-2xl font-satoshi-500">
               {` Essential Tips for Daily Practice`}
             </h2>
           </div>
 
-          <div className="bg-white px-8 py-6 space-y-4">
-            <div className="flex items-start gap-4 bg-[#FBF3EC] p-5 rounded-xl">
+          <div className="bg-white p-2.5 md:p-9 pt-5 md:pt-17.5 space-y-2.5 md:space-y-4 lg:space-y-6">
+            <div className="flex items-start gap-4 bg-[#FBF3EC] p-5 rounded-2xl">
               <div className="w-10 h-10 flex items-center justify-center rounded-full bg-[#C5658F] text-white font-semibold text-lg">
                 1
               </div>
@@ -258,34 +259,67 @@ export default async function BlogSingle({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="bg-linear-to-r from-pink-50 to-yellow-50 border-l-4 border-pink-400 py-6 px-6 rounded-xl italic text-gray-700 mb-12">
+        <div className="bg-linear-to-r from-pink-50 to-yellow-50 border-l-4 border-[#B95E82] px-9 py-6 md:p-11.5 rounded-xl italic mb-12 text-[25px] md:text-[44px] text-[#494949] font-satoshi-700 font-bold">
           {`“Calm is not a place — it's a practice.”`}
-          <div className="mt-2 text-sm not-italic text-gray-500">
+          <div className="mt-2 text-base md:text-[23px] not-italic text-[#717182] font-normal font-montserrat">
             — Wellness Team
           </div>
         </div>
-
-        <div className="flex gap-3 flex-wrap mb-10">
+        <div className="flex flex-col gap-8 mb-[60px]">
+          <Typography
+            title="Remember, the journey to inner peace is personal and unique. What works for one person may not work for another, and that's perfectly okay. Experiment with different techniques, times of day, and durations until you find your rhythm."
+            type="regular"
+            cssClass="!text-[24px]"
+          />
+          <Typography
+            title="The most important step is simply beginning. Your future self will thank you for the investment you make in your mental and emotional wellbeing today."
+            type="regular"
+            cssClass="!text-[24px]"
+          />
+        </div>
+        <div className="flex gap-3 flex-wrap mb-10 border-t border-[#4949491A] pt-9">
           {hashTagDetail?.map((hastag, i) => (
-            <span
-              key={i}
-              className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-600"
-            >
+            <Badge variant={"themeOutline"} key={i}>
               {hastag}
-            </span>
+            </Badge>
           ))}
         </div>
 
-        <div className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm mb-12">
-          <p className="text-gray-700 font-medium mb-4">Share this article</p>
-          <div className="flex gap-5 text-gray-500 text-xl">
-            <a href="#">🔗</a>
-            <a href="#">🐦</a>
-            <a href="#">📘</a>
+        <div className="p-8 bg-white border border-[#F0CCC4] rounded-2xl shadow-sm mb-12 font-satoshi-500">
+          <div className="flex items-center gap-3 justify-between">
+            <p className="text-[20px] md:text-[30px] text-[#494949] font-medium mb-4">
+              Share this article
+            </p>
+            <div className="flex items-center gap-4 text-gray-500 text-xl">
+              <a
+                href="#"
+                className="flex items-center justify-center border border-[#F0CCC4] bg-[#FEF9F5] rounded-xl size-12.5"
+              >
+                <Facebook />
+              </a>
+              <a
+                href="#"
+                className="flex items-center justify-center border border-[#F0CCC4] bg-[#FEF9F5] rounded-xl size-12.5"
+              >
+                <Twitter />
+              </a>
+              <a
+                href="#"
+                className="flex items-center justify-center border border-[#F0CCC4] bg-[#FEF9F5] rounded-xl size-12.5"
+              >
+                <LinkedIn />
+              </a>
+              <a
+                href="#"
+                className="flex items-center justify-center border border-[#F0CCC4] bg-[#FEF9F5] rounded-xl size-12.5"
+              >
+                <Copy />
+              </a>
+            </div>
           </div>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 flex gap-5">
+        <div className="bg-[linear-gradient(180deg,#FBEFD8_0%,#FFE8E8_100%)] border border-[#F0CCC4] rounded-2xl shadow-sm p-6 flex gap-5 text-[#494949]  font-satoshi-500">
           <Image
             src="/images/i1.png"
             alt="i1"
@@ -294,31 +328,29 @@ export default async function BlogSingle({ params }: PageProps) {
             className="w-16 h-16 rounded-full object-cover"
           />
           <div>
-            <p className="text-gray-800 font-semibold">
-              About the Wellness Team
-            </p>
-            <p className="text-gray-600 text-sm leading-relaxed mt-2">
+            <p className="font-medium">About the Wellness Team</p>
+            <p className="text-xl font-satoshi-400 leading-relaxed mt-2">
               Our team of certified yoga instructors, meditation guides, and
               wellness experts is dedicated to helping you find balance and
               peace in your daily life.
             </p>
 
-            <button className="mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm">
+            <Button variant={"outline2"} className="mt-6">
               View All Articles
-            </button>
+            </Button>
           </div>
         </div>
         <div className="bg-linear-to-b from-[#B95E82] to-[#D97BA3] rounded-3xl py-[46px] gap-5 flex flex-col items-center mt-14">
           <Typography
             title="Get More Wellness Tips"
-            cssClass="text-[44px] text-[#FFFFFF]!"
+            cssClass="text-[44px]! text-[#FFFFFF]!"
           />
           <Typography
             title="Subscribe to our newsletter for weekly insights, guided meditations, and exclusive content delivered to your inbox."
             type="regular"
             cssClass="text-[24px] text-[#FFFFFF]! max-w-[930px] text-center!"
           />
-          <div className="mt-3 flex items-center gap-4">
+          <div className="mt-3 flex flex-col md:flex-row items-center gap-4">
             <Input2 placeholder="Enter your email" className="min-w-[467px]" />
             <Button variant={"white"} className="rounded-[14px]">
               <Rocket />

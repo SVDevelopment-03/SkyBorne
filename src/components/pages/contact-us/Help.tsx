@@ -14,21 +14,21 @@ const HelpDetail = ({
   return (
     <div className="flex flex-col gap-6.5">
       <div className="flex items-center justify-between">
-        <div className={`flex flex-col items-start gap-2.5`}>
+        <div className={`flex flex-col items-start gap-2 md:gap-2.5`}>
           <Typography
             title={title}
-            cssClass="!text-[30px] !leading-8"
+            cssClass="!text-[22px] md:!text-[30px] !leading-8"
             type="xl"
           />
           <Typography
             title={description}
             type="regular"
-            cssClass={`max-w-full text-start leading-normal font-satoshi-500`}
+            cssClass={`max-w-full text-start max-md:!text-[13px] leading-normal font-satoshi-500`}
           />
         </div>
         <HelpIcon icon={icon} />
       </div>
-      <div className="h-[312px] w-full rounded-xl bg-[#B95E82]/50">
+      <div className="h-72 md:h-[312px] w-full rounded-xl bg-[#B95E82]/50">
         <Image
           src={image}
           alt="service-image"
@@ -67,19 +67,24 @@ const Help = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-[50px] items-center">
+    <div className="flex flex-col gap-7.5 md:gap-[50px] items-center">
       <Typography title="We’re Here to Help" type="xl" />
-      <div className="mt-4.5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {helpDetails?.map((help) => (
-          <div className="bg-[#FFE8E8] rounded-2xl p-4 pt-6" key={help?.id}>
-            <HelpDetail
-              image={help?.image}
-              title={help?.title}
-              description={help?.description}
-              icon={help?.icon}
-            />
-          </div>
-        ))}
+      <div className="max-lg:w-full max-lg:overflow-x-auto max-lg:[scrollbar-width:none]">
+        <div className="md:mt-4.5 flex items-start md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {helpDetails?.map((help) => (
+            <div
+              className="bg-[#FFE8E8] rounded-2xl p-2.5 md:p-4 pt-6 max-md:w-[298px] shrink-0"
+              key={help?.id}
+            >
+              <HelpDetail
+                image={help?.image}
+                title={help?.title}
+                description={help?.description}
+                icon={help?.icon}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

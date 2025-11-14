@@ -18,9 +18,9 @@ const Blog = ({ image, title, description, cssClass, id }: OurValueProp) => {
     }
   };
   return (
-    <div className="flex flex-col gap-6.5">
+    <div className="flex flex-col gap-5.5 md:gap-6.5">
       <div
-        className="h-[312px] w-full rounded-[10px] bg-[#B95E82]/50 cursor-pointer"
+        className="h-[269px] md:h-[312px] w-full rounded-[10px] bg-[#B95E82]/50 cursor-pointer"
         onClick={handleRedirect}
       >
         <Image
@@ -31,8 +31,12 @@ const Blog = ({ image, title, description, cssClass, id }: OurValueProp) => {
           className="rounded-[10px] size-full object-center object-cover"
         />
       </div>
-      <div className={`flex flex-col items-start gap-3.5`}>
-        <Typography title={title} cssClass="!text-[25px]" type="xl" />
+      <div className={`flex flex-col items-start gap-3 md:gap-3.5`}>
+        <Typography
+          title={title}
+          cssClass="!text-22px] md:!text-[25px]"
+          type="xl"
+        />
         <Typography
           title={description}
           type="regular"
@@ -97,20 +101,20 @@ const BlogList = () => {
 
   return (
     <div className="max-w-[1268px] mx-auto w-full">
-      <div className="flex flex-col gap-12 px-4">
-        <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-8 md:gap-12 px-4">
+        <div className="flex items-center max-md:flex-col max-md:gap-3 justify-between">
           <Typography
             title="Skyborne Journal Wellness, Insights, Inspiration"
             type="xl2"
-            cssClass="max-w-[575px] leading-tight"
+            cssClass="max-w-[575px] leading-tight max-md:text-[25px]"
           />
           <Typography
             title="Discover expert advice, inspiring stories, and practical wellness tools curated for your journey"
             type="theme"
-            cssClass="max-w-[481px]"
+            cssClass="max-w-[481px] max-md:text-sm"
           />
         </div>
-        <div className="flex items-center gap-5">
+        <div className="flex items-center gap-4 md:gap-5 overflow-x-auto w-full [scrollbar-width:none]">
           {tabDetails?.map((tab, i) => (
             <CustomButtons
               key={i}
@@ -120,9 +124,12 @@ const BlogList = () => {
             />
           ))}
         </div>
-        <div className="mt-4.5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="md:mt-4.5 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {yogaDetails?.map((yoga) => (
-            <div className="bg-[#FFE8E8] rounded-2xl p-5" key={yoga?.id}>
+            <div
+              className="bg-[#FFE8E8] rounded-2xl p-4.5 md:p-5"
+              key={yoga?.id}
+            >
               <Blog
                 id={yoga?.id}
                 image={yoga?.image}
@@ -132,7 +139,7 @@ const BlogList = () => {
             </div>
           ))}
         </div>
-        <div className="pt-14.5">
+        <div className="md:pt-14.5">
           <CustomPagination />
         </div>
       </div>

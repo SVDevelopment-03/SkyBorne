@@ -7,9 +7,9 @@ import React from "react";
 const AboutYoga = () => {
   return (
     <div className="max-w-[1390px] mx-auto">
-      <div className="bg-[#FFE8E8] gap-12 md:gap-15 rounded-2xl md:rounded-[30px] max-md:pb-7.5 max-lg:px-7.5 py-14 text-[#494949]">
-        <div className="grid grid-cols-[1fr_589px] gap-6 md:gap-12 pr-16 items-stretch">
-          <div className="flex flex-col items-start justify-between gap-24 pl-16">
+      <div className="bg-[#FFE8E8] gap-12 md:gap-15 rounded-2xl md:rounded-[30px] max-md:pb-4 max-md:px-2.5 max-lg:px-7.5 py-14 text-[#494949]">
+        <div className="grid lg:grid-cols-2 xl:grid-cols-[1fr_589px] gap-6 md:gap-12 lg:pr-16 items-stretch">
+          <div className="flex flex-col items-start justify-between gap-4 md:gap-24 lg:pl-16">
             <HeadingDiv
               variant={"secondary"}
               cssClass="items-start"
@@ -28,11 +28,11 @@ const AboutYoga = () => {
               alt="our-service-3"
               width={569}
               height={522}
-              className="object-contain rounded-2xl w-full"
+              className="object-cover rounded-2xl size-full"
             />
           </div>
 
-          <div className="flex items-center justify-between gap-[22px]">
+          <div className="flex items-center justify-between gap-2.5 md:gap-5.5">
             <div className="bg-[#B95E82]/25 size-full rounded-2xl">
               <Image
                 src={"/images/yoga-details-1.jpg"}
@@ -52,14 +52,14 @@ const AboutYoga = () => {
               />
             </div>
           </div>
-          <div className="flex flex-col items-start gap-8 bg-[#B95E82] rounded-xl px-3.5 md:px-6.5 py-[42px] min-h-[427px]">
+          <div className="flex flex-col items-start gap-6 md:gap-8 bg-[#B95E82] rounded-xl px-4 md:px-6.5 pt-3.5 pb-6.5 md;py-[42px] md:min-h-[427px]">
             <WhiteHeading
               title="The Power of Yoga"
               description="Yoga empowers you to relieve stress, improve flexibility, and enhance sleep quality. Whether you’re joining for relaxation or building strength, our certified instructors and supportive community make wellness accessible to all.\n\n
   Skyborne Drop guides your journey with daily live sessions, replays, feedback, and encouragement for growth—every step of the way."
               elemClass={{
-                heading: "md:text-[40px]",
-                paragraph: "max-w-[487px]",
+                heading: "text-xl md:text-[40px]",
+                paragraph: "max-md:text-[13px] max-w-[487px]",
               }}
             />
             <Button variant={"yellow"} className="mt-auto">

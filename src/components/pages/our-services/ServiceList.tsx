@@ -33,7 +33,8 @@ const ServiceList = () => {
       <div className="flex flex-col gap-[52px]">
         <HeadingDiv
           title="Explore Our Signature Services"
-          description="Skyborne Drop provides yoga, fitness, nutrition support, and dance classes for every journey and goal."
+          description="Skyborne Drop provides yoga, fitness, nutrition support, and dance classes for every journey and goal." 
+          elemCss={{ title: "max-md:!text-center", description: "max-md:!text-center" }}
         />
         <div className="grid grid-cols-1 md:grid-cols-2 justify-start xl:justify-center gap-5 lg:gap-7.5">
           {serviceListDetail.map((service) => (

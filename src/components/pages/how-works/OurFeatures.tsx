@@ -105,6 +105,7 @@ const OurFeatures = () => {
         badge="How it works"
         title="The Values That Power Skyborne"
         description="From first step to lasting change, our core values shape every class, connection, and achievement"
+        elemCss={{ title: "max-md:!text-center", description: "max-md:!text-center" }}
       />
       <div className="flex flex-col items-center gap-15 md:gap-24 lg:gap-32.5 max-w-[1268px] mx-auto w-full">
         {featureDetails?.map((featureData, i) => {
