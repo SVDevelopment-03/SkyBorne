@@ -199,8 +199,8 @@ export const footerSections = [
       { title: "About Us", link: "/about-us" },
       { title: "Classes", link: null },
       { title: "How it works", link: "/how-works" },
-      { title: "Pricing plans", link: null },
-      { title: "Contact Us", link: null },
+      { title: "Pricing plans", link: "/packages" },
+      { title: "Contact Us", link: "/contact-us" },
     ],
   },
   {
@@ -208,7 +208,7 @@ export const footerSections = [
     links: [
       { title: "Schedule", link: null },
       { title: "Pricing", link: null },
-      { title: "FAQ", link: null },
+      { title: "FAQ", link: "/faq" },
       { title: "Memberships", link: null },
       { title: "Guides", link: null },
     ],

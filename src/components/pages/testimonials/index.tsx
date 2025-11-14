@@ -1,15 +1,15 @@
-import BannerUi from '@/components/ui/banner-ui'
-import React from 'react'
-import Testimonials from '../home/Testimonials'
-import Members from './Members'
+import BannerUi from "@/components/ui/banner-ui";
+import React from "react";
+import Testimonials from "../home/Testimonials";
+import Members from "./Members";
 
 const TestimonialsComponent = () => {
   return (
-     <div className="flex flex-col gap-[130px]">
+    <div className="flex flex-col gap-[130px]">
       <div className="p-6 w-full rounded-4xl">
         <BannerUi
           src="/images/about-us.jpg"
-          badge="Contact us"
+          badge="Testimonials"
           heading="Your Journey Starts Here"
         />
       </div>
@@ -20,7 +20,7 @@ const TestimonialsComponent = () => {
         <Members />
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TestimonialsComponent
+export default TestimonialsComponent;

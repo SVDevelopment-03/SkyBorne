@@ -1,8 +1,8 @@
-import YogaDetail from "@/components/pages/yoga-detail";
-import React from "react";
+  import YogaDetail from "@/components/pages/yoga-detail";
+  import React from "react";
 
-const page = () => {
-  return <YogaDetail />;
-};
+  const page = () => {
+    return <YogaDetail />;
+  };
 
-export default page;
+  export default page;
