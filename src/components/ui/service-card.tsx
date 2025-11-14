@@ -1,14 +1,26 @@
+"use client";
 import { BannerHeading } from "@/components/ui/heading";
 import { Button } from "./button";
+import { useRouter } from "next/navigation";
 
 interface BannerUiProps {
   src: string;
   buttonText: string;
   heading: string;
   cssClass?: string;
+  id?: string;
 }
 
-const ServiceCard = ({ src, buttonText, heading }: BannerUiProps) => {
+const ServiceCard = ({ src, buttonText, heading, id }: BannerUiProps) => {
+  const router = useRouter();
+
+  const handleRedirect = () => {
+    if (id) {
+      router.push(`/yoga-detail/${id}`);
+    } else {
+      router.push(`/yoga-detail`);
+    }
+  };
   return (
     <div className="relative overflow-hidden bg-[#FFF7DD] rounded-2xl">
       <div
@@ -19,6 +31,7 @@ const ServiceCard = ({ src, buttonText, heading }: BannerUiProps) => {
           <BannerHeading title={heading} cssClass="!text-[30px]" />
           <Button
             variant={"outline"}
+            onClick={handleRedirect}
             className="text-[#FFF7DD] border-[#FFF7DD] py-2"
           >
             {buttonText}

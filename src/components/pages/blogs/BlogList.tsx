@@ -1,14 +1,28 @@
+"use client";
 import CustomButtons from "@/components/ui/CustomButtons";
 import CustomPagination from "@/components/ui/CustromPagination";
 import { Typography } from "@/components/ui/heading";
 import { OurValueProp } from "@/types/home.type";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React from "react";
 
-const Blog = ({ image, title, description, cssClass }: OurValueProp) => {
+const Blog = ({ image, title, description, cssClass, id }: OurValueProp) => {
+  const router = useRouter();
+
+  const handleRedirect = () => {
+    if (id) {
+      router.push(`/yoga-detail/${id}`);
+    } else {
+      router.push(`/yoga-detail`);
+    }
+  };
   return (
     <div className="flex flex-col gap-6.5">
-      <div className="h-[312px] w-full rounded-[10px] bg-[#B95E82]/50">
+      <div
+        className="h-[312px] w-full rounded-[10px] bg-[#B95E82]/50 cursor-pointer"
+        onClick={handleRedirect}
+      >
         <Image
           src={image}
           alt="service-image"
@@ -110,6 +124,7 @@ const BlogList = () => {
           {yogaDetails?.map((yoga) => (
             <div className="bg-[#FFE8E8] rounded-2xl p-5" key={yoga?.id}>
               <Blog
+                id={yoga?.id}
                 image={yoga?.image}
                 title={yoga?.title}
                 description={yoga?.description}

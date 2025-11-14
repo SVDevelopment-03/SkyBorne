@@ -32,12 +32,12 @@ export interface CustomButtonsProps {
   cssClass?: string;
 }
 
-
 export interface OurValueProp {
   image: string;
   title: string;
   description: string;
   cssClass?: string;
   isStart?: boolean;
-  icon?:string
+  icon?: string;
+  id?: string | number;
 }
