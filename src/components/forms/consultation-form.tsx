@@ -14,7 +14,6 @@ import {
 import { cn } from "@/lib/utils";
 
 const ConsultationForm = () => {
-  
   return (
     <div className="flex flex-col gap-7.5 md:gap-12 bg-[#FBEFD8] rounded-[30px] flex-1 h-full p-8 pt-9">
       <Heading

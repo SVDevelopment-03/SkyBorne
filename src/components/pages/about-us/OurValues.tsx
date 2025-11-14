@@ -1,14 +1,7 @@
 import { Typography } from "@/components/ui/heading";
 import HeadingDiv from "@/components/ui/HeadingDiv";
+import { OurValueProp } from "@/types/home.type";
 import Image from "next/image";
-
-interface OurValueProp {
-  image: string;
-  title: string;
-  description: string;
-  cssClass?: string;
-  isStart?: boolean;
-}
 
 const OurValue = ({
   image,
@@ -19,27 +12,35 @@ const OurValue = ({
 }: OurValueProp) => {
   return (
     <div
-      className={`bg-[#FFE8E8] p-[30px] flex flex-col ${
-        isStart ? "items-start" : "items-end"
-      } min-w-[577px] gap-20 ${cssClass}`}
+      className={`bg-[#FFE8E8] py-3 md:p-7.5 2xl:p-12 flex flex-col justify-center ${
+        isStart ? "items-start pl-2.5 pr-3" : "items-end pl-4 pr-2.5"
+      } max-lg:w-[calc(50%-10px)] lg:min-w-[45%] min-h-[174px] 2xl:min-h-[20em] gap-4.5 md:gap-12 lg:gap-20 ${cssClass}`}
     >
       <Image
         src={image}
         alt="service-image"
-        className="rounded-[10px] h-full object-center"
         width={45}
         height={45}
+        className="rounded-[10px] object-center size-4 md:size-11"
       />
       <div
         className={`flex flex-col gap-2.5 ${
           isStart ? "items-start" : "items-end"
         }`}
       >
-        <Typography title={title} cssClass="!text-[30px]" type="xl" />
+        <Typography
+          title={title}
+          cssClass={`!text-xs md:text-2xl lg:!text-[30px] whitespace-nowrap ${
+            isStart ? "text-start" : "text-end"
+          }`}
+          type="xl"
+        />
         <Typography
           title={description}
           type="regular"
-          cssClass={`max-w-[348px] ${isStart ? "" : "text-end"}`}
+          cssClass={`max-w-[122px] md:max-w-[60%] lg:max-w-[348px] max-md:!text-xs ${
+            isStart ? "" : "text-end"
+          }`}
         />
       </div>
     </div>
@@ -86,13 +87,14 @@ const OurValues = () => {
     },
   ];
   return (
-    <div className="flex flex-col items-center gap-18">
+    <div className="flex flex-col items-center gap-8.5 md:gap-13 lg:gap-18">
       <HeadingDiv
         badge="Our Values"
         title="The Heart of Everything We Do"
         description="Our values create the foundation for every experience, class, and connection at Skyborne"
+        cssClass=""
       />
-      <div className="flex items-center justify-center gap-[30px] flex-wrap max-w-[1184px]">
+      <div className="flex items-center justify-center gap-2.5 md:gap-4 lg:gap-7.5 flex-wrap w-full">
         {ourValueDetail?.map((ourValue, i) => (
           <OurValue
             key={ourValue?.id}

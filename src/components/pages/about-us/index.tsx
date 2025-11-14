@@ -7,24 +7,24 @@ import WhySkyborne from "./WhySkyborne";
 
 const AboutUs = () => {
   return (
-    <div className="flex flex-col gap-32">
-      <div className="p-6 w-full rounded-4xl">
+    <div className="flex flex-col gap-17.5 md:gap-24 lg:gap-32">
+      <div className="p-2 md:p-6 w-full rounded-4xl">
         <BannerUi
           src="/images/about-us.jpg"
           badge="About Us"
           heading="Our Story,Your Wellness"
         />
       </div>
-      <div className="px-16">
+      <div className="px-4 md:px-8 lg:px-16">
         <OurServices />
       </div>
-      <div className="px-6">
+      <div className="px-4 md:px-6">
         <OurValues />
       </div>
-      <div className="p-6">
+      <div className="px-4 md:p-6">
         <Coaches />
       </div>
-      <div className="px-16">
+      <div className="px-4 md:px-8 lg:px-16">
         <WhySkyborne />
       </div>
     </div>
