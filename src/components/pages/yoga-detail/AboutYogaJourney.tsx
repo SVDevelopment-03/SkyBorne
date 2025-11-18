@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { BannerHeading, Typography } from "@/components/ui/heading";
+import MotionDiv from "@/components/ui/MotionDiv";
 import Image from "next/image";
 import React from "react";
 
@@ -13,7 +14,9 @@ const AboutYogaJourney = () => {
               title="What to Expect Your Yoga Journey, Up Close"
               cssClass="!text-[25px] md:!text-[50px] !text-black"
             />
+
             <div className="flex flex-col gap-2 items-start h-[303px] md:h-[516px] md:hidden">
+              {/* <MotionDiv position="right"> */}
               <Image
                 src={"/images/yoga-journey.jpg"}
                 alt="our-service-3"
@@ -21,7 +24,9 @@ const AboutYogaJourney = () => {
                 height={516}
                 className="object-cover rounded-xl size-full"
               />
+              {/* </MotionDiv> */}
             </div>
+
             <Typography
               type="theme"
               title="Discover how your yoga journey with Skyborne Drop can fit seamlessly into your life every step, every session, every win"

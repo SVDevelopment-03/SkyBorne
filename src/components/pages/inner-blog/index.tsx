@@ -40,30 +40,41 @@ const Rocket = () => {
   );
 };
 
-export const InnerBlogDetail = ({ image, title, description }: OurValueProp) => {
+export const InnerBlogDetail = ({
+  image,
+  title,
+  description,
+}: OurValueProp) => {
   return (
-    <div className="flex flex-col gap-6.5 pb-[35px]">
-      <div className="h-[312px] w-full rounded-3xl">
+    <div className="flex flex-col gap-5 md:gap-6.5 pb-5 md:pb-6 max-md:w-[246px] h-full">
+      <div className="h-[219px] md:h-[312px] w-full rounded-t-3xl">
         <Image
           src={image}
           alt="service-image"
           width={396}
           height={281}
-          className="rounded-[10px] size-full object-center object-cover"
+          className="rounded-t-[10px] size-full object-center object-cover"
         />
       </div>
-      <div className={`flex flex-col items-start gap-[5px] p-6`}>
-        <Typography title={title} cssClass="!text-[24px]" type="theme" />
+      <div className={`flex flex-col items-start gap-[5px] px-5 md:px-6`}>
+        <Typography
+          title={title}
+          cssClass="!text-lg md:!text-2xl"
+          type="theme"
+        />
         <Typography
           title={description}
           type="regular"
-          cssClass={`max-w-full text-start leading-normal font-satoshi-500 text-[#717182]!`}
+          cssClass={`max-w-full text-start text-[15px] md:text-xl leading-normal font-satoshi-400 text-[#717182]!`}
         />
       </div>
-      <div className="mt-[30px] flex items-center justify-between px-6">
-        <div className="flex items-center gap-1">
+      <div className="mt-5 md:mt-auto flex items-center justify-between px-6">
+        <div className="flex items-center gap-1 text-[#717182]">
           <GrayTimer />
-          <Typography title="5 min read" />
+          <Typography
+            title="5 min read"
+            cssClass="text-xs md:text-[17px] text-[#717182]"
+          />
         </div>
         <div className="flex items-center gap-1">
           <Typography title="Read more →" cssClass="text-[#B95E82]!" />
@@ -135,18 +146,10 @@ const InnerBlog = () => {
             cssClass="text-2xl!"
           />
         </div>
-        <div className="rounded-3xl">
-
-        </div>
-
+        <div className="rounded-3xl"></div>
       </div>
     </div>
   );
 };
-
-
-
-
-
 
 export default InnerBlog;

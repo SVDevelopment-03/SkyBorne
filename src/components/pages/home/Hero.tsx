@@ -1,8 +1,11 @@
+"use client";
 import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Header from "@/components/layout/header";
+import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 const LiText = ({ text, link }: { text: string; link: string }) => {
   return (
@@ -28,6 +31,8 @@ const LiText = ({ text, link }: { text: string; link: string }) => {
 };
 
 const Hero = () => {
+  const router = useRouter();
+
   return (
     <div className="hero-gradient rounded-2xl md:rounded-[30px] text-[#494949] pt-3.5 md:pt-6 px-3 md:px-[60px] font-montserrat">
       <div className="max-w-[1440px] mx-auto">
@@ -38,7 +43,11 @@ const Hero = () => {
               <h2 className="font-medium text-[30px] md:text-[45px] lg:text-[60px] leading-[110%] font-satoshi-500 max-lg:text-center max-md:max-w-[293px]">
                 Live Balanced. Feel Energized. Be Well
               </h2>
-              <Button variant={"outline"} className="max-w-[152px]">
+              <Button
+                variant={"outline"}
+                className="max-w-[152px]"
+                onClick={() => router.push("/packages")}
+              >
                 Get Started
               </Button>
             </div>
@@ -55,9 +64,16 @@ const Hero = () => {
           <div className="w-full">
             <div className="relative center-image shrink-0 z-10 w-fit text-center">
               <div className="absolute top-5 left-2 -z-10">
-                <h2 className="font-satoshi-500 text-[65px] lg:text-[135px] leading-normal font-bold bg-clip-text [-webkit-text-fill-color:transparent] bg-[linear-gradient(180deg,rgba(0,0,0,0.32)0%,rgba(0,0,0,0)100%)] uppercase">
+                {/* <h2 className="font-satoshi-500 text-[65px] lg:text-[135px] leading-normal font-bold bg-clip-text [-webkit-text-fill-color:transparent] bg-[linear-gradient(180deg,rgba(0,0,0,0.32)0%,rgba(0,0,0,0)100%)] uppercase"> */}
+                <motion.h2
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 5, ease: "easeOut" }}
+                  className="font-satoshi-500 text-[65px] lg:text-[135px] leading-normal font-bold bg-clip-text [-webkit-text-fill-color:transparent] bg-[linear-gradient(180deg,rgba(0,0,0,0.32)0%,rgba(0,0,0,0)100%)] uppercase"
+                >
                   Skyborne
-                </h2>
+                </motion.h2>
+                {/* </h2> */}
               </div>
               <Image
                 src={"/images/hero-center-image.svg"}

@@ -20,7 +20,7 @@ const KeyFeature = ({
   return (
     <div
       className={`${
-        isMain ? "bg-[#FBEFD8]" : ""
+        isMain ? "bg-[#FBEFD8]" : "hover:bg-[#FBEFD8]"
       } rounded-[10px] border border-[#CCCCCC] p-4 md:p-7.5 flex flex-col items-start max-md:min-w-[230px] xl:max-w-[391px]  gap-6 md:gap-10.5 max-md:w-[230px] h-full ${cssClass}`}
     >
       <Image

@@ -1,4 +1,5 @@
 import HeadingDiv from "@/components/ui/HeadingDiv";
+import MotionDiv from "@/components/ui/MotionDiv";
 import ServiceCard from "@/components/ui/service-card";
 
 const ServiceList = () => {
@@ -20,6 +21,7 @@ const ServiceList = () => {
       image: "/images/services-3.jpg",
       buttonText: "know more",
       heading: "Diet & Nutrition",
+      comingSoon: true,
     },
     {
       id: 4,
@@ -33,21 +35,27 @@ const ServiceList = () => {
       <div className="flex flex-col gap-[52px]">
         <HeadingDiv
           title="Explore Our Signature Services"
-          description="Skyborne Drop provides yoga, fitness, nutrition support, and dance classes for every journey and goal." 
-          elemCss={{ title: "max-md:!text-center", description: "max-md:!text-center" }}
+          description="Skyborne Drop provides yoga, fitness, nutrition support, and dance classes for every journey and goal."
+          elemCss={{
+            title: "max-md:!text-center",
+            description: "max-md:!text-center",
+          }}
         />
         <div className="grid grid-cols-1 md:grid-cols-2 justify-start xl:justify-center gap-5 lg:gap-7.5">
-          {serviceListDetail.map((service) => (
+          {serviceListDetail.map((service, i) => (
             <div
               key={service.id}
               className="w-full"
               // className="flex-1 min-w-[calc(50%-15px)] md:min-w-[calc(50%-15px)]"
             >
-              <ServiceCard
-                src={service.image}
-                buttonText={service.buttonText}
-                heading={service.heading}
-              />
+              <MotionDiv position={i % 2 == 0 ? "left" : "right"}>
+                <ServiceCard
+                  comingSoon={service?.comingSoon}
+                  src={service.image}
+                  buttonText={service.buttonText}
+                  heading={service.heading}
+                />
+              </MotionDiv>
             </div>
           ))}
         </div>

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   DropdownMenu,
@@ -10,8 +11,10 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
 
 const Header = ({ isHero }: { isHero?: boolean }) => {
+  const router = useRouter();
   const menuDetail = [
     {
       title: "Home",
@@ -81,6 +84,7 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
           className={`${
             !isHero && "bg-[#FFFFFF] text-[#000000]"
           } max-md:py-1 max-md:px-4 `}
+          onClick={() => router.push("/signup")}
         >
           Signup
         </Button>
