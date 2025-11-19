@@ -7,12 +7,12 @@ import Consultation from "../home/Consultation";
 
 const OurServicesPage = () => {
   return (
-    <div className="flex flex-col gap-17.5 md:gap-24 lg:gap-32">
+    <div className="flex flex-col gap-17.5 md:gap-24 lg:gap-32.5">
       <div className="p-2 md:p-6 w-full rounded-4xl">
         <BannerUi
           src="/images/our-services.jpg"
           badge="Our services"
-          cssClass="min-w-[652px]"
+          cssClass="md:min-w-[652px]"
           heading="Unlock Wellness, Unlock Potential"
         />
       </div>
@@ -22,13 +22,13 @@ const OurServicesPage = () => {
       <div>
         <Explore />
       </div>
-      <div className="p-2 md:p-6">
+      <div className="px-4 md:px-6 xl:px-0">
         <Testimonials />
       </div>
-      <div className="p-2 md:p-6">
+      <div className="p-2 md:p-6 xl:px-0">
         <FAQ />
       </div>
-      <div className="p-2 md:p-6">
+      <div className="p-2 md:p-6 xl:px-0">
         <Consultation />
       </div>
     </div>

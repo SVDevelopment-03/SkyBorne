@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 interface HeadingProps {
   title: string;
@@ -11,7 +12,14 @@ interface HeadingProps {
   };
 }
 
-export type TypeProp = "lg" | "xl" | "regular" | "lgBlack" | "xl2" | "theme";
+export type TypeProp =
+  | "lg"
+  | "xl"
+  | "regular"
+  | "lgBlack"
+  | "xl2"
+  | "theme"
+  | "xxl";
 
 const Heading = ({
   title,
@@ -80,7 +88,7 @@ export const BannerHeading = ({
 }) => {
   return (
     <h2
-      className={`font-satoshi-500 font-medium text-[40px] md:text-[80px] text-[#FFFFFF] max-w-[567px] leading-[1.1] ${cssClass}`}
+      className={`font-satoshi-500 font-medium text-[24px] md:text-[60px] text-[#FFFFFF] max-w-[567px] leading-[1.1] ${cssClass}`}
     >
       {title}
     </h2>
@@ -91,10 +99,12 @@ export const Typography = ({
   title,
   type = "lg",
   cssClass,
+  onClick,
 }: {
   title: string;
   type?: TypeProp;
   cssClass?: string;
+  onClick?: () => void;
 }) => {
   //lg:18px
   const variant: Record<string, string> = {
@@ -104,6 +114,11 @@ export const Typography = ({
     lgBlack: "font-satoshi-500 font-medium text-lg text-[#000000]",
     xl: "font-satoshi-500 font-medium text-[25px] md:text-[40px] lg:text-[50px] text-[#000000]",
     xl2: "font-satoshi-500 font-medium text-[50px] text-[#494949]",
+    xxl: "font-satoshi-700 font-bold text-3xl md:text-[35px] text-[#494949]",
   };
-  return <h2 className={`${variant[type]} ${cssClass}`}>{title}</h2>;
+  return (
+    <h2 className={`${variant[type]} ${cssClass}`} onClick={onClick}>
+      {title}
+    </h2>
+  );
 };

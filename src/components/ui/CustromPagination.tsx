@@ -30,7 +30,7 @@ export default function CustomPagination() {
             href="#"
             onClick={() => currentPage > 1 && handlePageChange(currentPage - 1)}
             className={cn(
-              "rounded-full bg-[#B95E82] text-white hover:bg-[#B95E82] transition-all w-12 h-12",
+              "rounded-full bg-[#B95E82] text-white hover:bg-[#B95E82] transition-all size-9 md:size-12",
               currentPage === 1 && "opacity-50 pointer-events-none"
             )}
           />
@@ -43,7 +43,7 @@ export default function CustomPagination() {
               href="#"
               onClick={() => handlePageChange(page)}
               className={cn(
-                "rounded-full w-12 h-12 flex items-center justify-center lg:text-xl transition-all border-none text-[#494949] font-satoshi-500",
+                "rounded-full size-9 md:size-12 flex items-center justify-center text-base lg:text-xl transition-all border-none text-[#494949] font-satoshi-500",
                 currentPage === page
                   ? "bg-[#B95E82] text-white"
                   : "hover:bg-[#fbe6e6]"
@@ -64,7 +64,7 @@ export default function CustomPagination() {
             href="#"
             onClick={() => handlePageChange(totalPages)}
             className={cn(
-              "rounded-full w-12 h-12 flex items-center justify-center lg:text-xl transition-all text-[#494949] font-satoshi-500",
+              "rounded-full size-9 md:size-12 flex items-center justify-center text-base lg:text-xl transition-all text-[#494949] font-satoshi-500",
               currentPage === totalPages
                 ? "bg-[#B95E82] text-white"
                 : "hover:bg-[#fbe6e6]"
@@ -82,7 +82,7 @@ export default function CustomPagination() {
               currentPage < totalPages && handlePageChange(currentPage + 1)
             }
             className={cn(
-              "rounded-full bg-[#B95E82] text-white hover:bg-[#B95E82] transition-all w-12 h-12 [&_>svg]:size-5.5!",
+              "rounded-full bg-[#B95E82] text-white hover:bg-[#B95E82] transition-all size-9 md:size-12 [&_>svg]:size-5.5!",
               currentPage === totalPages && "opacity-50 pointer-events-none"
             )}
           />

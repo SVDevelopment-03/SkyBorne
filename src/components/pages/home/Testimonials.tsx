@@ -50,7 +50,7 @@ const Testimonials = () => {
       <div className="relative max-h-[664px] md:max-h-[610px] overflow-hidden [scrollbar-width:none]">
         <div className="absolute bg-[linear-gradient(180deg,#FFE8E8_0%,rgba(255,232,232,0)100%)] h-[116px] w-full z-10"></div>
 
-        <div className="animate-scroll-up grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+        <div className="animate-scroll-mobile md:animate-scroll-up grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
           {UserData?.map((user) => {
             return <Testimonial key={user?.id} data={user} />;
           })}

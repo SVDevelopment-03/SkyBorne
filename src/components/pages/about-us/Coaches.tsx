@@ -30,15 +30,15 @@ const CoachDetail = ({ title, description, role }: ServiceDetailProp) => {
 
 const Coach = ({ title, description, role, src = "" }: ServiceDetailProp) => {
   return (
-    <div className="relative flex items-center max-md:gap-5.5 rounded-xl md:h-[488px]">
-      <Image
+    <div className=" flex items-center max-md:gap-5.5 rounded-xl">
+      {/* <Image
         src={src}
         alt="service-image"
         width={344}
         height={488}
         className="rounded-[10px] h-[153px] max-md:w-[153px] md:h-[488px] object-cover object-center shrink-0"
-      />
-      <div className="md:p-4 md:absolute bottom-0 max-w-[406px]">
+      /> */}
+      <div className="md:p-4 max-w-[406px]">
         <CoachDetail title={title} description={description} role={role} />
       </div>
     </div>
@@ -52,7 +52,7 @@ const Coaches = () => {
         title="Meet Our Coaches"
         description="Our team blends expertise, care, and encouragement—making every class approachable and impactful"
         cssClass="items-start"
-        elemCss={{description: "text-left"}}
+        elemCss={{ description: "text-left" }}
       />
       <div className="flex items-center justify-center flex-wrap gap-4">
         {coachDetail?.map((coach) => (

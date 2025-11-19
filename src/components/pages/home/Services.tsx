@@ -1,7 +1,9 @@
 "use client";
 import { Button } from "@/components/ui/button";
+import MotionDiv, { MotionDivVertical } from "@/components/ui/MotionDiv";
 import { services } from "@/constants/home.constant";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 interface ServiceDetailProp {
   title: string;
@@ -56,6 +58,7 @@ const Service = ({
 const Services = () => {
   const [hovered, setHovered] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const scrollToSecond = () => {
@@ -88,27 +91,34 @@ const Services = () => {
         ref={scrollRef}
         className="max-lg:w-full max-lg:overflow-x-auto max-lg:[scrollbar-width:none]"
       >
-        <div className="flex items-center md:justify-center gap-3.5 md:gap-5">
-          {services?.map((service, index) => (
-            <div
-              className="flex relative rounded-lg md:rounded-[10px] h-[312px] md:h-[451px] w-[280px] md:w-[406px] max-md:min-w-[280px] shrink-0 md:overflow-hidden transition-all ease-in-out duration-600"
-              style={{ flex: hovered == index ? "1.6" : "1" }}
-              key={service?.id}
-              onMouseEnter={() => setHovered(index)}
-              onMouseLeave={() => setHovered(null)}
-            >
-              <Service
-                src={service?.src}
-                title={service?.title}
-                description={service?.description}
-                index={index}
-              />
-            </div>
-          ))}
-        </div>
+        <MotionDivVertical>
+          <div className="flex items-center md:justify-center gap-3.5 md:gap-5">
+            {services?.map((service, index) => (
+              <div
+                className="flex relative rounded-lg md:rounded-[10px] h-[312px] md:h-[451px] w-[280px] md:w-[406px] max-md:min-w-[280px] shrink-0 md:overflow-hidden transition-all ease-in-out duration-600"
+                style={{ flex: hovered == index ? "1.6" : "1" }}
+                key={service?.id}
+                onMouseEnter={() => setHovered(index)}
+                onMouseLeave={() => setHovered(null)}
+              >
+                <Service
+                  src={service?.src}
+                  title={service?.title}
+                  description={service?.description}
+                  index={index}
+                />
+              </div>
+            ))}
+          </div>
+        </MotionDivVertical>
       </div>
       <div>
-        <Button variant={"outline"}>Explore all Services</Button>
+        <Button
+          variant={"outline"}
+          onClick={() => router.push("/our-services")}
+        >
+          Explore all Services
+        </Button>
       </div>
     </div>
   );

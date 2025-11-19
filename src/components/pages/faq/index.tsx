@@ -5,8 +5,8 @@ import Consultation from "../home/Consultation";
 
 const FAQComponent = () => {
   return (
-    <div className="flex flex-col gap-5">
-      <div className="p-6 w-full rounded-4xl">
+    <div className="flex flex-col gap-17.5 md:gap-24 lg:gap-32.5">
+      <div className="p-2 md:p-6 w-full rounded-4xl">
         <BannerUi
           src="/images/faq.jpg"
           badge="FAQ"

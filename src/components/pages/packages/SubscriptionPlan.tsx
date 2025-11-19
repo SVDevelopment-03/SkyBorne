@@ -1,75 +1,6 @@
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import CustomButtons from "@/components/ui/CustomButtons";
 import Heading from "@/components/ui/heading";
-import Image from "next/image";
-import React from "react";
-
-interface SubscriptionProp {
-  name: string;
-  price: string;
-  description: string;
-  features: string[];
-  isMain?: boolean;
-}
-
-const Subscription = ({
-  name,
-  price,
-  description,
-  features,
-  isMain = false,
-}: SubscriptionProp) => {
-  return (
-    <div
-      className={`rounded-[18px] ${
-        isMain ? "bg-[#B95E82]" : "bg-[#FFCFBD]/20"
-      } px-[15px] flex flex-col items-start gap-7.5 pt-[42px] pb-[15px]`}
-    >
-      <Badge
-        variant={`${isMain ? "outline" : "secondary"}`}
-        className="px-8! py-3! text-xl! leading-5! font-satoshi-500 max-h-10 font-medium"
-      >
-        {name}
-      </Badge>
-      <Heading
-        title={`$${price}/Month`}
-        description={description}
-        cssClass="items-start! !gap-3"
-        isUpdated={true}
-        isMain={isMain}
-        elemClass={{
-          heading: `text-[35px]! ${isMain ? "text-white" : "text-black"}`,
-          paragraph: `text-base ${
-            isMain ? "text-white" : "text-black/70 "
-          }!text-left`,
-        }}
-      />
-      <div className="bg-[#FFF7DD] rounded-xl p-5 w-full">
-        <ul className="space-y-4 font-satoshi-500 text-xs md:text-base font-medium [&_li]:flex [&_li]:items-center [&_li]:gap-2">
-          {features?.map((feature, i) => (
-            <li key={i}>
-              <Image
-                src={"/images/right-tick.svg"}
-                alt="Tick"
-                height={20}
-                width={20}
-              />
-              {feature}
-            </li>
-          ))}
-          <Button
-            variant={"theme"}
-            className="px-8! py-4! text-lg! leading-5! font-montserrat mt-3.5"
-          >
-            Sign up & Claim
-          </Button>
-        </ul>
-        <div></div>
-      </div>
-    </div>
-  );
-};
+import SubscriptionPanUi from "@/components/ui/SubscriptionPlanUi";
 
 const SubscriptionPlans = () => {
   const plansDetail = [
@@ -125,18 +56,18 @@ const SubscriptionPlans = () => {
           description={
             "Choose a package that fits your goals and schedule. Flexible options make it easy to start and grow at your pace."
           }
-          elemClass={{ heading: "text-black" }}
+          elemClass={{ heading: "text-black max-md:!text-[25px]" }}
         />
         <div className="flex flex-col items-center gap-16 w-full">
           <div className="rounded-4xl bg-[#FFE8E8] py-2 px-5 flex items-center gap-5">
             <CustomButtons variant={"theme"} text="Monthly" />
-            <CustomButtons variant={"theme"} text="Yearly" />
+            <CustomButtons variant={"themeOutline"} text="Yearly" />
           </div>
           <div className="w-full max-lg:overflow-x-auto max-lg:[scrollbar-width:none]">
             <div className="grid grid-cols-3 items-center justify-center gap-4 lg:gap-9 w-full min-w-[800px]">
               {plansDetail?.map((plan) => {
                 return (
-                  <Subscription
+                  <SubscriptionPanUi
                     key={plan?.id}
                     name={plan?.name}
                     description={plan?.description}

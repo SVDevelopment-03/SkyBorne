@@ -13,6 +13,8 @@ const badgeVariants = cva(
           "border-transparent bg-[#FFE8E8] text-[#B95E82] [a&]:hover:bg-primary/90 font-montserrat backdrop-blur-[20px] font-semibold",
         secondary:
           "bg-white/20 text-[#494949] [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px] border-[#494949] font-semibold",
+        themeOutline:
+          "bg-white/20 text-[#B95E82] [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px] border-[#F0CCC4] font-normal font-satoshi-400 px-[11px] py-[2px]!",
         black:
           "border-transparent bg-[#494949] text-white [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px] border-[#494949] font-semibold",
         blur: "border-transparent bg-white/20 text-white [a&]:hover:bg-white/90 font-montserrat backdrop-blur-[20px]",

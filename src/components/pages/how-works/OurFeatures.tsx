@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import HeadingDiv from "@/components/ui/HeadingDiv";
+import MotionDiv from "@/components/ui/MotionDiv";
 import Image from "next/image";
 import React from "react";
 interface FeatureDetailProps {
@@ -50,49 +51,59 @@ const FeatureDetail = ({
   isRight,
 }: FeatureDetailProps) => {
   return (
-    <div className={`flex md:flex-row items-center gap-7.5 md:gap-16 lg:gap-31.5 w-full ${isRight ? "max-md:flex-col " : "max-md:flex-col-reverse"}`}>
+    <div
+      className={`flex md:flex-row items-center gap-7.5 md:gap-16 lg:gap-31.5 w-full ${
+        isRight ? "max-md:flex-col " : "max-md:flex-col-reverse"
+      }`}
+    >
       {isRight && (
-        <div className="max-md:w-[358px] max-md:mr-auto">
-          <Image
-            src={image}
-            alt="how-works-1"
-            width={544}
-            height={544}
-            className="rounded-[15px] max-md:w-full"
-          />
-        </div>
+        <MotionDiv position="left">
+          <div className="max-md:w-[358px] max-md:mr-auto">
+            <Image
+              src={image}
+              alt="how-works-1"
+              width={544}
+              height={544}
+              className="rounded-[15px] max-md:w-full"
+            />
+          </div>
+        </MotionDiv>
       )}
-      <div className="flex flex-col items-start gap-5.5 md:gap-14 lg:gap-21 max-md:w-full">
-        <div
-          className={`flex flex-col items-start justify-center gap-4 md:gap-7.5 flex-1`}
-        >
-          <Typography
-            title={heading}
-            type="xl"
-            cssClass="!text-[22px] md:!text-4xl"
-          />
-          <Typography
-            cssClass="!text-[#494949] max-w-[594px]"
-            title={description}
-          />
+      <MotionDiv position={isRight ? "right" : "left"}>
+        <div className="flex flex-col items-start gap-5.5 md:gap-14 lg:gap-21 max-md:w-full">
+          <div
+            className={`flex flex-col items-start justify-center gap-4 md:gap-7.5 flex-1`}
+          >
+            <Typography
+              title={heading}
+              type="xl"
+              cssClass="!text-[22px] md:!text-4xl"
+            />
+            <Typography
+              cssClass="!text-[#494949] max-w-[594px]"
+              title={description}
+            />
+          </div>
+          <Button
+            variant={"theme"}
+            className={`px-6 md:px-10 py-2 md:py-3.5 text-xs md:text-base lg:text-lg font-medium`}
+          >
+            {buttonText}
+          </Button>
         </div>
-        <Button
-          variant={"theme"}
-          className={`px-6 md:px-10 py-2 md:py-3.5 text-xs md:text-base lg:text-lg font-medium`}
-        >
-          {buttonText}
-        </Button>
-      </div>
+      </MotionDiv>
       {!isRight && (
-        <div className="max-md:w-[358px] max-md:mr-auto">
-          <Image
-            src={image}
-            alt="how-works-1"
-            width={544}
-            height={544}
-            className="rounded-[15px] max-md:w-full"
-          />
-        </div>
+        <MotionDiv>
+          <div className="max-md:w-[358px] max-md:mr-auto">
+            <Image
+              src={image}
+              alt="how-works-1"
+              width={544}
+              height={544}
+              className="rounded-[15px] max-md:w-full"
+            />
+          </div>
+        </MotionDiv>
       )}
     </div>
   );
@@ -105,6 +116,10 @@ const OurFeatures = () => {
         badge="How it works"
         title="The Values That Power Skyborne"
         description="From first step to lasting change, our core values shape every class, connection, and achievement"
+        elemCss={{
+          title: "max-md:!text-center",
+          description: "max-md:!text-center",
+        }}
       />
       <div className="flex flex-col items-center gap-15 md:gap-24 lg:gap-32.5 max-w-[1268px] mx-auto w-full">
         {featureDetails?.map((featureData, i) => {

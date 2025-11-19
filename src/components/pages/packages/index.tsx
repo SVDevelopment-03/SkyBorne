@@ -6,19 +6,19 @@ import SubscriptionPlan from "./SubscriptionPlan";
 
 const Packages = () => {
   return (
-    <div className="flex flex-col gap-[130px]">
-      <div className="p-6 w-full rounded-4xl">
+    <div className="flex flex-col gap-17.5 md:gap-24 lg:gap-32.5">
+      <div className="p-2 md:p-6 w-full rounded-4xl">
         <BannerUi
           src="/images/package-banner.jpg"
           badge="Packages"
-          cssClass="min-w-[652px]"
+          cssClass="md:min-w-[652px]"
           heading="Flexible Plans for Every Journey"
         />
       </div>
-      <div className="p-2 md:p-6 xl:p-0">
+      <div className="px-2 md:px-6 xl:p-0">
         <SubscriptionPlan />
       </div>
-      <div className="p-2 md:p-6">
+      <div className="px-2 md:px-6">
         <CenterCard
           heading="Why sign-up required for pricing?"
           description="We personalize and secure each journey signing up helps us show you the right options, safely "
@@ -26,7 +26,7 @@ const Packages = () => {
           src="/images/yoga-detail-1.jpg"
         />
       </div>
-      <div className="p-2 md:p-6">
+      <div className="px-2 md:px-6">
         <FAQ />
       </div>
     </div>
