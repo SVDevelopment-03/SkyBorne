@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { useSignup } from "./SignupContext";
 import { Typography } from "@/components/ui/heading";
@@ -19,9 +20,11 @@ const Step5Schema = Yup.object().shape({
 });
 
 const Step5 = () => {
+  const { step, setStep, totalSteps, formData, updateStepData } = useSignup();
+
   const initialValues: UserinfoSchema = {
-    ageGroup: "",
-    wellnessRole: "",
+    ageGroup: formData.step5.ageGroup || "",
+    wellnessRole: formData.step5.wellnessRole || "",
   };
 
   const ageGroupOptions = [
@@ -63,10 +66,11 @@ const Step5 = () => {
   ];
 
   const handleSubmit = (values: UserinfoSchema) => {
-    console.log("Form Submitted:", values);
+    // Save to context
+    updateStepData("step5", values);
+
     nextStep();
   };
-  const { step, setStep, totalSteps } = useSignup();
 
   const nextStep = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -89,6 +93,7 @@ const Step5 = () => {
           initialValues={initialValues}
           validationSchema={Step5Schema}
           onSubmit={handleSubmit}
+          enableReinitialize={true}
         >
           {({ values, errors, touched, handleChange, setFieldValue }) => (
             <Form className="space-y-6">
@@ -132,7 +137,7 @@ const Step5 = () => {
                 <Button
                   variant={"theme"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
-                  onClick={nextStep}
+                  type="submit"
                 >
                   Next
                 </Button>

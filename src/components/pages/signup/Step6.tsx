@@ -4,12 +4,24 @@ import React, { useState } from "react";
 import { useSignup } from "./SignupContext";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
+import SuccessAlert from "@/utils/swal";
+import MotionDiv from "@/components/ui/MotionDiv";
+
 const Step6 = () => {
-  const [selected, setSelected] = useState<string>("");
-  const { step, setStep, totalSteps } = useSignup();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const { step, setStep, totalSteps, formData, updateStepData } = useSignup();
+  const [selected, setSelected] = useState(formData?.step6?.goal || "");
+
+  const handleSelect = (val: string) => {
+    setSelected(val);
+    updateStepData("step6", { goal: val });
+  };
 
   const nextStep = () => {
-    if (step < totalSteps) setStep(step + 1);
+    setShowSuccess(true);
+    setTimeout(() => {
+      if (step < totalSteps) setStep(step + 1);
+    }, 0);
   };
 
   const prevStep = () => {
@@ -51,34 +63,35 @@ const Step6 = () => {
         {/* ---- RADIO GROUP ---- */}
         <RadioGroup
           value={selected ?? ""}
-          onValueChange={(val) => setSelected(val)}
+          onValueChange={handleSelect}
           className="grid grid-cols-1 gap-4"
         >
           {motivations.map((m) => (
-            <label
-              key={m.id}
-              htmlFor={m.id}
-              className={`flex items-center gap-4 border-[2.5px] rounded-xl p-5.5 cursor-pointer transition 
+            <MotionDiv key={m.id} position="left">
+              <label
+                htmlFor={m.id}
+                className={`flex items-center gap-4 border-[2.5px] rounded-xl p-5.5 cursor-pointer transition 
                 ${
                   selected === m.id
                     ? "border-[#B95E82] bg-[#FFE8E8]"
                     : "border-[#E5E7EB] bg-white"
                 }
               `}
-            >
-              <RadioGroupItem
-                id={m.id}
-                value={m.id}
-                className={`size-5 ${
-                  selected === m.id && "border-[#B95E82]"
-                } text-[#B95E82]`}
-              />
+              >
+                <RadioGroupItem
+                  id={m.id}
+                  value={m.id}
+                  className={`size-5 ${
+                    selected === m.id && "border-[#B95E82]"
+                  } text-[#B95E82]`}
+                />
 
-              <Typography
-                title={m.title}
-                cssClass="xl:!text-xl xl:!leading-none text-[#0A0A0A]!"
-              />
-            </label>
+                <Typography
+                  title={m.title}
+                  cssClass="xl:!text-xl xl:!leading-none text-[#0A0A0A]!"
+                />
+              </label>
+            </MotionDiv>
           ))}
         </RadioGroup>
         <div className="bg-[#FFE8E8] border border-[#B95E82] px-15 py-7.5 flex items-start gap-3 rounded-[10px]">
@@ -100,6 +113,7 @@ const Step6 = () => {
           </Button>
           <Button
             variant={"theme"}
+            disabled={!selected}
             onClick={nextStep}
             className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
           >
@@ -107,6 +121,12 @@ const Step6 = () => {
           </Button>
         </div>
       </div>
+      {showSuccess && (
+        <SuccessAlert
+          message="Goal set-let's reach it together"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 };

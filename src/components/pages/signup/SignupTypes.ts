@@ -1,5 +1,5 @@
 export interface Step1Data {
-  inspiration: string;
+  motivation: string;
 }
 
 export interface Step2Data {
@@ -8,15 +8,15 @@ export interface Step2Data {
   email: string;
   password: string;
   country: string;
-  acceptTerms: boolean;
+  agreeTerms: boolean;
 }
 
 export interface Step3Data {
-  phone: string;
+  phoneNumber: string;
 }
 
 export interface Step4Data {
-  otp: string[];
+  otp: string;
 }
 
 export interface Step5Data {

@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import { useSignup } from "./SignupContext";
 import { Typography } from "@/components/ui/heading";
@@ -21,15 +22,15 @@ const OtpSchema = Yup.object().shape({
 });
 
 const Step3 = () => {
-  const initialValues: OtpFormValues = {
-    phoneNumber: "",
-  };
-
   const handleSubmit = (values: OtpFormValues) => {
-    console.log("Form Submitted:", values);
+    updateStepData("step3", { phoneNumber: values.phoneNumber });
     nextStep();
   };
-  const { step, setStep, totalSteps } = useSignup();
+  const { step, setStep, totalSteps, updateStepData, formData } = useSignup();
+
+  const initialValues: OtpFormValues = {
+    phoneNumber: formData?.step3?.phoneNumber || "",
+  };
 
   const nextStep = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -107,6 +108,7 @@ const Step3 = () => {
                 <Button
                   variant={"theme"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
+                  type="submit"
                 >
                   Submit
                 </Button>

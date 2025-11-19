@@ -36,15 +36,15 @@ const SignupSchema = Yup.object().shape({
 
 const Step2 = () => {
   const [showPass, setShowPass] = useState(false);
-  const { step, setStep, totalSteps } = useSignup();
+  const { step, setStep, totalSteps, formData, updateStepData } = useSignup();
 
   const initialValues: SignupFormValues = {
-    firstName: "",
-    lastName: "",
-    email: "",
-    password: "",
-    country: "",
-    agreeTerms: false,
+    firstName: formData.step2.firstName,
+    lastName: formData.step2.lastName,
+    email: formData.step2.email,
+    password: "", // always empty (never stored)
+    country: formData.step2.country,
+    agreeTerms: formData.step2.agreeTerms,
   };
 
   const nextStep = () => {
@@ -56,8 +56,15 @@ const Step2 = () => {
   };
 
   const handleSubmit = (values: SignupFormValues) => {
-    console.log("Form Submitted:", values);
-    nextStep();
+    updateStepData("step2", {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      password: "", // NEVER store password
+      country: values.country,
+      agreeTerms: values.agreeTerms,
+    });
+    setStep(step + 1);
   };
   return (
     <div className="flex flex-col gap-8 md:gap-14 h-full">
@@ -223,6 +230,7 @@ const Step2 = () => {
                 <Button
                   variant={"theme"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
+                  type="submit"
                 >
                   Next
                 </Button>

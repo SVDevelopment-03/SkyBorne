@@ -4,7 +4,7 @@ import React, { useRef, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import type { Swiper as SwiperType } from "swiper";
 
-import { Pagination } from "swiper/modules";
+import { EffectFade, Pagination } from "swiper/modules";
 import {
   CalenderIcon,
   CommentIcon,
@@ -86,16 +86,18 @@ export function TourSlider() {
     <div className="bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)]">
       <div className="bg-white rounded-[30px] px-5 md:px-13 py-6 md:py-12 w-full max-w-[1080] text-center">
         <Swiper
-          modules={[Pagination]}
+          modules={[Pagination, EffectFade]}
+          effect="fade"
+          fadeEffect={{ crossFade: true }}
           pagination={{ clickable: true }}
           spaceBetween={40}
-          className="mySwiper"
+          className="mySwiper swiper-fade-scale"
           onSwiper={(swiper) => {
             swiperRef.current = swiper;
-            setCurrentIndex(swiper.activeIndex); // store instance
+            setCurrentIndex(swiper.activeIndex);
           }}
           onSlideChange={(swiper) => {
-            setCurrentIndex(swiper.activeIndex); // updates index every time
+            setCurrentIndex(swiper.activeIndex);
           }}
         >
           {/* Slide 1 */}

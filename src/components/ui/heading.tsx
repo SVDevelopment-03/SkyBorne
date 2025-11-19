@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 interface HeadingProps {
   title: string;
@@ -115,5 +116,9 @@ export const Typography = ({
     xl2: "font-satoshi-500 font-medium text-[50px] text-[#494949]",
     xxl: "font-satoshi-700 font-bold text-3xl md:text-[35px] text-[#494949]",
   };
-  return <h2 className={`${variant[type]} ${cssClass}`}>{title}</h2>;
+  return (
+    <h2 className={`${variant[type]} ${cssClass}`} onClick={onClick}>
+      {title}
+    </h2>
+  );
 };

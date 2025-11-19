@@ -246,3 +246,14 @@ html.lenis body {
   width: 32px;
   border-radius: 10px;
 }
+
+.swiper-fade-scale .swiper-slide {
+  opacity: 0 !important;
+  transform: scale(0.92);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.swiper-fade-scale .swiper-slide-active {
+  opacity: 1 !important;
+  transform: scale(1);
+}

@@ -2,16 +2,21 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import React, { useState } from "react";
 import { useSignup } from "./SignupContext";
-import  {
-  SignupSubscriptionPlan,
-} from "@/components/ui/SubscriptionPlanUi";
+import { SignupSubscriptionPlan } from "@/components/ui/SubscriptionPlanUi";
+import SuccessAlert from "@/utils/swal";
 
 const Step7 = () => {
+  const [showSuccess, setShowSuccess] = useState(false);
+
   const [selected, setSelected] = useState<number>(2);
-  const { step, setStep, totalSteps } = useSignup();
+  const { step, setStep, totalSteps, formData } = useSignup();
+  const name = formData?.step2?.firstName;
 
   const nextStep = () => {
-    if (step < totalSteps) setStep(step + 1);
+    setShowSuccess(true);
+    setTimeout(() => {
+      if (step < totalSteps) setStep(step + 1);
+    }, 0);
   };
 
   const prevStep = () => {
@@ -111,6 +116,12 @@ const Step7 = () => {
           </Button>
         </div>
       </div>
+      {showSuccess && (
+        <SuccessAlert
+          message={`Nice job ${name}! Your account is ready.`}
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 };

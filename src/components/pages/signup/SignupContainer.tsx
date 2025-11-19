@@ -7,11 +7,20 @@ import { Typography } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import SignupPage from "./SignupPage";
 import Step8 from "./Step8";
+import { useEffect, useState } from "react";
 
 // import Step8 from "./steps/Step8";
 
 export default function SignupContainer() {
   const { step } = useSignup();
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 0);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!ready) return null; // prevent SSR mismatch
 
   const renderStep = () => {
     switch (step) {

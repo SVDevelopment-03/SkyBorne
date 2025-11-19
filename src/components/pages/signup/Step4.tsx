@@ -1,10 +1,11 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import { Input2 } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useSignup } from "./SignupContext";
 import { ShieldIcon } from "@/icons/helpIcon";
 import {
@@ -12,27 +13,69 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import SuccessAlert from "@/utils/swal";
 
 export interface OtpFormValues {
-  phoneNumber: string;
+  otp: string;
 }
 
 const OtpSchema = Yup.object().shape({
-  phoneNumber: Yup.string()
-    .matches(/^\+[1-9]\d{1,14}$/, "Enter a valid phone number")
-    .required("Phone number is required"),
+  otp: Yup.string()
+    .matches(/^\d{6}$/, "OTP must be 6 digits")
+    .required("OTP is required"),
 });
 
 const Step4 = () => {
   const initialValues: OtpFormValues = {
-    phoneNumber: "",
+    otp: "",
+  };
+  const [showSuccess, setShowSuccess] = useState(false);
+  const { step, setStep, totalSteps, updateStepData, formData } = useSignup();
+  const userEmail = formData?.step2?.email;
+
+  const [timer, setTimer] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    if (!canResend && timer > 0) {
+      const interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            // When timer hits 0 → enable resend and stop interval
+            setCanResend(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [timer, canResend]);
+
+  const resendOtp = () => {
+    setCanResend(false);
+    setTimer(30);
+
+    // ❗ Call backend to resend OTP
+    // await resendOtpApi(formData.step2.email)
+
+    console.log("OTP resent");
   };
 
   const handleSubmit = (values: OtpFormValues) => {
-    console.log("Form Submitted:", values);
-    nextStep();
+    console.log("OTP Submitted:", values);
+    setShowSuccess(true);
+
+    // 1. Save OTP into context
+    updateStepData("step4", { otp: values.otp });
+
+    // 2. Call backend to verify OTP (example)
+    // const res = await verifyOtpApi(values.otp);
+    setTimeout(() => {
+      nextStep();
+    }, 0);
   };
-  const { step, setStep, totalSteps } = useSignup();
 
   const nextStep = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -57,7 +100,7 @@ const Step4 = () => {
         </div>
         <div className="flex flex-col justify-start gap-1">
           <Typography
-            title="OTP sent to unknown@gmail.com"
+            title={`OTP sent to ${userEmail}`}
             type="lgBlack"
             cssClass="text-base!"
           />
@@ -83,7 +126,11 @@ const Step4 = () => {
                   <h2 className="font-arial font-normal text-xl text-[#0A0A0A]">
                     Enter OTP *
                   </h2>
-                  <InputOTP maxLength={6}>
+                  <InputOTP
+                    maxLength={6}
+                    value={values?.otp}
+                    onChange={(val) => setFieldValue("otp", val)}
+                  >
                     <InputOTPGroup className="flex items-center gap-1.5">
                       {[0, 1, 2, 3, 4, 5]?.map((i) => (
                         <InputOTPSlot
@@ -95,13 +142,25 @@ const Step4 = () => {
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
+                {touched?.otp && errors?.otp && (
+                  <p className="text-red-500 text-sm pt-4">{errors?.otp}</p>
+                )}
                 <div className="flex flex-col items-start pt-4">
-                  <p className="font-satoshi-500   text-lg font-normal leading-5 text-[#6A7282]">
-                    {`Didn't receive it?`}
-                    <span className="font-satoshi-700 font-bold text-[#B95E82] pl-2">
-                      Resend code
-                    </span>
-                  </p>
+                  {!canResend ? (
+                    <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
+                      Resend in 00:{timer < 10 && "0"} {timer}s
+                    </p>
+                  ) : (
+                    <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
+                      {`Didn't receive it?`}
+                      <span
+                        className="font-satoshi-700 font-bold text-[#B95E82] pl-2"
+                        onClick={resendOtp}
+                      >
+                        Resend code
+                      </span>
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -115,16 +174,21 @@ const Step4 = () => {
                 </Button>
                 <Button
                   variant={"theme"}
-                  onClick={nextStep}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                 >
-                  Next
+                  Verify & Continue
                 </Button>
               </div>
             </Form>
           )}
         </Formik>
       </div>
+      {showSuccess && (
+        <SuccessAlert
+          message="You're verified and secure"
+          onClose={() => setShowSuccess(false)}
+        />
+      )}
     </div>
   );
 };

@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import React, { useState } from "react";
 import { useSignup } from "./SignupContext";
+import { motion, Variants } from "framer-motion";
 
 const RightIcon = () => (
   <svg
@@ -21,9 +22,38 @@ const RightIcon = () => (
   </svg>
 );
 
+const containerVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.12, // items animate one-by-one
+    },
+  },
+};
+
+const itemVariants: Variants = {
+  hidden: {
+    opacity: 0,
+    y: 35, // starts lower
+  },
+  visible: {
+    opacity: 1,
+    y: 0, // moves up
+    transition: {
+      type: "spring",
+      stiffness: 220, // bounce power
+      damping: 18, // smoothness
+    },
+  },
+};
+
 const Step1 = () => {
-  const [selected, setSelected] = useState<null | number>(null);
-  const { step, setStep, totalSteps } = useSignup();
+  const { step, setStep, totalSteps, formData, updateStepData } = useSignup();
+  const selected = formData?.step1?.motivation;
+
+  const handleSelect = (id: string) => {
+    updateStepData("step1", { motivation: id });
+  };
 
   const nextStep = () => {
     if (step < totalSteps) setStep(step + 1);
@@ -35,27 +65,27 @@ const Step1 = () => {
 
   const motivations = [
     {
-      id: 1,
+      id: "1",
       title: "Move more & improve flexibility",
     },
     {
-      id: 2,
+      id: "2",
       title: "Get fit & stronger",
     },
     {
-      id: 3,
+      id: "3",
       title: "Eat healthy & feel better",
     },
     {
-      id: 4,
+      id: "4",
       title: "Reduce stress",
     },
     {
-      id: 5,
+      id: "5",
       title: "Build a lasting habit",
     },
     {
-      id: 6,
+      id: "6",
       title: "Just exploring",
     },
   ];
@@ -70,9 +100,18 @@ const Step1 = () => {
         <Typography title="What inspired you to join Skyborne?" type="theme" />
       </div>
       <div className="flex flex-col gap-8 md:gap-14 h-full overflow-auto [scrollbar-width:none]">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4.5 ">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 md:grid-cols-2 gap-4.5"
+        >
           {motivations?.map((motivation) => (
-            <div
+            <motion.div
+              key={motivation?.id}
+              variants={itemVariants}
+              whileHover={{ scale: 1.02 }}
+              onClick={() => handleSelect(motivation?.id)}
               className={`${
                 selected === motivation?.id ? "bg-[#FFE8E8]" : "bg-[#FFFFFF]"
               } border-[2.5px] rounded-[22px] cursor-pointer relative p-[26px] ${
@@ -80,8 +119,6 @@ const Step1 = () => {
                   ? "border-[#B95E82]"
                   : "border-[#E5E7EB]"
               }`}
-              key={motivation?.id}
-              onClick={() => setSelected(motivation?.id)}
             >
               <Typography
                 title={motivation?.title}
@@ -92,9 +129,9 @@ const Step1 = () => {
                   <RightIcon />
                 </div>
               )}
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
         <div className="flex flex-col items-center pt-3">
           <p className="font-arial text-lg font-normal leading-5">
             Not sure?
