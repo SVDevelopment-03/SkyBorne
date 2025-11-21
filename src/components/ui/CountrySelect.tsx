@@ -10,7 +10,7 @@ import {
 import { Label } from "@/components/ui/label";
 interface CountrySelectProps {
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: { label: string; value: string }) => void;
   error?: string;
   touched?: boolean;
 }
@@ -41,7 +41,13 @@ const CountrySelect = ({
     <div className="flex flex-col gap-[18px]">
       <Label>Country*</Label>
 
-      <Select value={value} onValueChange={onChange}>
+      <Select
+        value={value}
+        onValueChange={(val) => {
+          const selected = options.find((c) => c.value === val);
+          if (selected) onChange(selected);
+        }}
+      >
         <SelectTrigger className="w-full bg-[#F3F3F5] min-h-[55px] cursor-pointer">
           <SelectValue placeholder="Select an option" />
         </SelectTrigger>

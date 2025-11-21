@@ -16,12 +16,12 @@ import { useRouter } from "next/navigation";
 
 const Step8 = () => {
   return (
-    <div className="flex flex-col items-center justify-center gap-8 md:gap-16 h-dvh pt-5">
+    <div className="flex flex-col items-center justify-center gap-8 md:gap-16 h-dvh pt-5 max-xl:px-6">
       <div className="flex flex-col items-center justify-center gap-2.5 px-4">
         <Typography
           title="Welcome to Your Skyborne Dashboard, James !"
           type="xxl"
-          cssClass="leading-tight"
+          cssClass="leading-tight text-center max-md:max-w-[380px]"
         />
         <Typography
           title="Let's take a quick tour of what you can do"
@@ -83,8 +83,8 @@ export function TourSlider() {
   };
 
   return (
-    <div className="bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)]">
-      <div className="bg-white rounded-[30px] px-5 md:px-13 py-6 md:py-12 w-full max-w-[1080] text-center">
+    <div className="bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)] w-full max-w-[1080px] ">
+      <div className="bg-white rounded-[30px] px-5 md:px-13 py-9 md:py-12 text-center">
         <Swiper
           modules={[Pagination, EffectFade]}
           effect="fade"
@@ -104,13 +104,13 @@ export function TourSlider() {
           {SwiperDetail?.map((swiperData, i) => (
             <SwiperSlide key={i}>
               <div className="flex flex-col gap-8 md:gap-11 items-center">
-                <div className="bg-[linear-gradient(135.33deg,#B95E82_0%,#FFFBF7_135.16%)] size-24 rounded-3xl flex flex-col items-center justify-center shadow-[0px_4px_6px_-4px_#0000001A,0px_10px_15px_-3px_#0000001A]">
+                <div className="bg-[linear-gradient(135.33deg,#B95E82_0%,#FFFBF7_135.16%)] size-20 sm:size-24 rounded-3xl flex flex-col items-center justify-center shadow-[0px_4px_6px_-4px_#0000001A,0px_10px_15px_-3px_#0000001A]">
                   {swiperData?.icon}
                 </div>
                 <div className="flex flex-col items-center gap-5">
                   <Typography
                     title={swiperData?.title}
-                    cssClass="text-[30px]! text-[#0A0A0A]!"
+                    cssClass="text-2xl! md:text-[30px]! text-[#0A0A0A]!"
                   />
                   <Typography
                     title={swiperData?.description}

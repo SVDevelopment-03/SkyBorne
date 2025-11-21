@@ -4,22 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-
 import { Checkbox } from "@/components/ui/checkbox";
-
 import { AppleIcon, Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { GoogleIcon } from "@/icons/helpIcon";
-import CountrySelect from "@/components/ui/CountrySelect";
 import { useSignup } from "./SignupContext";
+import { useGoogleLogin } from "@react-oauth/google";
+
+import toast from "react-hot-toast";
 
 export interface SignupFormValues {
   firstName: string;
   lastName: string;
   email: string;
   password: string;
-  country: string;
   agreeTerms: boolean;
 }
 
@@ -27,45 +26,90 @@ export interface SignupFormValues {
 
 const SignupSchema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().required("Last name is required"),
+  lastName: Yup.string().notRequired(),
   email: Yup.string().email("Invalid email").required("Email is required"),
   password: Yup.string().min(6, "Too short").required("Required"),
-  country: Yup.string().required("Please select a country"),
   agreeTerms: Yup.boolean().oneOf([true], "You must agree before continuing"),
 });
 
 const Step2 = () => {
   const [showPass, setShowPass] = useState(false);
-  const { step, setStep, totalSteps, formData, updateStepData } = useSignup();
+  const { step, setStep, formData, updateStepData } = useSignup();
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      const { access_token } = tokenResponse;
+
+      // Fetch user info from Google
+      const userInfo = await fetch(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        {
+          headers: {
+            Authorization: `Bearer ${access_token}`,
+          },
+        }
+      ).then((res) => res.json());
+
+      console.log("Google User:", userInfo);
+
+      // Extract needed data
+      const googleData = {
+        firstName: userInfo.given_name || "",
+        lastName: userInfo.family_name || "",
+        email: userInfo.email,
+        picture: userInfo.picture,
+        authProvider: "google",
+        googleId: userInfo?.sub,
+      };
+
+      console.log("googleData:", googleData);
+
+      // Save to Step2 in SignupContext
+      updateStepData("step2", {
+        firstName: googleData.firstName,
+        lastName: googleData.lastName,
+        email: googleData.email,
+        password: "", // password not needed for social login
+        agreeTerms: true,
+        authProvider: "google",
+        googleId: userInfo?.sub,
+      });
+
+      // Move to next step
+      setStep(3); // or Step 4 based on your flow
+    },
+    onError: () => {
+      toast.error("Google login failed");
+    },
+  });
 
   const initialValues: SignupFormValues = {
     firstName: formData.step2.firstName,
     lastName: formData.step2.lastName,
     email: formData.step2.email,
-    password: "", // always empty (never stored)
-    country: formData.step2.country,
+    password: formData.step2.password,
     agreeTerms: formData.step2.agreeTerms,
-  };
-
-  const nextStep = () => {
-    if (step < totalSteps) setStep(step + 1);
   };
 
   const prevStep = () => {
     if (step > 0) setStep(step - 1);
   };
 
-  const handleSubmit = (values: SignupFormValues) => {
+  const handleSubmit = async (values: SignupFormValues) => {
     updateStepData("step2", {
       firstName: values.firstName,
       lastName: values.lastName,
       email: values.email,
-      password: "", // NEVER store password
-      country: values.country,
+      password: values?.password,
       agreeTerms: values.agreeTerms,
+      authProvider: "email",
+      // googleId: formData?.step2?.googleId,
+      // appleId: formData?.step2?.appleId,
     });
+
     setStep(step + 1);
   };
+
   return (
     <div className="flex flex-col gap-8 md:gap-14 h-full">
       <div className="flex flex-col gap-5">
@@ -101,7 +145,7 @@ const Step2 = () => {
 
                 {/* Last Name */}
                 <div className="flex flex-col gap-4.5">
-                  <Label>Last Name*</Label>
+                  <Label>Last Name</Label>
                   <Input2
                     name="lastName"
                     value={values?.lastName}
@@ -156,14 +200,6 @@ const Step2 = () => {
                 </div>
               </div>
 
-              {/* Country */}
-              <CountrySelect
-                value={values?.country}
-                onChange={(val) => setFieldValue("country", val)}
-                error={errors?.country}
-                touched={touched?.country}
-              />
-
               {/* Terms */}
               <div className="flex items-center gap-2 pt-[26px] leading-none">
                 <Checkbox
@@ -199,6 +235,8 @@ const Step2 = () => {
                 <Button
                   variant={"outlineBlackRect"}
                   className="py-[17px]! px-[123px]!"
+                  onClick={() => googleLogin()}
+                  type="button"
                 >
                   <GoogleIcon />
                   Sign up with Google
@@ -206,6 +244,7 @@ const Step2 = () => {
                 <Button
                   variant={"outlineBlackRect"}
                   className="py-[17px]! px-[123px]!"
+                  type="button"
                 >
                   <AppleIcon />
                   Sign up with Apple
@@ -224,6 +263,7 @@ const Step2 = () => {
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                   onClick={prevStep}
+                  type="button"
                 >
                   Back
                 </Button>

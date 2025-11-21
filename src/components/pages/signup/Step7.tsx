@@ -4,13 +4,35 @@ import React, { useState } from "react";
 import { useSignup } from "./SignupContext";
 import { SignupSubscriptionPlan } from "@/components/ui/SubscriptionPlanUi";
 import SuccessAlert from "@/utils/swal";
+import { useCreatePaymentMutation } from "@/store/api/authApi";
+import toast from "react-hot-toast";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 const Step7 = () => {
   const [showSuccess, setShowSuccess] = useState(false);
-
   const [selected, setSelected] = useState<number>(2);
+  const [createPayment, { isLoading }] = useCreatePaymentMutation();
+  const user = useSelector((state: RootState) => state.auth.user);
   const { step, setStep, totalSteps, formData } = useSignup();
   const name = formData?.step2?.firstName;
+
+  // const handlePayment = async () => {
+  //   try {
+  //     const payload = {
+  //       amount: 99,
+  //       currency: "USD",
+  //       userId: user._id,
+  //     };
+
+  //     const res = await createPayment(payload).unwrap();
+
+  //     window.location.href = res.paymentLink;
+
+  //   } catch (err) {
+  //     toast.error("Payment failed");
+  //   }
+  // };
 
   const nextStep = () => {
     setShowSuccess(true);

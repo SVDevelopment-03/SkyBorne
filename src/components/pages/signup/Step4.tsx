@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
@@ -5,7 +7,7 @@ import { Input2 } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSignup } from "./SignupContext";
 import { ShieldIcon } from "@/icons/helpIcon";
 import {
@@ -14,6 +16,9 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 import SuccessAlert from "@/utils/swal";
+import { useSendOtpMutation, useVerifyOtpMutation } from "@/store/api/authApi";
+import toast from "react-hot-toast";
+import { Loader2 } from "lucide-react";
 
 export interface OtpFormValues {
   otp: string;
@@ -30,18 +35,30 @@ const Step4 = () => {
     otp: "",
   };
   const [showSuccess, setShowSuccess] = useState(false);
+  const otpSentRef = useRef(false);
+
   const { step, setStep, totalSteps, updateStepData, formData } = useSignup();
   const userEmail = formData?.step2?.email;
 
+  const [sendOtp] = useSendOtpMutation();
+  const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
+
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
+
+  useEffect(() => {
+    if (!userEmail) return;
+    if (!otpSentRef?.current) {
+      otpSentRef.current = true;
+      sendOtp({ email: userEmail });
+    }
+  }, [userEmail, sendOtp]);
 
   useEffect(() => {
     if (!canResend && timer > 0) {
       const interval = setInterval(() => {
         setTimer((prev) => {
           if (prev <= 1) {
-            // When timer hits 0 → enable resend and stop interval
             setCanResend(true);
             return 0;
           }
@@ -53,28 +70,39 @@ const Step4 = () => {
     }
   }, [timer, canResend]);
 
-  const resendOtp = () => {
-    setCanResend(false);
-    setTimer(30);
-
-    // ❗ Call backend to resend OTP
-    // await resendOtpApi(formData.step2.email)
-
-    console.log("OTP resent");
+  // RESEND OTP HANDLER
+  const resendOtpHandler = async () => {
+    try {
+      setCanResend(false);
+      setTimer(30);
+      await sendOtp({ email: userEmail }).unwrap();
+      console.log("OTP resent successfully");
+    } catch (err: any) {
+      console.log("Resend OTP Error:", err?.data?.message || err.message);
+    }
   };
 
-  const handleSubmit = (values: OtpFormValues) => {
-    console.log("OTP Submitted:", values);
-    setShowSuccess(true);
+  // VERIFY OTP HANDLER
+  const handleSubmit = async (values: OtpFormValues) => {
+    try {
+      const res = await verifyOtp({
+        email: userEmail,
+        otp: values.otp,
+      }).unwrap();
+      const { data } = res;
+      if (res?.success) {
+        console.log("OTP Verified:", res);
+        toast.success(res?.message ?? "Otp verified successfully");
+        updateStepData("step4", {
+          otp: values.otp,
+          tempUserId: data?.tempUserId,
+        });
 
-    // 1. Save OTP into context
-    updateStepData("step4", { otp: values.otp });
-
-    // 2. Call backend to verify OTP (example)
-    // const res = await verifyOtpApi(values.otp);
-    setTimeout(() => {
-      nextStep();
-    }, 0);
+        setTimeout(() => nextStep(), 500);
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "OTP verification failed");
+    }
   };
 
   const nextStep = () => {
@@ -154,8 +182,8 @@ const Step4 = () => {
                     <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
                       {`Didn't receive it?`}
                       <span
-                        className="font-satoshi-700 font-bold text-[#B95E82] pl-2"
-                        onClick={resendOtp}
+                        className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer"
+                        onClick={resendOtpHandler}
                       >
                         Resend code
                       </span>
@@ -169,14 +197,24 @@ const Step4 = () => {
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                   onClick={prevStep}
+                  disabled={isLoading}
                 >
                   Back
                 </Button>
                 <Button
                   variant={"theme"}
+                  disabled={isLoading}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                 >
-                  Verify & Continue
+                  <span className="flex flex-row gap-2 items-center">
+                    {isLoading && (
+                      <Loader2
+                        size={24}
+                        className="animate-spin text-white! h-6! w-6!"
+                      />
+                    )}
+                    Verify & Continue
+                  </span>
                 </Button>
               </div>
             </Form>

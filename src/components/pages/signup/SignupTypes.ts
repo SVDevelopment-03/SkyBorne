@@ -1,5 +1,5 @@
 export interface Step1Data {
-  motivation: string;
+  motivation?: string;
 }
 
 export interface Step2Data {
@@ -7,8 +7,10 @@ export interface Step2Data {
   lastName: string;
   email: string;
   password: string;
-  country: string;
   agreeTerms: boolean;
+  authProvider: "google" | "apple" | "email";
+  googleId?: string;
+  appleId?: string;
 }
 
 export interface Step3Data {
@@ -17,6 +19,7 @@ export interface Step3Data {
 
 export interface Step4Data {
   otp: string;
+  tempUserId: string;
 }
 
 export interface Step5Data {
@@ -45,4 +48,22 @@ export interface SignupFormData {
   step6: Step6Data;
   step7: Step7Data;
   step8: Step8Data;
+}
+
+export interface SignupFormValidation {
+  motivation?: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  agreeTerms: boolean;
+  phoneNumber: string;
+  otp: string;
+  tempUserId: string;
+  ageGroup: string;
+  wellnessRole: string;
+  goal: string;
+  authProvider: string;
+  googleId?: string;
+  appleId?: string;
 }

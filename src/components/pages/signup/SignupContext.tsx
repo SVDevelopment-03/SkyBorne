@@ -29,11 +29,11 @@ const defaultData: SignupFormData = {
     lastName: "",
     email: "",
     password: "",
-    country: "",
     agreeTerms: false,
+    authProvider: "email",
   },
   step3: { phoneNumber: "" },
-  step4: { otp: "" },
+  step4: { otp: "", tempUserId: "" },
   step5: { ageGroup: "", wellnessRole: "" },
   step6: { goal: "" },
   step7: { selectedPlan: "" },
@@ -65,7 +65,7 @@ export const SignupProvider = ({ children }: { children: ReactNode }) => {
     return {
       ...defaultData,
       ...decrypted,
-      step2: { ...decrypted.step2, password: "" },
+      step2: { ...decrypted.step2 },
     };
   });
 
@@ -74,8 +74,7 @@ export const SignupProvider = ({ children }: { children: ReactNode }) => {
     if (typeof window === "undefined") return;
 
     const safeData = {
-      ...formData,
-      step2: { ...formData.step2, password: "" }, // do NOT store password
+      ...formData, // do NOT store password
     };
 
     const encrypted = encrypt(safeData);
@@ -92,6 +91,8 @@ export const SignupProvider = ({ children }: { children: ReactNode }) => {
     key: K,
     value: SignupFormData[K]
   ) => {
+    console.log("value", value);
+
     setFormData((prev) => ({
       ...prev,
       [key]: value,
