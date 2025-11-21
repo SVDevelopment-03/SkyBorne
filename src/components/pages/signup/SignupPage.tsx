@@ -16,7 +16,7 @@ export default function SignupPage() {
   const { step, totalSteps } = useSignup();
 
   return (
-    <div className="mx-auto max-md:px-6 py-6 max-w-[1080px] w-full h-dvh">
+    <div className="mx-auto max-xl:px-6 py-6 max-w-[1080px] w-full h-dvh">
       <div className="flex flex-col gap-8 h-full">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">

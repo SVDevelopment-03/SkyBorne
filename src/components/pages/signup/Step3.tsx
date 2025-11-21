@@ -1,34 +1,40 @@
 "use client";
 import React from "react";
+import "react-phone-number-input/style.css";
+import PhoneInput, {
+  isValidPhoneNumber,
+  parsePhoneNumber,
+} from "react-phone-number-input";
 import { useSignup } from "./SignupContext";
 import { Typography } from "@/components/ui/heading";
 import { Button } from "@/components/ui/button";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import { Input2 } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export interface OtpFormValues {
+export interface PhoneNumberFormValues {
   phoneNumber: string;
 }
 
-const OtpSchema = Yup.object().shape({
+const PhoneNumberSchema = Yup.object().shape({
   phoneNumber: Yup.string()
-    .matches(
-      /^\+[1-9]\d{1,14}$/,
-      "Enter a valid phone number start's with country code"
-    )
-    .required("Phone number is required"),
+    .required("Phone number is required")
+    .test("is-valid", "Enter a valid phone number", (value) =>
+      value ? isValidPhoneNumber(value) : false
+    ),
 });
 
 const Step3 = () => {
-  const handleSubmit = (values: OtpFormValues) => {
-    updateStepData("step3", { phoneNumber: values.phoneNumber });
+  const handleSubmit = (values: PhoneNumberFormValues) => {
+    const parsed = parsePhoneNumber(values?.phoneNumber);
+    console.log("aaa", parsed);
+
+    updateStepData("step3", { phoneNumber: parsed?.number as string });
     nextStep();
   };
   const { step, setStep, totalSteps, updateStepData, formData } = useSignup();
 
-  const initialValues: OtpFormValues = {
+  const initialValues: PhoneNumberFormValues = {
     phoneNumber: formData?.step3?.phoneNumber || "",
   };
 
@@ -52,10 +58,10 @@ const Step3 = () => {
       <div className="form h-full overflow-auto [scrollbar-width:none]">
         <Formik
           initialValues={initialValues}
-          validationSchema={OtpSchema}
+          validationSchema={PhoneNumberSchema}
           onSubmit={handleSubmit}
         >
-          {({ values, errors, touched, handleChange, setFieldValue }) => (
+          {({ values, errors, touched, setFieldValue }) => (
             <Form>
               {/* 2 Column Grid */}
               <div className="grid grid-cols-1">
@@ -64,23 +70,14 @@ const Step3 = () => {
                   <Label>Mobile Number*</Label>
                   <div className="flex items-start gap-3">
                     <div className="flex-1">
-                      <Input2
-                        name="phoneNumber"
-                        placeholder="+1 (555) 000-0000"
-                        value={values?.phoneNumber}
-                        onChange={(e) => {
-                          let val = e.target.value;
-
-                          // Allow "+" only at the start, remove everywhere else
-                          val = val.replace(/[^\d+]/g, "");
-                          if (val.indexOf("+") > 0)
-                            val = val.replace(/\+/g, "");
-
-                          handleChange({
-                            target: { name: "phoneNumber", value: val },
-                          });
-                        }}
-                        className="bg-[#F3F3F5] min-h-[55px]"
+                      <PhoneInput
+                        international
+                        defaultCountry="SA"
+                        value={values.phoneNumber}
+                        onChange={(value) =>
+                          setFieldValue("phoneNumber", value)
+                        }
+                        className="bg-[#F3F3F5] min-h-[55px] rounded-[12.78px] border border-[#00000000] py-4 px-5 font-satoshi-400 gap-2.5 [&_input]:outline-none [&_.PhoneInputCountrySelectArrow]:opacity-100! [&_.PhoneInputCountrySelectArrow]:text-[#494949]!"
                       />
                       <Typography
                         title="We use your phone only for security, booking alerts, and important updates."

@@ -95,7 +95,7 @@ const Step5 = () => {
           onSubmit={handleSubmit}
           enableReinitialize={true}
         >
-          {({ values, errors, touched, handleChange, setFieldValue }) => (
+          {({ values, errors, touched, setFieldValue }) => (
             <Form className="space-y-6">
               {/* Age Group */}
               <CommonSelect
@@ -117,11 +117,11 @@ const Step5 = () => {
                 touched={touched?.wellnessRole}
               />
               <div className="py-4">
-                <div className="bg-[#FFE8E8] border border-[#B95E82] px-15 py-7.5 flex items-start gap-3 rounded-[10px]">
+                <div className="bg-[#FFE8E8] border border-[#B95E82] px-6 lg:px-15 py-5 lg:py-7.5 flex items-start gap-3 rounded-[10px]">
                   <Typography
                     title="We use age to suggest safe, relevant programs and personalize your experience."
                     type="lgBlack"
-                    cssClass="text-[22px]! leading-none!"
+                    cssClass="text-sm! leading-normal md:text-base! lg:text-[22px]! md:leading-none!"
                   />
                 </div>
               </div>

@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
-import React, { useState } from "react";
 import { useSignup } from "./SignupContext";
 import { motion, Variants } from "framer-motion";
 

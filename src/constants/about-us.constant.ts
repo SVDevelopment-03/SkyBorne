@@ -1,26 +1,38 @@
 export const coachDetail = [
   {
     id: "1",
-    image: "/images/service1.jpg",
-    title: "Priya Mehra",
-    role: "Lead Yoga",
-    description:
-      "Empathy shapes my classes. I help you reconnect and find strength through breath.",
+    image: "/images/yoga.svg",
+    title: "Yoga Specialist",
+    badges: ["Beginner Yoga", "Live Session", "Relaxation"],
+    description: [
+      "Certified International Yoga Trainer",
+      "5+ Years Experience",
+      "300+ Classes Conducted",
+      "Focus on Flexibility, Posture & Breathwork",
+    ],
   },
   {
     id: "2",
-    image: "/images/service-2.jpg",
-    title: "Rahul Singh",
-    role: "Fitness",
-    description:
-      "Progress is joy let’s move together, celebrate small wins, and make fitness fun and sustainable",
+    image: "/images/exercise.svg",
+    title: "Fitness & Strength Coach",
+    badges: ["Strength Level 1", "HIIT", "Mobility"],
+    description: [
+      "Strength & Conditioning Certified",
+      "4+ Years Experience",
+      "Specializes in Weight Loss & Toning",
+      "Functional Training & HIIT Expert",
+    ],
   },
   {
     id: "3",
-    image: "/images/service1.jpg",
-    title: "Aisha Khan",
-    role: "Nutrition",
-    description:
-      "We build healthy habits one honest check-in at a time, always keeping it practical and tailored to your life",
+    image: "/images/food.svg",
+    title: "Diet & Nutrition Coach",
+    badges: ["Nutrition Plan", "Healthy Eating", "Weight Management"],
+    description: [
+      "Certified Nutritionist",
+      "Personalized Meal Planning",
+      "Focus on Weight Management",
+      "Science-Based Nutrition Guidance",
+    ],
   },
 ];

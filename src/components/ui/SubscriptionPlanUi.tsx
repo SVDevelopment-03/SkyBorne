@@ -11,6 +11,7 @@ interface SubscriptionProp {
   features: string[];
   isMain?: boolean;
   onClick?: () => void;
+  handleClicke?: () => void;
 }
 
 const SubscriptionPanUi = ({
@@ -130,7 +131,7 @@ export const SignupSubscriptionPlan = ({
             variant={"theme"}
             className="px-8! py-2.5! text-sm! md:text-sm! leading-5! font-montserrat mt-3.5"
           >
-            {isMain ? 'Selected' : 'Select Plan'}
+            {isMain ? "Selected" : "Select Plan"}
           </Button>
         </ul>
       </div>

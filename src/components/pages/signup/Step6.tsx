@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import React, { useState } from "react";
@@ -6,22 +7,74 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import SuccessAlert from "@/utils/swal";
 import MotionDiv from "@/components/ui/MotionDiv";
+import { useRegisterMutation } from "@/store/api/authApi";
+import toast from "react-hot-toast";
+import { SignupFormValidation } from "./SignupTypes";
+import { setCredentials } from "@/store/slices/authSlice";
+import { useDispatch } from "react-redux";
+import { Loader2 } from "lucide-react";
+import { storage } from "@/lib/storage";
 
 const Step6 = () => {
+  const dispatch = useDispatch();
   const [showSuccess, setShowSuccess] = useState(false);
   const { step, setStep, totalSteps, formData, updateStepData } = useSignup();
   const [selected, setSelected] = useState(formData?.step6?.goal || "");
+  const [register, { isLoading }] = useRegisterMutation();
+  const tempUserId = formData?.step4?.tempUserId;
+  const { step1, step2, step3, step4, step5, step6 } = formData;
 
   const handleSelect = (val: string) => {
     setSelected(val);
     updateStepData("step6", { goal: val });
   };
 
-  const nextStep = () => {
-    setShowSuccess(true);
-    setTimeout(() => {
-      if (step < totalSteps) setStep(step + 1);
-    }, 0);
+  const nextStep = async () => {
+    try {
+      if (!tempUserId) {
+        toast.error("Invalid tempUserId. Please restart signup.");
+        return;
+      }
+
+      const payload: SignupFormValidation = {
+        ...step1,
+        ...step2,
+        ...step3,
+        ...step4,
+        ...step5,
+        ...step6,
+      };
+
+      const res = await register(payload).unwrap();
+      console.log("resssssssss", res);
+
+      const { data } = res;
+      const { user, accessToken, refreshToken } = data;
+      if (res?.success) {
+        storage.set(
+          process.env.NEXT_PUBLIC_USER as string,
+          JSON.stringify(user)
+        );
+        localStorage.setItem(
+          process.env.NEXT_PUBLIC_ACCESS_Token as string,
+          accessToken
+        );
+        localStorage.setItem(
+          process.env.NEXT_PUBLIC_REFRESH_Token as string,
+          refreshToken
+        );
+
+        dispatch(
+          setCredentials({ user: data?.user, accessToken, refreshToken })
+        );
+        toast.success(res?.message || "Signup completed!");
+        setTimeout(() => {
+          if (step < totalSteps) setStep(step + 1);
+        }, 500);
+      }
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to complete signup");
+    }
   };
 
   const prevStep = () => {
@@ -94,11 +147,11 @@ const Step6 = () => {
             </MotionDiv>
           ))}
         </RadioGroup>
-        <div className="bg-[#FFE8E8] border border-[#B95E82] px-15 py-7.5 flex items-start gap-3 rounded-[10px]">
+        <div className="bg-[#FFE8E8] border border-[#B95E82] px-6 lg:px-15 py-5 lg:py-7.5 flex items-start gap-3 rounded-[10px]">
           <Typography
             title="Setting a goal helps you stay motivated. Change it anytime."
             type="lgBlack"
-            cssClass="text-[22px]! leading-none!"
+            cssClass="text-sm! leading-normal md:text-base! lg:text-[22px]! md:leading-none!"
           />
         </div>
         {/* ---------------------- */}
@@ -107,17 +160,26 @@ const Step6 = () => {
           <Button
             variant={"outlineBlack"}
             onClick={prevStep}
+            disabled={isLoading}
             className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
           >
             Back
           </Button>
           <Button
             variant={"theme"}
-            disabled={!selected}
+            disabled={!selected || isLoading}
             onClick={nextStep}
             className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
           >
-            Next
+            <span className="flex flex-row gap-2 items-center">
+              {isLoading && (
+                <Loader2
+                  size={24}
+                  className="animate-spin text-white! h-6! w-6!"
+                />
+              )}
+              Next
+            </span>
           </Button>
         </div>
       </div>
