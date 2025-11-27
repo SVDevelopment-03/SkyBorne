@@ -21,6 +21,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Input2 } from "@/components/ui/input";
 import { useGetUpcomingMeetingsQuery } from "@/store/api/meetingApi";
+import { format } from "date-fns";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toTitleCase } from "@/utils/Titlecase";
@@ -105,6 +106,8 @@ const options: ApexOptions = {
 export default function Page() {
   const { data: upcomingData, isLoading: loadingMeetings } =
     useGetUpcomingMeetingsQuery(undefined);
+    const today = format(new Date(), "dd/MM/yyyy");
+
 
   const {user} = useSelector((state:RootState)=>state.auth);
   const avatarName = user?.firstName[0] + (user?.lastName ? user?.lastName[0] :'' );
@@ -279,8 +282,8 @@ export default function Page() {
           <div className="flex flex-col gap-7.5 p-7.5 pt-0">
             <div className="relative">
               <DashboardBanner
-                badgeTitle="Good Morning, Sarah"
-                badgeDate="17/08/2025"
+                badgeTitle={`Good Morning, ${user?.firstName}`}
+                badgeDate={today}
                 heading="Ready for your next session?"
                 description="You're doing great! Keep the momentum in your wellness journey."
                 buttonText="Unlock My Plan"
