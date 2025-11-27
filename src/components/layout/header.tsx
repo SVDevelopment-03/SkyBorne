@@ -80,6 +80,14 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
         </Link>
       </div>
       <div className="relative flex items-center gap-3.5">
+         <Button
+          className={`${
+            !isHero && "bg-[#FFFFFF] text-[#000000]"
+          } max-md:py-1 max-md:px-4 `}
+          onClick={() => router.push("/login")}
+        >
+          Login
+        </Button>
         <Button
           className={`${
             !isHero && "bg-[#FFFFFF] text-[#000000]"

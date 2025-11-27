@@ -77,7 +77,7 @@ const Step5 = () => {
   };
 
   const prevStep = () => {
-    if (step > 0) setStep(step - 1);
+    if (step > 0) setStep(step - 2);
   };
   return (
     <div className="flex flex-col gap-8 md:gap-14 h-full">

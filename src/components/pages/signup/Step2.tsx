@@ -13,6 +13,8 @@ import { useSignup } from "./SignupContext";
 import { useGoogleLogin } from "@react-oauth/google";
 
 import toast from "react-hot-toast";
+import { round } from "lodash";
+import { useRouter } from "next/navigation";
 
 export interface SignupFormValues {
   firstName: string;
@@ -33,6 +35,7 @@ const SignupSchema = Yup.object().shape({
 });
 
 const Step2 = () => {
+  const router = useRouter();
   const [showPass, setShowPass] = useState(false);
   const { step, setStep, formData, updateStepData } = useSignup();
 
@@ -253,7 +256,8 @@ const Step2 = () => {
               <div className="flex flex-col items-center pb-4">
                 <p className="font-satoshi-400 text-lg font-normal leading-5">
                   Already have an account?
-                  <span className="font-satoshi-700 font-bold text-[#B95E82] pl-2">
+                  <span className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer"
+                  onClick={()=>router.push("/login")}>
                     Login
                   </span>
                 </p>
