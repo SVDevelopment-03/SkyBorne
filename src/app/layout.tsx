@@ -6,6 +6,7 @@ import { ReduxProvider } from "./provider";
 import { Toaster } from "react-hot-toast";
 import TopLoaderClient from "./TopLoader";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import AutoLeaveTracker from "@/components/dashboard/user-dashboard/AutoLeaveTracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default function RootLayout({
           <TopLoaderClient />
           <ReduxProvider>
             <RouteWrapper>
+            <AutoLeaveTracker/>
               {children}
               <Toaster position="top-right" />
             </RouteWrapper>

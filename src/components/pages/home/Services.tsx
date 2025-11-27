@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import MotionDiv, { MotionDivVertical } from "@/components/ui/MotionDiv";
 import { services } from "@/constants/home.constant";
+import { useGetServicesQuery } from "@/store/api/publicApi";
+import { ServiceType } from "@/types/home.type";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
@@ -56,6 +58,11 @@ const Service = ({
 };
 
 const Services = () => {
+  const { data, isLoading } = useGetServicesQuery(undefined);
+  const services: ServiceType[] = data?.data || [];
+
+  console.log("aaa", data, isLoading);
+
   const [hovered, setHovered] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -93,22 +100,32 @@ const Services = () => {
       >
         <MotionDivVertical>
           <div className="flex items-center md:justify-center gap-3.5 md:gap-5">
-            {services?.map((service, index) => (
-              <div
-                className="flex relative rounded-lg md:rounded-[10px] h-[312px] md:h-[451px] w-[280px] md:w-[406px] max-md:min-w-[280px] shrink-0 md:overflow-hidden transition-all ease-in-out duration-600"
-                style={{ flex: hovered == index ? "1.6" : "1" }}
-                key={service?.id}
-                onMouseEnter={() => setHovered(index)}
-                onMouseLeave={() => setHovered(null)}
-              >
-                <Service
-                  src={service?.src}
-                  title={service?.title}
-                  description={service?.description}
-                  index={index}
-                />
-              </div>
-            ))}
+            {isLoading &&
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="animate-pulse flex relative rounded-lg md:rounded-[10px] h-[312px] md:h-[451px] w-[280px] md:w-[406px] max-md:min-w-[280px] shrink-0 bg-gray-300/20"
+                >
+                  <div className="absolute inset-0 bg-gray-200/20 rounded-lg" />
+                </div>
+              ))}
+            {!isLoading &&
+              services?.map((service, index) => (
+                <div
+                  className="flex relative rounded-lg md:rounded-[10px] h-[312px] md:h-[451px] w-[280px] md:w-[406px] max-md:min-w-[280px] shrink-0 md:overflow-hidden transition-all ease-in-out duration-600"
+                  style={{ flex: hovered == index ? "1.6" : "1" }}
+                  key={service?.uuid}
+                  onMouseEnter={() => setHovered(index)}
+                  onMouseLeave={() => setHovered(null)}
+                >
+                  <Service
+                    src={service?.image}
+                    title={service?.title}
+                    description={service?.description}
+                    index={index}
+                  />
+                </div>
+              ))}
           </div>
         </MotionDivVertical>
       </div>

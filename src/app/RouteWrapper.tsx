@@ -10,7 +10,7 @@ export default function RouteWrapper({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideFooter = ["/signup"].includes(pathname);
+  const hideFooter = ["/signup","/login","/dashboard"].includes(pathname);
 
   console.log("path", pathname);
 

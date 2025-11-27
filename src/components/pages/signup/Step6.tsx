@@ -31,10 +31,10 @@ const Step6 = () => {
 
   const nextStep = async () => {
     try {
-      if (!tempUserId) {
-        toast.error("Invalid tempUserId. Please restart signup.");
-        return;
-      }
+      // if (!tempUserId) {
+      //   toast.error("Invalid tempUserId. Please restart signup.");
+      //   return;
+      // }
 
       const payload: SignupFormValidation = {
         ...step1,
@@ -46,21 +46,20 @@ const Step6 = () => {
       };
 
       const res = await register(payload).unwrap();
-      console.log("resssssssss", res);
 
       const { data } = res;
       const { user, accessToken, refreshToken } = data;
       if (res?.success) {
         storage.set(
           process.env.NEXT_PUBLIC_USER as string,
-          JSON.stringify(user)
+          user
         );
         localStorage.setItem(
-          process.env.NEXT_PUBLIC_ACCESS_Token as string,
+          process.env.NEXT_PUBLIC_ACCESS_TOKEN as string,
           accessToken
         );
         localStorage.setItem(
-          process.env.NEXT_PUBLIC_REFRESH_Token as string,
+          process.env.NEXT_PUBLIC_REFRESH_TOKEN as string,
           refreshToken
         );
 

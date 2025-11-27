@@ -14,10 +14,10 @@ const initialState: AuthState = {
   user: isBrowser ? storage.get(process.env.NEXT_PUBLIC_USER as string) : null,
 
   accessToken: isBrowser
-    ? localStorage.getItem(process.env.NEXT_PUBLIC_ACCESS_Token as string)
+    ? localStorage.getItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string)
     : null,
   refreshToken: isBrowser
-    ? localStorage.getItem(process.env.NEXT_PUBLIC_REFRESH_Token as string)
+    ? localStorage.getItem(process.env.NEXT_PUBLIC_REFRESH_TOKEN as string)
     : null,
 };
 

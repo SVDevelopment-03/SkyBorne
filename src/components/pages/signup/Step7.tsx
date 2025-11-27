@@ -8,13 +8,17 @@ import { useCreatePaymentMutation } from "@/store/api/authApi";
 import toast from "react-hot-toast";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import { useGetPlansQuery } from "@/store/api/publicApi";
+import { IPlan } from "@/types/home.type";
 
 const Step7 = () => {
   const [showSuccess, setShowSuccess] = useState(false);
-  const [selected, setSelected] = useState<number>(2);
+  const [selected, setSelected] = useState<string>("2");
   const [createPayment, { isLoading }] = useCreatePaymentMutation();
   const user = useSelector((state: RootState) => state.auth.user);
   const { step, setStep, totalSteps, formData } = useSignup();
+      const { data, isLoading:planLoading, error } = useGetPlansQuery(undefined);
+      const plans: IPlan[] = data?.data || [];
   const name = formData?.step2?.firstName;
 
   // const handlePayment = async () => {
@@ -105,17 +109,17 @@ const Step7 = () => {
       </div>
       <div className="flex flex-col gap-8 md:gap-14 h-full overflow-auto [scrollbar-width:none]">
         <div className="w-full max-lg:overflow-x-auto max-lg:[scrollbar-width:none]">
-          <div className="grid grid-cols-3 items-center justify-center gap-4 lg:gap-5 w-full min-w-[800px]">
-            {plansDetail?.map((plan) => {
+          <div className="grid grid-cols-3 items-stretch justify-center gap-4 h-full lg:gap-5 w-full min-w-[800px]">
+            {plans?.map((plan) => {
               return (
                 <SignupSubscriptionPlan
-                  key={plan?.id}
-                  onClick={() => setSelected(plan?.id)}
+                  key={plan?._id}
+                  onClick={() => setSelected(plan?._id)}
                   name={plan?.name}
                   description={plan?.description}
                   features={plan?.features}
-                  price={plan?.price}
-                  isMain={plan?.id == selected}
+                  price={plan?.price as string}
+                  isMain={plan?._id == selected}
                 />
               );
             })}

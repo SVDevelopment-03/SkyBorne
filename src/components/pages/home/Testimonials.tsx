@@ -1,7 +1,8 @@
+"use client";
 import Heading from "@/components/ui/heading";
 import RatingReview from "@/components/ui/rating-review";
-import { UserData } from "@/constants/home.constant";
-import { TestimonialProps } from "@/types/home.type";
+import { useGetTestimonialsQuery } from "@/store/api/publicApi";
+import { ITestimonial, TestimonialProps } from "@/types/home.type";
 import Image from "next/image";
 import React from "react";
 
@@ -11,10 +12,11 @@ const Testimonial = ({ data }: TestimonialProps) => {
       <RatingReview rating={4} />
       <div className="pt-4 md:pt-5">
         <h2 className="font-satoshi-500 text-[17px] md:text-[22px] leading-[1.2]">
-          {data?.heading}
+          {data?.title}
         </h2>
         <p className="text-xs md:text-base font-montserrat font-normal pt-2.5 md:pt-3 max-w-[362px]">
-          {data?.description}
+          {data?.description?.slice(0, 100)}
+          {data?.description?.length > 0 && "..."}
         </p>
         <div className="flex pt-5 md:pt-[30px] items-center gap-4">
           <Image
@@ -39,31 +41,47 @@ const Testimonial = ({ data }: TestimonialProps) => {
 };
 
 const Testimonials = () => {
-  return (
-    <div className="bg-[#FFE8E8] flex flex-col gap-12 md:gap-15 items-center justify-between rounded-2xl md:rounded-[30px] max-md:pb-7.5 max-lg:px-7.5 pt-[70px] text-[#494949]">
-      <Heading
-        title={"What Our Members Say"}
-        description={
-          "Don’t just take our word for it hear from the real people who found balance, energy, and growth with Skyborne"
-        }
-      />
-      <div className="relative max-h-[664px] md:max-h-[610px] overflow-hidden [scrollbar-width:none]">
-        <div className="absolute bg-[linear-gradient(180deg,#FFE8E8_0%,rgba(255,232,232,0)100%)] h-[116px] w-full z-10"></div>
+  const { data, isLoading, error } = useGetTestimonialsQuery(undefined);
+  const UserData: ITestimonial[] = data?.data ?? [];
+  console.log("aa", UserData);
 
-        <div className="animate-scroll-mobile md:animate-scroll-up grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
-          {UserData?.map((user) => {
-            return <Testimonial key={user?.id} data={user} />;
-          })}
-          {/* duplicate for infinite scroll */}
-          {UserData?.map((user) => (
-            <Testimonial key={`${user?.id}-duplicate`} data={user} />
-          ))}
+  console.log("testimonials", data);
+
+  return (
+    <>
+      {!isLoading && UserData?.length>0 && (
+        <div className="bg-[#FFE8E8] flex flex-col gap-12 md:gap-15 items-center justify-between rounded-2xl md:rounded-[30px] max-md:pb-7.5 max-lg:px-7.5 pt-[70px] text-[#494949]">
+          <Heading
+            title={"What Our Members Say"}
+            description={
+              "Don’t just take our word for it hear from the real people who found balance, energy, and growth with Skyborne"
+            }
+          />
+          <div className="relative max-h-[664px] md:max-h-[610px] overflow-hidden [scrollbar-width:none]">
+            <div className="absolute bg-[linear-gradient(180deg,#FFE8E8_0%,rgba(255,232,232,0)100%)] h-[116px] w-full z-10"></div>
+
+            <div className="animate-scroll-mobile md:animate-scroll-up grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+              {UserData?.map((user) => {
+                return <Testimonial key={user?._id} data={user} />;
+              })}
+              {/* duplicate for infinite scroll */}
+              {UserData?.map((user) => (
+                <Testimonial key={`${user?._id}-duplicate`} data={user} />
+              ))}
+              {UserData?.map((user) => (
+                <Testimonial key={`${user?._id}-duplicate`} data={user} />
+              ))}
+              {UserData?.map((user) => (
+                <Testimonial key={`${user?._id}-duplicate`} data={user} />
+              ))}
+            </div>
+            <div className="sticky bottom-0">
+              <div className="absolute bottom-0 bg-[linear-gradient(180deg,#FFE8E8_0%,rgba(255,232,232,0)100%)] md:bg-[linear-gradient(180deg,#FFE8E8_0%,rgba(255,232,232,0)100%)] h-[77px] md:h-[116px] w-full z-10 rotate-180"></div>
+            </div>
+          </div>
         </div>
-        <div className="sticky bottom-0">
-          <div className="absolute bottom-0 bg-[linear-gradient(180deg,#FFE8E8_0%,rgba(255,232,232,0)100%)] md:bg-[linear-gradient(180deg,#FFE8E8_0%,rgba(255,232,232,0)100%)] h-[77px] md:h-[116px] w-full z-10 rotate-180"></div>
-        </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 };
 
