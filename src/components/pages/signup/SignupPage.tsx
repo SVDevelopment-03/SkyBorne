@@ -11,12 +11,13 @@ import Step4 from "./Step4";
 import Step5 from "./Step5";
 import Step6 from "./Step6";
 import Step7 from "./Step7";
+import Step7Packages from "./Step7Package";
 
 export default function SignupPage() {
   const { step, totalSteps } = useSignup();
 
   return (
-    <div className="mx-auto max-xl:px-6 py-6 max-w-[1080px] w-full h-dvh">
+    <div className="mx-auto max-xl:px-6 py-6 max-w-[1080px] w-full min-h-dvh">
       <div className="flex flex-col gap-8 h-full">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-3">
@@ -33,15 +34,15 @@ export default function SignupPage() {
         </div>
 
         {/* Current Step Content */}
-        <div className="bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)]">
-          <div className="bg-white rounded-[30px] px-5 md:px-13 py-6 md:py-12 h-full">
+        <div className={`${step != 7 ? 'bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)]':''}`}>
+          <div className={`${ step != 7 ? 'bg-white rounded-[30px] px-5 md:px-13 py-6 md:py-12 h-full' : ''}`}>
             {step === 1 && <Step1 />}
             {step === 2 && <Step2 />}
             {step === 3 && <Step3 />}
             {step === 4 && <Step4 />}
             {step === 5 && <Step5 />}
             {step === 6 && <Step6 />}
-            {step === 7 && <Step7 />}
+            {step === 7 && <Step7Packages />}
           </div>
         </div>
       </div>

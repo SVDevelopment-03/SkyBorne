@@ -41,8 +41,8 @@ const ConsultationForm = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
-                <SelectItem value="apple">Yoga</SelectItem>
-                <SelectItem value="banana">Dance</SelectItem>
+                <SelectItem value="yoga">Yoga</SelectItem>
+                <SelectItem value="dance">Dance</SelectItem>
               </SelectGroup>
             </SelectContent>
           </Select>

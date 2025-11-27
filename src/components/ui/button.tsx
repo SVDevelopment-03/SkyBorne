@@ -28,6 +28,8 @@ const buttonVariants = cva(
           "bg-[#B95E82] rounded-[265px] font-normal text-white hover:bg-[#B95E82]/90",
         themeRect:
           "rounded-[12px]! font-satoshi-700 font-bold text-lg text-white min-h-[55px]  bg-[#B95E82] hover:bg-[#B95E82]/90",
+                  themeRegular:
+          "rounded-[12px]! font-montserrat font-semibold px-[42px]! leading-[20px]! font-bold text-base text-[#FFF7DD] py-1.5!  bg-[#B95E82] hover:bg-[#B95E82]/90",
 
         themeOutline:
           "rounded-[265px] border border-[#B95E82] font-normal text-black",
@@ -37,7 +39,9 @@ const buttonVariants = cva(
         outlineBlack:
           "border border-[#494949] text-[#494949] rounded-[265px] font-medium hover:bg-[#EAEAEA] hover:text-[#2E2E2E] transition-all duration-200",
         outlineBlackRect:
-          "border rounded-[10px]! border-[#0000001A] text-[#494949] font-medium hover:bg-[#EAEAEA] hover:text-[#2E2E2E] transition-all duration-200",
+          "border rounded-[10px]! border-[#0000001A] text-[#494949] font-satoshi-500 font-medium hover:bg-[#EAEAEA] hover:text-[#2E2E2E] transition-all duration-200",
+                  outlineGradientRect:
+          "rounded-[6px] text-[14px]! leading-[16.5px]! px-3! py-1.5! text-white font-satoshi-700 font-bold bg-[linear-gradient(270deg,_#FBEFD8_-21.76%,_#B95E82_100%)] hover:!bg-[#C77295] hover:text-white transition-all duration-200",
         yellow:
           "border border-[#FBEFD8] bg-[#FBEFD8] text-[#494949] shadow-xs rounded-[265px] font-medium hover:text-white hover:border-[#B95E82] hover:bg-[#B95E82] dark:bg-input/30 dark:border-input dark:hover:bg-input/50",
       },

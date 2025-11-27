@@ -1,8 +1,10 @@
+"use client"
 import Image from "next/image";
 import { Badge } from "./badge";
-import Heading from "./heading";
+import Heading, { Typography } from "./heading";
 import { Button } from "./button";
-import { MouseEventHandler } from "react";
+import { MouseEventHandler, useState } from "react";
+import { RadioGroup, RadioGroupItem } from "./radio-group";
 
 interface SubscriptionProp {
   name: string;
@@ -82,11 +84,33 @@ export const SignupSubscriptionPlan = ({
   onClick,
   isMain = false,
 }: SubscriptionProp) => {
+  const [selected, setSelected] = useState("");
+
+  const handleSelect = (val: string) => {
+
+    setSelected(val);
+  };
+
+  const packageType = [
+    {
+      id: "1",
+      title: "2 Yoga",
+    },
+    {
+      id: "2",
+      title: "2 Zumba",
+    },
+    {
+      id: "3",
+      title: "Mixed(1 Yoga + 1 Zumba)",
+    },
+  ];
+  const isGold = name?.toLocaleLowerCase().startsWith("gold");
   return (
     <div
       className={`rounded-[18px] ${
         isMain ? "bg-[#B95E82]" : "bg-[#FFCFBD]/20"
-      } px-3 flex flex-col items-start gap-6 pt-7.5 pb-3 md:pb-[15px]`}
+      } px-3 flex flex-col items-stretch gap-6 pt-7.5 pb-3 md:pb-[15px]`}
       onClick={onClick}
     >
       <Badge
@@ -127,9 +151,49 @@ export const SignupSubscriptionPlan = ({
               {feature}
             </li>
           ))}
+
+          {isGold && (
+            <div className="flex flex-col gap-8 h-full overflow-auto [scrollbar-width:none] bg-[#fcf6ef]">
+              <RadioGroup
+                value={selected ?? ""}
+                onValueChange={handleSelect}
+                className="grid grid-cols-1 gap-1"
+              >
+                {packageType.map((m) => (
+                  <div key={m.id}>
+                    <label
+                      htmlFor={m.id}
+                        onClick={(e) => e.stopPropagation()}
+                      className={`flex items-center gap-1 border-[2.5px] rounded-xl p-3 cursor-pointer transition 
+                ${
+                  selected === m.id
+                    ? "border-[#B95E82] bg-[#FFE8E8]"
+                    : "border-[#E5E7EB] bg-white"
+                }
+              `}
+                    >
+                      <RadioGroupItem
+                        id={m.id}
+                        value={m.id}
+                        className={`size-5 ${
+                          selected === m.id && "border-[#B95E82]"
+                        } text-[#B95E82]`}
+                      />
+
+                      <Typography
+                        title={m.title}
+                        cssClass="text-[14px]! xl:!leading-none text-[#0A0A0A]!"
+                      />
+                    </label>
+                  </div>
+                ))}
+              </RadioGroup>
+            </div>
+          )}
+
           <Button
             variant={"theme"}
-            className="px-8! py-2.5! text-sm! md:text-sm! leading-5! font-montserrat mt-3.5"
+            className="px-8! py-2.5! text-sm! md:text-sm! leading-5! font-montserrat mt-auto"
           >
             {isMain ? "Selected" : "Select Plan"}
           </Button>

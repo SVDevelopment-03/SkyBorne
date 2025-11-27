@@ -19,7 +19,10 @@ export type TypeProp =
   | "lgBlack"
   | "xl2"
   | "theme"
-  | "xxl";
+  | "xxl"
+  | "baseTheme"
+  | "regularTheme"
+  ;
 
 const Heading = ({
   title,
@@ -101,7 +104,7 @@ export const Typography = ({
   cssClass,
   onClick,
 }: {
-  title: string;
+  title: string | React.ReactNode;
   type?: TypeProp;
   cssClass?: string;
   onClick?: () => void;
@@ -110,11 +113,13 @@ export const Typography = ({
   const variant: Record<string, string> = {
     theme: "font-satoshi-500 font-medium text-lg text-[#494949]",
     regular: "font-satoshi-400 font-normal text-lg text-black/80",
+    regularTheme: "font-satoshi-400 font-normal text-lg text-[#494949]",
     lg: "font-satoshi-500 font-medium text-sm md:text-base lg:text-lg text-[#1D1D1D]",
     lgBlack: "font-satoshi-500 font-medium text-lg text-[#000000]",
     xl: "font-satoshi-500 font-medium text-[25px] md:text-[40px] lg:text-[50px] text-[#000000]",
     xl2: "font-satoshi-500 font-medium text-[50px] text-[#494949]",
     xxl: "font-satoshi-700 font-bold text-3xl md:text-[35px] text-[#494949]",
+    baseTheme: "font-satoshi-700 font-bold text-[12px] md:text-[16px] text-[#B95E82]",
   };
   return (
     <h2 className={`${variant[type]} ${cssClass}`} onClick={onClick}>

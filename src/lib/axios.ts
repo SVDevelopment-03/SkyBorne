@@ -4,7 +4,12 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 
-import { getAccessToken, removeTokens, setAccessToken } from "./token";
+import {
+  getAccessToken,
+  getRefreshToken,
+  removeTokens,
+  setAccessToken,
+} from "./token";
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -19,7 +24,6 @@ const API: AxiosInstance = axios.create({
 API.interceptors.request.use(
   (config: CustomAxiosRequestConfig) => {
     const token = getAccessToken();
-
     if (token) {
       config.headers.set("Authorization", `Bearer ${token}`);
     }
@@ -37,11 +41,12 @@ API.interceptors.response.use(
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
+      const refreshToken = getRefreshToken();
 
       try {
         const refresh = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
-          {},
+          `${process.env.NEXT_PUBLIC_API_URL}refresh-token`,
+          { refreshToken: refreshToken },
           { withCredentials: true }
         );
 
@@ -53,8 +58,8 @@ API.interceptors.response.use(
 
         return API(originalRequest);
       } catch (refreshError) {
-        removeTokens();
-        return Promise.reject(refreshError);
+        // removeTokens();
+        // return Promise.reject(refreshError);
       }
     }
 

@@ -15,6 +15,7 @@ const ServiceList = () => {
       image: "/images/services-2.jpg",
       buttonText: "know more",
       heading: "Fitness Classes",
+      comingSoon: true,
     },
     {
       id: 3,
@@ -28,6 +29,7 @@ const ServiceList = () => {
       image: "/images/services-4.jpg",
       buttonText: "know more",
       heading: "Zumba Dance",
+      comingSoon: true
     },
   ];
   return (
