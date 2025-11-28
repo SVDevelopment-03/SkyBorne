@@ -40,14 +40,23 @@ export const authApi = createApi({
       query: (body) => ({
         url: "/verify-otp",
         method: "POST",
-        data: body, // { email, otp }
+        data: body,
       }),
     }),
 
-    getProfile: builder.query({
-      query: () => ({
-        url: "/auth/me",
-        method: "GET",
+    passwordResetRequest: builder.mutation({
+      query: (body) => ({
+        url: "/request-password-reset",
+        method: "POST",
+        data: body,
+      }),
+    }),
+
+    resetPassword: builder.mutation({
+      query: (body) => ({
+        url: "/reset-password",
+        method: "POST",
+        data: body,
       }),
     }),
   }),
@@ -55,9 +64,10 @@ export const authApi = createApi({
 
 export const {
   useRegisterMutation,
+  usePasswordResetRequestMutation,
+  useResetPasswordMutation,
   useLoginMutation,
   useCreatePaymentMutation,
   useSendOtpMutation,
   useVerifyOtpMutation,
-  useGetProfileQuery,
 } = authApi;

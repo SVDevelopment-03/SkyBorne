@@ -40,13 +40,13 @@ const Hero = () => {
         <div className="flex max-xl:flex-col items-center lg:items-center xl:items-end justify-between gap-5 min-h-[800px] max-xl:pt-[70px] max-lg:pb-3">
           <div className="flex flex-col gap-11 max-lg:items-center pb-10 md:pb-14">
             <div className="flex flex-col max-lg:items-center gap-7">
-              <h2 className="font-medium text-[30px] md:text-[45px] lg:text-[60px] leading-[110%] font-satoshi-500 max-lg:text-center max-md:max-w-[293px]">
+              <h2 className="font-medium text-[30px] md:text-[45px] 2xl:text-[60px] leading-[110%] font-satoshi-500 max-lg:text-center max-md:max-w-[293px]">
                 Live Balanced. Feel Energized. Be Well
               </h2>
               <Button
                 variant={"outline"}
                 className="max-w-[152px]"
-                onClick={() => router.push("/packages")}
+                onClick={() => router.push("/signup")}
               >
                 Get Started
               </Button>

@@ -29,7 +29,7 @@ const Explore = () => {
 
   return (
     <div
-      className="flex items-center justify-between max-md:min-h-[907px] lg:h-[791px] bg-[#FFF7DD] bg-no-repeat bg-cover bg-bottom w-full"
+      className="flex items-center justify-between max-lg:min-h-[907px] lg:h-[791px] bg-[#FFF7DD] bg-no-repeat bg-cover bg-bottom w-full"
       style={{ backgroundImage: "url('/images/explore-main.svg')" }}
     >
       <div className="grid md:grid-cols-2 max-md:gap-[183px] px-3.5 pt-11 pb-7.5 md:p-16 w-full max-w-full 2xl:max-w-[1440px] mx-auto font-satoshi-500 text-[#FFF7DD]">

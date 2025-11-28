@@ -25,7 +25,7 @@ const MeetingSchema = Yup.object().shape({
   start_time: Yup.string().required("Start time is required"),
   duration: Yup.number()
     .required("Duration is required")
-    .min(1, "Duration must be at least 1"),
+    .min(30, "Duration must be at least 30 minutes"),
 });
 
 interface Props {
@@ -56,7 +56,7 @@ export default function CreateMeetingModal({ open, onClose, adminId }: Props) {
   "
       >
         <DialogHeader>
-          <DialogTitle className="md:text-[24px]!">
+          <DialogTitle className="md:text-[24px]! font-bold font-satoshi-500">
             Create New Meeting
           </DialogTitle>
         </DialogHeader>
@@ -98,9 +98,9 @@ export default function CreateMeetingModal({ open, onClose, adminId }: Props) {
           }}
         >
           {({ errors, touched, isSubmitting, handleChange }) => (
-            <Form className="space-y-4 pt-4">
+            <Form className="space-y-6 pt-4">
               {/* Meeting Name */}
-              <div className="flex flex-col gap-4.5">
+              <div className="flex flex-col gap-2">
                 <Label>Meeting Name</Label>
                 <Input2
                   name="topic"
@@ -114,7 +114,7 @@ export default function CreateMeetingModal({ open, onClose, adminId }: Props) {
               </div>
 
               {/* Start Time */}
-              <div className="flex flex-col gap-4.5">
+              <div className="flex flex-col gap-2">
                 <Label>Start Time</Label>
                 <Input2
                   type="datetime-local"
@@ -130,7 +130,7 @@ export default function CreateMeetingModal({ open, onClose, adminId }: Props) {
               </div>
 
               {/* Duration */}
-              <div className="flex flex-col gap-4.5">
+              <div className="flex flex-col gap-2">
                 <Label>Duration (minutes)</Label>
                 <Input2
                   type="number"
@@ -145,7 +145,7 @@ export default function CreateMeetingModal({ open, onClose, adminId }: Props) {
               </div>
 
               {/* Buttons */}
-              <div className="mt-12">
+              <div className="mt-8">
                 <DialogFooter className="mt-4">
                   <Button type="button" variant="outline" onClick={onClose}>
                     Cancel

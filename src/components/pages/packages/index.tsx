@@ -1,3 +1,4 @@
+"use client";
 import BannerUi from "@/components/ui/banner-ui";
 import React from "react";
 import FAQ from "../home/FAQ";

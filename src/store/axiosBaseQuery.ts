@@ -19,10 +19,15 @@ export const axiosBaseQuery =
       return { data: result.data };
     } catch (error) {
       const err = error as AxiosError;
+
+      // These two are ALWAYS safe and never crash:
+      const status = err.response?.status;
+      const responseData = err.response?.data;
+
       return {
         error: {
-          status: err.response?.status,
-          data: err.response?.data || err.message,
+          status: status || 500,
+          data: responseData || err.message || "Something went wrong",
         },
       };
     }

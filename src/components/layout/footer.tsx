@@ -1,8 +1,23 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+"use client"
 import React from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { footerSections, socialLinks } from "@/constants/home.constant";
+import * as Yup from "yup";
+import { useNewsLetterMutation } from "@/store/api/publicApi";
+
+export const newsletterSchema = Yup.object().shape({
+  email: Yup.string()
+    .email("Invalid email format")
+    .required("Email is required"),
+});
+
 import Link from "next/link";
+import { useFormik } from "formik";
+import toast from "react-hot-toast";
+
 
 const ArrowRightIcon = () => (
   <svg
@@ -23,6 +38,29 @@ const ArrowRightIcon = () => (
 );
 
 export default function Footer() {
+   const [newsLetter] = useNewsLetterMutation();
+
+  // Formik Setup
+  const formik = useFormik({
+    initialValues: { email: "" },
+
+    validationSchema: Yup.object({
+      email: Yup.string()
+        .email("Invalid email address")
+        .required("Email is required"),
+    }),
+
+    onSubmit: async (values, { resetForm }) => {
+      try {
+        await newsLetter(values).unwrap();
+        toast.success("Subscribed successfully!");
+        resetForm();
+      } catch (error: any) {
+        toast.error(error?.data?.message || "Failed to subscribe");
+      }
+    },
+  });
+
   return (
     <footer className="bg-[#494949] text-[#FFF7DD] rounded-2xl md:rounded-[30px] pt-7.5 lg:pt-[71px] pb-2 lg:pb-9 px-2 md:px-5 lg:px-[61px] font-satoshi-500">
       <div className="max-w-full mx-auto">
@@ -56,16 +94,35 @@ export default function Footer() {
             <h3 className="font-semibold text-lg md:text-[28px] leading-normal uppercase md:text-right">
               SUBSCRIBE TO RECEIVE MORE UPDATES
             </h3>
-            <div className="relative flex items-center w-fit justify-start">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="bg-transparent border border-gray-400 rounded-full pl-5 pr-16 py-2 md:py-4 w-80 lg:w-96 text-base placeholder:text-[#7F7F7F] text-[#7F7F7F] focus:outline-none"
-              />
-              <button className="absolute right-2 bg-[#F5F1E7] text-[#494949] rounded-full max-md:size-7 px-2 md:px-3 py-1 md:py-2 text-xs md:text-sm font-semibold -rotate-30">
-                →
-              </button>
-            </div>
+ <form onSubmit={formik.handleSubmit}>
+              <div className="relative flex items-center w-fit justify-start">
+                <input
+                  type="email"
+                  name="email"
+                  placeholder="Enter your email"
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  value={formik.values.email}
+                  className="bg-transparent border border-gray-400 rounded-full pl-5 pr-16 py-2 md:py-4 w-80 lg:w-96 text-base placeholder:text-[#7F7F7F] text-[#7F7F7F] focus:outline-none"
+                />
+
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  className="absolute right-2 bg-[#F5F1E7] text-[#494949] rounded-full max-md:size-7 px-2 md:px-3 py-1 md:py-2 text-xs md:text-sm font-semibold -rotate-30"
+                >
+                  →
+                </button>
+              </div>
+
+              {/* Error Message */}
+              {formik.touched.email && formik.errors.email && (
+                <p className="text-red-400 text-xs mt-1 pl-6 md:text-sm">
+                  {formik.errors.email}
+                </p>
+              )}
+            </form>
+
           </div>
 
           {/* Social Links + Copyright */}

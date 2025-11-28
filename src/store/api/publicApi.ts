@@ -23,14 +23,34 @@ export const publicApi = createApi({
         method: "GET",
       }),
     }),
-     getFAQ: builder.query({
+    getFAQ: builder.query({
       query: () => ({
         url: "/faq",
         method: "GET",
       }),
     }),
-  
+    creatConsultation: builder.mutation({
+      query: (body) => ({
+        url: "/consultation",
+        method: "POST",
+        data: body,
+      }),
+    }),
+    newsLetter: builder.mutation({
+      query: (body) => ({
+        url: "/news-letter",
+        method: "POST",
+        data: body,
+      }),
+    }),
   }),
 });
 
-export const { useGetServicesQuery, useGetPlansQuery,useGetTestimonialsQuery,useGetFAQQuery } = publicApi;
+export const {
+  useGetServicesQuery,
+  useGetPlansQuery,
+  useGetTestimonialsQuery,
+  useNewsLetterMutation,
+  useCreatConsultationMutation,
+  useGetFAQQuery,
+} = publicApi;

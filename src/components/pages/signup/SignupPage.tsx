@@ -34,8 +34,20 @@ export default function SignupPage() {
         </div>
 
         {/* Current Step Content */}
-        <div className={`${step != 7 ? 'bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)]':''}`}>
-          <div className={`${ step != 7 ? 'bg-white rounded-[30px] px-5 md:px-13 py-6 md:py-12 h-full' : ''}`}>
+        <div
+          className={`${
+            step != 7
+              ? "bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)]"
+              : ""
+          }`}
+        >
+          <div
+            className={`${
+              step != 7
+                ? "bg-white rounded-[30px] px-5 md:px-13 py-6 md:py-8 h-full"
+                : ""
+            }`}
+          >
             {step === 1 && <Step1 />}
             {step === 2 && <Step2 />}
             {step === 3 && <Step3 />}

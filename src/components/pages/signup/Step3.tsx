@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import { Label } from "@/components/ui/label";
+import HomeIcon from "@/utils/homeIcon";
 
 export interface PhoneNumberFormValues {
   phoneNumber: string;
@@ -47,13 +48,19 @@ const Step3 = () => {
   };
   return (
     <div className="flex flex-col gap-8 md:gap-14 h-full">
-      <div className="flex flex-col gap-5">
-        <Typography
-          title="Keep Your Skyborne Account Secure"
-          type="xxl"
-          cssClass="leading-tight"
-        />
-        <Typography title="You can change preferences anytime." type="theme" />
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-5">
+          <Typography
+            title="Keep Your Skyborne Account Secure"
+            type="xxl"
+            cssClass="leading-tight"
+          />
+          <Typography
+            title="You can change preferences anytime."
+            type="theme"
+          />
+        </div>
+        <HomeIcon />
       </div>
       <div className="form h-full overflow-auto [scrollbar-width:none]">
         <Formik
