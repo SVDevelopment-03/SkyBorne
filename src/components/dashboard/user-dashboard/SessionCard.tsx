@@ -242,7 +242,8 @@ const SessionCard = ({
                 </div>
                 <div className="flex items-center gap-2 text-[#717182]">
                   <Users className="w-4 h-4" />
-                  {selectedClass?.participants}
+                  5 participants
+                  {/* {selectedClass?.participants} */}
                 </div>
               </div>
             </div>

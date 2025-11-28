@@ -235,7 +235,7 @@ export function ZoomSessionFlow({
               <div className="p-4 bg-green-50 rounded-lg border border-green-200">
                 <p className="text-sm text-green-800 text-center">
                   <CheckCircle className="w-4 h-4 inline mr-1" />
-                  Your subscription is active. You will join inside the app.
+                  Your subscription is active. You will join on the browser.
                 </p>
               </div>
             ) : (
@@ -331,7 +331,7 @@ export function ZoomSessionFlow({
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-900 text-center">
                 <Shield className="w-4 h-4 inline mr-1" />
-                The class will redirect you to zoom app.
+                The class will redirect you to zoom on browser.
               </p>
             </div>
 

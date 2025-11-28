@@ -12,9 +12,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import { RootState } from "@/store";
+import { useSelector } from "react-redux";
+import { toTitleCase } from "@/utils/Titlecase";
+import UserAvatar from "@/hooks/useAvatar";
+import { Typography } from "../ui/heading";
 
 const Header = ({ isHero }: { isHero?: boolean }) => {
   const router = useRouter();
+    const {user} = useSelector((state:RootState)=>state.auth);
+    const avatarName = user?.firstName[0] + (user?.lastName ? user?.lastName[0] :'' );
+      const fullName =toTitleCase( user?.firstName +' ' + (user?.lastName ? user?.lastName :'' ));
   const menuDetail = [
     {
       title: "Home",
@@ -80,6 +88,7 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
         </Link>
       </div>
       <div className="relative flex items-center gap-3.5">
+      {!user ?   <>
          <Button
           className={`${
             !isHero && "bg-[#FFFFFF] text-[#000000]"
@@ -96,6 +105,12 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
         >
           Signup
         </Button>
+        </>
+      :   <>
+              <div className="flex items-center cursor-pointer" onClick={()=>router.push("/dashboard")}>
+                <UserAvatar name={avatarName}/>
+              </div>
+            </>}
         <DropdownMenu>
           <DropdownMenuTrigger>
             <div className="image rounded-full">

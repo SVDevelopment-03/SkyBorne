@@ -15,6 +15,7 @@ export const storage = {
   get(key: string) {
     try {
       const encrypted = localStorage.getItem(key);
+
       if (!encrypted) return null;
 
       return decrypt(encrypted);

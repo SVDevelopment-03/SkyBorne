@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import { useSignup } from "./SignupContext";
 import { motion, Variants } from "framer-motion";
+import HomeIcon from "@/utils/homeIcon";
 
 const RightIcon = () => (
   <svg
@@ -89,16 +90,22 @@ const Step1 = () => {
     },
   ];
   return (
-    <div className="flex flex-col gap-8 md:gap-14 h-full">
-      <div className="flex flex-col gap-5">
-        <Typography
-          title="What inspired you to join Skyborne?"
-          type="xxl"
-          cssClass="leading-tight"
-        />
-        <Typography title="What inspired you to join Skyborne?" type="theme" />
+    <div className="flex flex-col gap-8 md:gap-10 h-full">
+      <div className="flex items-start justify-between">
+        <div className="flex flex-col gap-3">
+          <Typography
+            title="What inspired you to join Skyborne?"
+            type="xxl"
+            cssClass="leading-tight"
+          />
+          <Typography
+            title="What inspired you to join Skyborne?"
+            type="theme"
+          />
+        </div>
+        <HomeIcon />
       </div>
-      <div className="flex flex-col gap-8 md:gap-14 h-full overflow-auto [scrollbar-width:none]">
+      <div className="flex flex-col gap-8 h-full overflow-auto [scrollbar-width:none]">
         <motion.div
           variants={containerVariants}
           initial="hidden"
@@ -131,7 +138,7 @@ const Step1 = () => {
             </motion.div>
           ))}
         </motion.div>
-        <div className="flex flex-col items-center pt-3">
+        <div className="flex flex-col items-center pt-2">
           <p className="font-arial text-lg font-normal leading-5">
             Not sure?
             <span

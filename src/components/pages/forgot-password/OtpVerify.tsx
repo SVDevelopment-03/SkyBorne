@@ -3,23 +3,19 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
-import { Input2 } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import React, { useEffect, useRef, useState } from "react";
-import { useSignup } from "./SignupContext";
+import React, { useEffect, useState } from "react";
 import { ShieldIcon } from "@/icons/helpIcon";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
-import SuccessAlert from "@/utils/swal";
 import { useSendOtpMutation, useVerifyOtpMutation } from "@/store/api/authApi";
 import toast from "react-hot-toast";
 import { Loader2 } from "lucide-react";
-import HomeIcon from "@/utils/homeIcon";
+import { EmailVerifyProps } from ".";
 
 export interface OtpFormValues {
   otp: string;
@@ -31,29 +27,16 @@ const OtpSchema = Yup.object().shape({
     .required("OTP is required"),
 });
 
-const Step4 = () => {
+const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
   const initialValues: OtpFormValues = {
     otp: "",
   };
-  const [showSuccess, setShowSuccess] = useState(false);
-  const otpSentRef = useRef(false);
-
-  const { step, setStep, totalSteps, updateStepData, formData } = useSignup();
-  const userEmail = formData?.step2?.email;
 
   const [sendOtp] = useSendOtpMutation();
   const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
 
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
-
-  useEffect(() => {
-    if (!userEmail) return;
-    if (!otpSentRef?.current) {
-      otpSentRef.current = true;
-      sendOtp({ email: userEmail });
-    }
-  }, [userEmail, sendOtp]);
 
   useEffect(() => {
     if (!canResend && timer > 0) {
@@ -94,10 +77,6 @@ const Step4 = () => {
       if (res?.success) {
         console.log("OTP Verified:", res);
         toast.success(res?.message ?? "Otp verified successfully");
-        updateStepData("step4", {
-          otp: values.otp,
-          tempUserId: data?.tempUserId,
-        });
 
         setTimeout(() => nextStep(), 500);
       }
@@ -106,28 +85,15 @@ const Step4 = () => {
     }
   };
 
-  const nextStep = () => {
-    if (step < totalSteps) setStep(step + 1);
-  };
-
-  const prevStep = () => {
-    if (step > 0) setStep(step - 1);
-  };
   return (
     <div className="flex flex-col gap-8 md:gap-8 h-full">
-      <div className="flex items-start justify-between">
-        <div className="flex flex-col gap-5">
-          <Typography
-            title="Keep Your Skyborne Account Secure"
-            type="xxl"
-            cssClass="leading-tight"
-          />
-          <Typography
-            title="You can change preferences anytime."
-            type="theme"
-          />
-        </div>
-        <HomeIcon />
+      <div className="flex flex-col gap-5">
+        <Typography
+          title="Keep Your Skyborne Account Secure"
+          type="xxl"
+          cssClass="leading-tight"
+        />
+        <Typography title="You can change preferences anytime." type="theme" />
       </div>
       <div className="bg-[#FFE8E8] border border-[#B95E82] p-4 flex items-start gap-3 rounded-[10px]">
         <div className="p-2 bg-[#E1E1E1] w-8 h-8 rounded-full">
@@ -142,7 +108,7 @@ const Step4 = () => {
           <Typography
             title="Change email"
             type="lgBlack"
-            onClick={() => setStep(2)}
+            // onClick={() => setStep(2)}
             cssClass="text-base! text-[#B95E82] cursor-pointer"
           />
         </div>
@@ -153,7 +119,7 @@ const Step4 = () => {
           validationSchema={OtpSchema}
           onSubmit={handleSubmit}
         >
-          {({ values, errors, touched, handleChange, setFieldValue }) => (
+          {({ values, errors, touched, setFieldValue }) => (
             <Form>
               {/* 2 Column Grid */}
               <div className="grid grid-cols-1">
@@ -199,7 +165,7 @@ const Step4 = () => {
                 </div>
               </div>
 
-              <div className="flex justify-center items-center gap-4 md:gap-5.5 pt-[57px]">
+              <div className="flex justify-start items-center gap-4 md:gap-5.5 pt-[57px]">
                 <Button
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
@@ -228,14 +194,8 @@ const Step4 = () => {
           )}
         </Formik>
       </div>
-      {showSuccess && (
-        <SuccessAlert
-          message="You're verified and secure"
-          onClose={() => setShowSuccess(false)}
-        />
-      )}
     </div>
   );
 };
 
-export default Step4;
+export default OtpVerify;

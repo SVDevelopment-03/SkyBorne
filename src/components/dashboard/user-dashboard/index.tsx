@@ -111,9 +111,7 @@ export default function Page() {
 
   const {user} = useSelector((state:RootState)=>state.auth);
   const avatarName = user?.firstName[0] + (user?.lastName ? user?.lastName[0] :'' );
-    const fullName =toTitleCase( user?.firstName +' ' + (user?.lastName ? user?.lastName :'' ));
-
-    console.log(upcomingData);
+  const fullName =toTitleCase( user?.firstName +' ' + (user?.lastName ? user?.lastName :'' ));
 
   const formatDate = (iso: string) => {
     if (!iso) return "";

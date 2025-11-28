@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useGetPlansQuery } from "@/store/api/publicApi";
 import { IPlan } from "@/types/home.type";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 interface SubscriptionProp {
@@ -13,28 +14,29 @@ interface SubscriptionProp {
   isSelected?: boolean;
 }
 
-const Subscription = ({
+export const Subscription = ({
   name,
   image,
   features,
   price,
   isSelected,
 }: SubscriptionProp) => {
+  const router = useRouter();
   return (
     <div
-      className={`cursor-pointer ${
+      className={`cursor-pointer min-h-[440px] ${
         isSelected
-          ? "bg-[linear-gradient(180.02deg,rgba(255,207,189,0.7)-51.68%,rgba(255,247,221,0.7)99.98%)] shadow-[0px_4.44px_8.88px_0px_#0000001A,0px_4.44px_8.88px_0px_#0000001A]"
+          ? "bg-[linear-gradient(180.02deg,rgba(255,207,189,0.7)-51.68%,rgba(255,247,221,0.7)99.98%)] shadow-[0px_4.44px_8.88px_0px_#0000001A,0px_4.44px_8.88px_0px_#0000001A] hover:scale-105 transition"
           : "bg-[linear-gradient(180.02deg,rgba(255,207,189,0.25)_-51.68%,rgba(255,247,221,0.25)_99.98%)] shadow-[0px_3.63px_7.25px_0px_#0000001A,0px_3.63px_7.25px_0px_#0000001A] hover:scale-105 transition"
       } ${
-        isSelected ? "lg:w-[387px]" : "max-md:min-w-[252px] lg:w-[317px]"
+        isSelected ? "lg:w-[317px]" : "max-md:min-w-[252px] lg:w-[317px]"
       } rounded-[30px] text-[#494949] hover:bg-[linear-gradient(180.02deg,rgba(255,207,189,0.7)-51.68%,rgba(255,247,221,0.7)99.98%)] hover:shadow-[0px_4.44px_8.88px_0px_#0000001A,0px_4.44px_8.88px_0px_#0000001A]`}
     >
       <div
-        className={`relative flex flex-col font-montserrat ${
+        className={`relative min-h-[440px] flex flex-col h-full font-montserrat ${
           isSelected
             ? "gap-9.5 md:gap-16 px-6 md:px-9 pt-11 md:pt-16 pb-8 md:pb-12"
-            : "gap-4.5 md:gap-11 px-3 md:px-5 pt-8 md:pt-12 pb-5.5 md:pb-9.5"
+            : "gap-4.5 md:gap-11 px-3 md:px-5 pt-8 md:pt-12 pb-8 md:pb-12"
         }`}
       >
         <div className="absolute right-14 -top-5.5">
@@ -58,7 +60,9 @@ const Subscription = ({
             className="size-8 md:size-[50px]"
           />
           <div className={`${isSelected ? "space-y-3.5" : "space-y-6"}`}>
-            <h5 className="text-3xl md:text-5xl font-medium">{name}</h5>
+            <h5 className="text-2xl md:text-4xl font-medium max-w-[250px]">
+              {name}
+            </h5>
             <ul className="space-y-3 text-[8px] md:text-xs font-medium [&_li]:flex [&_li]:items-center [&_li]:gap-2">
               {features?.map((feature, i) => (
                 <li key={i}>
@@ -77,8 +81,9 @@ const Subscription = ({
         <Button
           variant={"filled"}
           className={`${
-            isSelected ? "text-base py-2" : "text-sm py-2.5"
-          } lg:w-[257px] mx-auto`}
+            isSelected ? "text-base py-2 mt-2" : "text-base py-2"
+          } lg:w-[257px] mx-auto mt-auto!`}
+          onClick={() => router.push("/signup")}
         >
           Unlock This Plan
         </Button>
@@ -88,8 +93,8 @@ const Subscription = ({
 };
 
 const Subscriptions = () => {
-    const { data, isLoading, error } = useGetPlansQuery(undefined);
-    const plans: IPlan[] = data?.data || [];
+  const { data, isLoading, error } = useGetPlansQuery(undefined);
+  const plans: IPlan[] = data?.data || [];
 
   const [isSelected, setIsSelected] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null);

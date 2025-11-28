@@ -89,7 +89,7 @@ const Services = () => {
     <div className="flex flex-col items-center gap-9 md:gap-12 md:py-[53px] px-5 md:px-10 text-[#494949]">
       <div className="flex flex-col items-center justify-center text-center gap-2.5 md:gap-6 font-satoshi-500">
         <h2 className="text-[30px] md:text-5xl">Find Your Flow, Every Day</h2>
-        <p className="text-[13px] text-lg  text-[#1D1D1D] max-w-[492px]">
+        <p className="sm:text-[13px] md:text-lg  text-[#1D1D1D] max-w-[492px]">
           Every class invites you to return—to your body, your presence, your
           breath. Find your path to lasting wellness
         </p>

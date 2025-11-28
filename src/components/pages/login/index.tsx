@@ -20,6 +20,7 @@ import { storage } from "@/lib/storage";
 import { setCredentials } from "@/store/slices/authSlice";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
+import HomeIcon from "@/utils/homeIcon";
 interface LoginError {
   data: { message: string };
 }
@@ -42,7 +43,7 @@ const Login = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [showPass, setShowPass] = useState(false);
-  const [login, { isLoading }] = useLoginMutation();
+  const [login, { isLoading, error }] = useLoginMutation();
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -83,6 +84,10 @@ const Login = () => {
     agreeTerms: false,
   };
 
+  const handleClick = () => {
+    router.push("/forgot-password");
+  };
+
   const prevStep = () => {};
 
   const handleSubmit = async (values: LoginFormValues) => {
@@ -114,7 +119,15 @@ const Login = () => {
         router.push("/dashboard");
       }
     } catch (err: any) {
-      toast.error((err.data.message as string) || "Failed to login");
+      console.log("RAW LOGIN ERROR:", err);
+
+      const message =
+        err?.data?.message ||
+        err?.error?.data?.message ||
+        err?.message ||
+        "Failed to login";
+
+      toast.error(message);
     }
   };
 
@@ -123,12 +136,13 @@ const Login = () => {
       <div className="bg-black/5 rounded-[30px] shadow max-h-[calc(100%-100px)]">
         <div className="bg-white rounded-[30px] px-5 md:px-13 py-6 md:py-12 h-full">
           <div className="flex flex-col gap-8 md:gap-14 h-full">
-            <div className="flex flex-col gap-5">
+            <div className="flex items-center justify-between">
               <Typography
                 title="Welcome Back to Skyborne"
                 type="xxl"
                 cssClass="leading-tight"
               />
+              <HomeIcon />
             </div>
             <div className="form h-full overflow-auto [scrollbar-width:none]">
               <Formik
@@ -167,11 +181,12 @@ const Login = () => {
                             onChange={handleChange}
                             className="bg-[#F3F3F5] min-h-[55px]"
                           />
-                          {/* <Typography
+                          <Typography
                             title="Forgot password?"
                             type="baseTheme"
-                            cssClass="leading-tight pt-4 absolute right-0"
-                          /> */}
+                            onClick={handleClick}
+                            cssClass="leading-tight pt-4 absolute right-0 cursor-pointer"
+                          />
                           <button
                             type="button"
                             className="absolute right-3 top-4.5"
@@ -244,6 +259,7 @@ const Login = () => {
                       </Button>
                       <Button
                         variant={"outlineBlack"}
+                        type="button"
                         className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                         onClick={() => router.push("/signup")}
                       >

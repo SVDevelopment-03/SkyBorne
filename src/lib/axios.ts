@@ -44,6 +44,7 @@ API.interceptors.response.use(
       const refreshToken = getRefreshToken();
 
       try {
+        if (!refreshToken) return;
         const refresh = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}refresh-token`,
           { refreshToken: refreshToken },
@@ -58,8 +59,8 @@ API.interceptors.response.use(
 
         return API(originalRequest);
       } catch (refreshError) {
-        // removeTokens();
-        // return Promise.reject(refreshError);
+        removeTokens();
+        return Promise.reject(refreshError);
       }
     }
 

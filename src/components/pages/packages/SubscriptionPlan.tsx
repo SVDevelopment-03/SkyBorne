@@ -1,52 +1,24 @@
+"use client";
 import CustomButtons from "@/components/ui/CustomButtons";
 import Heading from "@/components/ui/heading";
-import SubscriptionPanUi from "@/components/ui/SubscriptionPlanUi";
+import { useGetPlansQuery } from "@/store/api/publicApi";
+import { IPlan } from "@/types/home.type";
+import { SkeletonSubscription, Subscription } from "../home/Subscription";
+import { useEffect, useState } from "react";
 
 const SubscriptionPlans = () => {
-  const plansDetail = [
-    {
-      id: 1,
-      name: "Starter Plan",
-      price: "0",
-      description: "Wellness for beginners or focused paths.",
-      features: [
-        "Up to 2 yoga group sessions/week",
-        "Access to Yoga only",
-        "Community chat, attendance tracker",
-        "Beginner-friendly guidance",
-        "No long-term commitment",
-      ],
-      isMain: false,
-    },
-    {
-      id: 2,
-      name: "Flex Plan",
-      price: "0",
-      description: "Balance, variety, and tools for steady progress.",
-      features: [
-        "4 sessions/week across Yoga + Fitness",
-        "Downloadable wellness guides",
-        "Habit tracker & reminder nudges",
-        "Priority booking for workshops",
-        "Support for changing needs",
-      ],
-      isMain: true,
-    },
-    {
-      id: 3,
-      name: "All Access Plan",
-      price: "0",
-      description: "Full access for holistic living and big goals",
-      features: [
-        "Unlimited sessions",
-        "Exclusive webinars & milestone rewards",
-        "Priority booking always",
-        "Community challenges & leaderboards",
-        "Personalized feedback and coaching",
-      ],
-      isMain: false,
-    },
-  ];
+  const [hydrated, setHydrated] = useState(false);
+  const [isSelected, setIsSelected] = useState(1);
+  const { data, isLoading, error } = useGetPlansQuery(undefined);
+  const plans: IPlan[] = data?.data || [];
+
+  useEffect(() => {
+    setTimeout(() => {
+      setHydrated(true);
+    }, 0);
+  }, []);
+
+  if (!hydrated) return null;
 
   return (
     <div className="max-w-[1268px] w-full mx-auto">
@@ -64,19 +36,23 @@ const SubscriptionPlans = () => {
             <CustomButtons variant={"themeOutline"} text="Yearly" />
           </div>
           <div className="w-full max-lg:overflow-x-auto max-lg:[scrollbar-width:none]">
-            <div className="grid grid-cols-3 items-center justify-center gap-4 lg:gap-9 w-full min-w-[800px]">
-              {plansDetail?.map((plan) => {
-                return (
-                  <SubscriptionPanUi
-                    key={plan?.id}
-                    name={plan?.name}
-                    description={plan?.description}
-                    features={plan?.features}
-                    price={plan?.price}
-                    isMain={plan?.isMain}
-                  />
-                );
-              })}
+            <div className="flex items-center justify-center gap-5 md:gap-14 pt-10 pb-3 min-w-[800px]">
+              {isLoading &&
+                [1, 2, 3].map((i) => <SkeletonSubscription key={i} />)}
+              {!isLoading &&
+                !error &&
+                plans?.map((plan, index) => {
+                  return (
+                    <Subscription
+                      key={plan?.name}
+                      name={plan?.name}
+                      features={plan?.features}
+                      image={plan?.image}
+                      isSelected={index == isSelected}
+                      price={plan?.price}
+                    />
+                  );
+                })}
             </div>
           </div>
         </div>

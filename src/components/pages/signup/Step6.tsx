@@ -50,10 +50,7 @@ const Step6 = () => {
       const { data } = res;
       const { user, accessToken, refreshToken } = data;
       if (res?.success) {
-        storage.set(
-          process.env.NEXT_PUBLIC_USER as string,
-          user
-        );
+        storage.set(process.env.NEXT_PUBLIC_USER as string, user);
         localStorage.setItem(
           process.env.NEXT_PUBLIC_ACCESS_TOKEN as string,
           accessToken
@@ -103,7 +100,7 @@ const Step6 = () => {
     },
   ];
   return (
-    <div className="flex flex-col gap-8 md:gap-12 h-full">
+    <div className="flex flex-col gap-6 h-full">
       <div className="flex flex-col gap-5 pb-3.5">
         <Typography
           title="Set Your First Goal!"
@@ -122,7 +119,7 @@ const Step6 = () => {
             <MotionDiv key={m.id} position="left">
               <label
                 htmlFor={m.id}
-                className={`flex items-center gap-4 border-[2.5px] rounded-xl p-5.5 cursor-pointer transition 
+                className={`flex items-center gap-4 border-[2.5px] rounded-xl p-4.5 cursor-pointer transition 
                 ${
                   selected === m.id
                     ? "border-[#B95E82] bg-[#FFE8E8]"
@@ -146,7 +143,7 @@ const Step6 = () => {
             </MotionDiv>
           ))}
         </RadioGroup>
-        <div className="bg-[#FFE8E8] border border-[#B95E82] px-6 lg:px-15 py-5 lg:py-7.5 flex items-start gap-3 rounded-[10px]">
+        <div className="bg-[#FFE8E8] border border-[#B95E82] h-[61px] max-h-[61px] flex justify-center items-center gap-3 rounded-[10px]">
           <Typography
             title="Setting a goal helps you stay motivated. Change it anytime."
             type="lgBlack"

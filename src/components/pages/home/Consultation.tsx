@@ -17,7 +17,7 @@ const Consultation = () => {
           />
         </MotionDiv>
       </div>
-      <div className="flex-1">
+      <div className="flex-1 max-w-full lg:max-w-[669px]">
         <MotionDiv>
           <ConsultationForm />
         </MotionDiv>

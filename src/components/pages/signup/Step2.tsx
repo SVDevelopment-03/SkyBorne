@@ -15,6 +15,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import toast from "react-hot-toast";
 import { round } from "lodash";
 import { useRouter } from "next/navigation";
+import HomeIcon from "@/utils/homeIcon";
 
 export interface SignupFormValues {
   firstName: string;
@@ -28,9 +29,29 @@ export interface SignupFormValues {
 
 const SignupSchema = Yup.object().shape({
   firstName: Yup.string().required("First name is required"),
-  lastName: Yup.string().notRequired(),
+  lastName: Yup.string()
+    .notRequired()
+    .min(2, "Last name atleast have 2 characters"),
   email: Yup.string().email("Invalid email").required("Email is required"),
-  password: Yup.string().min(6, "Too short").required("Required"),
+  password: Yup.string()
+    .required("Password is required")
+    .min(8, "Password must be at least 8 characters long")
+    .matches(
+      /[A-Z]/,
+      "Password must contain uppercase, lowercase, number, special character (@, $, !, %, *, ?, &)"
+    )
+    .matches(
+      /[a-z]/,
+      "Password must contain uppercase, lowercase, number, special character (@, $, !, %, *, ?, &)"
+    )
+    .matches(
+      /\d/,
+      "Password must contain uppercase, lowercase, number, special character (@, $, !, %, *, ?, &)"
+    )
+    .matches(
+      /[@$!%*?&]/,
+      "Password must contain uppercase, lowercase, number, special character (@, $, !, %, *, ?, &)"
+    ),
   agreeTerms: Yup.boolean().oneOf([true], "You must agree before continuing"),
 });
 
@@ -114,13 +135,14 @@ const Step2 = () => {
   };
 
   return (
-    <div className="flex flex-col gap-8 md:gap-14 h-full">
-      <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-8 md:gap-10 h-full">
+      <div className="flex items-center justify-between">
         <Typography
           title="Create Your Skyborne Account"
           type="xxl"
           cssClass="leading-tight"
         />
+        <HomeIcon />
       </div>
       <div className="form h-full overflow-auto [scrollbar-width:none]">
         <Formik
@@ -131,9 +153,9 @@ const Step2 = () => {
           {({ values, errors, touched, handleChange, setFieldValue }) => (
             <Form className="space-y-6">
               {/* 2 Column Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* First Name */}
-                <div className="flex flex-col gap-4.5">
+                <div className="flex flex-col gap-3">
                   <Label>First Name*</Label>
                   <Input2
                     name="firstName"
@@ -147,7 +169,7 @@ const Step2 = () => {
                 </div>
 
                 {/* Last Name */}
-                <div className="flex flex-col gap-4.5">
+                <div className="flex flex-col gap-3">
                   <Label>Last Name</Label>
                   <Input2
                     name="lastName"
@@ -161,7 +183,7 @@ const Step2 = () => {
                 </div>
 
                 {/* Email */}
-                <div className="flex flex-col gap-4.5">
+                <div className="flex flex-col gap-3">
                   <Label>Email Address*</Label>
                   <Input2
                     name="email"
@@ -175,7 +197,7 @@ const Step2 = () => {
                 </div>
 
                 {/* Password */}
-                <div className="flex flex-col gap-4.5">
+                <div className="flex flex-col gap-3">
                   <Label>Password*</Label>
                   <div className="relative">
                     <Input2
@@ -204,7 +226,7 @@ const Step2 = () => {
               </div>
 
               {/* Terms */}
-              <div className="flex items-center gap-2 pt-[26px] leading-none">
+              <div className="flex items-center gap-2 leading-none">
                 <Checkbox
                   checked={values.agreeTerms}
                   onCheckedChange={(val) => setFieldValue("agreeTerms", val)}
@@ -234,7 +256,7 @@ const Step2 = () => {
                 <p className="text-red-500 text-sm">{errors.agreeTerms}</p>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-[26px]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-[26px] pt-[20px]">
                 <Button
                   variant={"outlineBlackRect"}
                   className="py-[17px]! px-[123px]!"
@@ -256,8 +278,10 @@ const Step2 = () => {
               <div className="flex flex-col items-center pb-4">
                 <p className="font-satoshi-400 text-lg font-normal leading-5">
                   Already have an account?
-                  <span className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer"
-                  onClick={()=>router.push("/login")}>
+                  <span
+                    className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer"
+                    onClick={() => router.push("/login")}
+                  >
                     Login
                   </span>
                 </p>
