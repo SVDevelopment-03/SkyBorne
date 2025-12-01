@@ -1,8 +1,10 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import HeadingDiv from "@/components/ui/HeadingDiv";
 import MotionDiv from "@/components/ui/MotionDiv";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React from "react";
 interface FeatureDetailProps {
   image: string;
@@ -50,6 +52,7 @@ const FeatureDetail = ({
   buttonText,
   isRight,
 }: FeatureDetailProps) => {
+  const router = useRouter();
   return (
     <div
       className={`flex md:flex-row items-center gap-7.5 md:gap-16 lg:gap-31.5 w-full ${
@@ -87,6 +90,7 @@ const FeatureDetail = ({
           <Button
             variant={"theme"}
             className={`px-6 md:px-10 py-2 md:py-3.5 text-xs md:text-base lg:text-lg font-medium`}
+            onClick={() => router.push("/signup")}
           >
             {buttonText}
           </Button>

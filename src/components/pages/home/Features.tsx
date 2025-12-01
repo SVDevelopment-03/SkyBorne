@@ -1,3 +1,5 @@
+"use client"
+import useRedirectUser from "@/hooks/useRedirectUser";
 import Image from "next/image";
 import React from "react";
 interface FeatureProp {
@@ -22,6 +24,7 @@ const Feature = ({ icon, alt, text }: FeatureProp) => {
 };
 
 const Features = () => {
+const {redirectUser} = useRedirectUser()
   return (
     <div className="relative before:content-[''] before:size-full before:absolute before:inset-0 before:bg-[url(/images/grid-bg.svg)] ">
       <div className="font-montserrat bg-[linear-gradient(135deg,rgba(255,247,221,0.2)_0.7%,rgba(255,207,189,0.1)_50%,rgba(255,247,221,0.2)_100%)] rounded-3xl flex flex-col gap-8 items-center justify-between pt-8 md:pt-[82px] px-2.5 md:px-10">
@@ -60,8 +63,9 @@ const Features = () => {
             src="/images/about-us-logo.png"
             alt="About Us"
             width={140}
+            onClick ={()=>redirectUser("/about-us")}
             height={140}
-            className="absolute right-2 lg:-right-16 bottom-16 size-16 md:size-36"
+            className="absolute right-2 lg:-right-16 bottom-16 size-16 md:size-36 cursor-pointer"
           />
         </div>
       </div>

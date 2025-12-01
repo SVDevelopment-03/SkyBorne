@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 
 interface CardImage {
   id: number;
@@ -19,6 +20,7 @@ const imageCards: CardImage[] = [
 // import bgExplore from "../../../../public/images/explore-main.svg"
 
 const Explore = () => {
+  const router = useRouter();
   const [active, setActive] = useState<number | null>(null);
 
   // const [cards, setCards] = React.useState(CARD_COLORS);
@@ -50,7 +52,8 @@ const Explore = () => {
               Every class invites you to return—to your body, your presence,
               your breath. Find your path to lasting wellness
             </p>
-            <Button className="bg-[#FFF7DD] text-[#494949] hover:text-white hover:border-[#B95E82] hover:bg-[#B95E82]">
+            <Button className="bg-[#FFF7DD] text-[#494949] hover:text-white hover:border-[#B95E82] hover:bg-[#B95E82]"
+            onClick={()=>router.push("/coming-soon")}>
               Explore all classes
             </Button>
           </div>

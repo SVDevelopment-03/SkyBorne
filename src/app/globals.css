@@ -2,6 +2,10 @@
 @import "swiper/css";
 @import "swiper/css/pagination";
 @import "tw-animate-css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
 
 @font-face {
   font-family: "Satoshi-Regular";
@@ -35,13 +39,18 @@
 html,
 html body {
   height: auto;
-  font-family: "Satoshi-Regular";
+  font-family: "Satoshi-Medium";
+  overflow-x: hidden;
 }
 
 html.lenis,
 html.lenis body {
   height: auto;
-  font-family: "Satoshi-Regular";
+  font-family: "Satoshi-Medium";
+}
+
+.font-inter {
+  font-family: "Inter", sans-serif !important;
 }
 
 .lenis.lenis-smooth {
@@ -171,6 +180,7 @@ html.lenis body {
 
 :root {
   --radius: 0.625rem;
+  --font-inter: "Inter", sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -289,3 +299,5 @@ html.lenis body {
 .swal2-cancel {
   cursor: pointer;
 }
+
+

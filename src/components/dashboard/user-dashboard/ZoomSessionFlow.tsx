@@ -141,6 +141,7 @@ export function ZoomSessionFlow({
   };
 
   const handleJoinNow = () => {
+    handleClose()
     joinMeeting()
   };
 
@@ -164,7 +165,6 @@ export function ZoomSessionFlow({
   const handleClose = () => {
     setCurrentStep("upcoming");
     setProgress(0);
-    setCountdown(120);
     setMeetingDuration(0);
     onClose();
   };

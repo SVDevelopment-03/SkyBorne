@@ -26,6 +26,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
+import { Bell } from "lucide-react";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -267,7 +268,13 @@ export default function Page() {
                 />
               </svg>
             </div>
-            <div>
+            <div className="flex items-center gap-10 text-[#212C26]">
+              <div className="relative">
+                <Bell className="h-8 w-8"/>
+              {/* <div className="bg-[#E05252] absolute -top-1.5 -right-1 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] rounded-full h-5 w-5 px-1.5 py-0.5">
+                <h2 className="text-white  text-[12px] font-semibold font-inter!"  style={{ fontFamily: "Inter, sans-serif" }}>3</h2>
+              </div> */}
+              </div>
               <div className="flex items-center gap-2">
                 <UserAvatar name={avatarName}/>
               <div>

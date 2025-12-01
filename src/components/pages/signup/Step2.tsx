@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Typography } from "@/components/ui/heading";
 import { Input2 } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,7 @@ import Link from "next/link";
 import { GoogleIcon } from "@/icons/helpIcon";
 import { useSignup } from "./SignupContext";
 import { useGoogleLogin } from "@react-oauth/google";
+import AppleSignin from "react-apple-signin-auth";
 
 import toast from "react-hot-toast";
 import { round } from "lodash";
@@ -59,6 +62,34 @@ const Step2 = () => {
   const router = useRouter();
   const [showPass, setShowPass] = useState(false);
   const { step, setStep, formData, updateStepData } = useSignup();
+
+  const handleAppleSuccess = (response: any) => {
+    const { authorization, user } = response;
+    const idToken = authorization.id_token;
+    const decoded: any = JSON.parse(atob(idToken.split(".")[1]));
+
+    const appleData = {
+      firstName: user?.name?.firstName || "",
+      lastName: user?.name?.lastName || "",
+      email: user?.email || decoded.email,
+      appleId: decoded.sub,
+      authProvider: "apple",
+    };
+
+    console.log("Apple User:", appleData);
+
+    updateStepData("step2", {
+      firstName: appleData.firstName,
+      lastName: appleData.lastName,
+      email: appleData.email,
+      password: "",
+      agreeTerms: true,
+      authProvider: "apple",
+      appleId: appleData.appleId,
+    });
+
+    setStep(3);
+  };
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -266,14 +297,37 @@ const Step2 = () => {
                   <GoogleIcon />
                   Sign up with Google
                 </Button>
-                <Button
+                <AppleSignin
+                  uiType="dark"
+                  authOptions={{
+                    clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID as string,
+                    scope: "email name",
+                    redirectURI: process.env
+                      .NEXT_PUBLIC_APPLE_REDIRECT_URI as string,
+                    usePopup: true,
+                  }}
+                  onSuccess={(response: any) => handleAppleSuccess(response)}
+                  onError={() => toast.error("Apple signup failed")}
+                  render={(props: any) => (
+                    <Button
+                      variant="outlineBlackRect"
+                      className="py-[17px]! px-[123px]!"
+                      {...props}
+                    >
+                      <AppleIcon />
+                      Sign up with Apple
+                    </Button>
+                  )}
+                />
+
+                {/* <Button
                   variant={"outlineBlackRect"}
                   className="py-[17px]! px-[123px]!"
                   type="button"
                 >
                   <AppleIcon />
                   Sign up with Apple
-                </Button>
+                </Button> */}
               </div>
               <div className="flex flex-col items-center pb-4">
                 <p className="font-satoshi-400 text-lg font-normal leading-5">

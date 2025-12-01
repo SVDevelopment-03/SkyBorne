@@ -3,6 +3,7 @@
 import { useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/token";
+import useGetUser from "@/hooks/useGetUser";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -10,12 +11,14 @@ interface AuthLayoutProps {
 
 export default function UserLayout({ children }: AuthLayoutProps) {
   const router = useRouter();
+  const {user} = useGetUser();
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
     const token = getAccessToken();
 
-    if (!token) {
+    // if (!user?.onboardingCompleted) {
+    if(!token){
       setTimeout(() => {
         router.replace("/login");
       }, 0);

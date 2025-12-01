@@ -40,7 +40,7 @@ const Step3 = () => {
   };
 
   const nextStep = () => {
-    if (step < totalSteps) setStep(step + 2);
+    if (step < totalSteps) setStep(step + 1);
   };
 
   const prevStep = () => {

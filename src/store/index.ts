@@ -4,6 +4,7 @@ import { publicApi } from "./api/publicApi";
 import { meetingApi } from "./api/meetingApi";
 
 import authReducer from "./slices/authSlice";
+import { paymentApi } from "./api/paymentApi";
 
 export const store = configureStore({
   reducer: {
@@ -11,12 +12,14 @@ export const store = configureStore({
     [authApi.reducerPath]: authApi.reducer,
     [publicApi.reducerPath]: publicApi.reducer,
     [meetingApi.reducerPath]: meetingApi.reducer,
+    [paymentApi.reducerPath]: paymentApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
       .concat(authApi.middleware)
       .concat(publicApi.middleware)
-      .concat(meetingApi.middleware),
+      .concat(meetingApi.middleware)
+      .concat(paymentApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

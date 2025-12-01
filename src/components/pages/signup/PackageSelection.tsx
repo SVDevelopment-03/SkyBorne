@@ -112,7 +112,6 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
             </div>
 
             <div className="bg-[#fcf6ef] rounded-xl p-4 mb-6 text-sm">
-              <p className="text-gray-600 mb-1">Discount Applied: 17%</p>
               <p className="text-gray-800">
                 Original Value: <span className="line-through">$120</span> → You
                 Pay <span className="text-[#b97d9f]">$100</span>
@@ -120,7 +119,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
             </div>
 
             {/* Accordion for breakdown */}
-            <div className="border-t border-[#f0e5d8] pt-4 mb-6">
+            {/* <div className="border-t border-[#f0e5d8] pt-4 mb-6">
               <button
                 onClick={() => setGoldAccordionOpen(!goldAccordionOpen)}
                 className="flex items-center justify-between w-full text-sm text-gray-700 hover:text-[#b97d9f] transition-colors"
@@ -171,7 +170,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </div> */}
           </div>
           <button
             onClick={handleGoldSelect}
@@ -211,7 +210,6 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
             </div>
 
             <div className="bg-[#fcf6ef] rounded-xl p-4 mb-6 text-sm">
-              <p className="text-gray-600 mb-1">Discount Applied: 17%</p>
               <p className="text-gray-800">
                 Original Value: <span className="line-through">$240</span> → You
                 Pay <span className="text-[#b97d9f]">$200</span>
@@ -219,7 +217,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
             </div>
 
             {/* Accordion for breakdown */}
-            <div className="border-t border-[#f0e5d8] pt-4 mb-6">
+            {/* <div className="border-t border-[#f0e5d8] pt-4 mb-6">
               <button
                 onClick={() => setDiamondAccordionOpen(!diamondAccordionOpen)}
                 className="flex items-center justify-between w-full text-sm text-gray-700 hover:text-[#b97d9f] transition-colors"
@@ -276,7 +274,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </div> */}
           </div>
           <button
             onClick={() => onSelect("diamond")}
@@ -320,7 +318,6 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 mb-6 text-sm border border-white/20">
-              <p className="opacity-90 mb-1">Discount Applied: 17%</p>
               <p>
                 Original Value:{" "}
                 <span className="line-through opacity-75">$360</span> → You Pay{" "}
@@ -329,7 +326,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
             </div>
 
             {/* Accordion for breakdown */}
-            <div className="border-t border-white/20 pt-4 mb-6">
+            {/* <div className="border-t border-white/20 pt-4 mb-6">
               <button
                 onClick={() => setPlatinumAccordionOpen(!platinumAccordionOpen)}
                 className="flex items-center justify-between w-full text-sm text-white hover:text-white/80 transition-colors"
@@ -392,7 +389,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </div> */}
           </div>
           <button
             onClick={() => onSelect("platinum")}

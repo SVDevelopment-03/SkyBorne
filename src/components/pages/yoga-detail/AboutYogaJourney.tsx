@@ -1,10 +1,15 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { BannerHeading, Typography } from "@/components/ui/heading";
 import MotionDiv from "@/components/ui/MotionDiv";
+import useGetUser from "@/hooks/useGetUser";
+import useRedirectUser from "@/hooks/useRedirectUser";
 import Image from "next/image";
 import React from "react";
 
 const AboutYogaJourney = () => {
+  const {user} = useGetUser();
+  const {redirectUser} = useRedirectUser()
   return (
     <div className="max-w-[1268px] w-full mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-12 lg:gap-[142px] items-between">
@@ -34,9 +39,10 @@ const AboutYogaJourney = () => {
             />
           </div>
 
-          <Button variant={"theme"} className="max-w-56 mt-auto max-md:hidden">
+          {!user && <Button variant={"theme"} className="max-w-56 mt-auto max-md:hidden"
+          onClick={()=>redirectUser('/signup')}>
             Sign up & Claim
-          </Button>
+          </Button>}
         </div>
         <div className="flex flex-col gap-2 items-start h-[303px] md:h-[516px] max-md:hidden">
           <Image

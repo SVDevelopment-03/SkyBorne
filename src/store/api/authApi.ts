@@ -59,6 +59,13 @@ export const authApi = createApi({
         data: body,
       }),
     }),
+    socialLogin: builder.mutation({
+      query: (body) => ({
+        url: "/social-login",
+        method: "POST",
+        data:body,
+      }),
+    }),
   }),
 });
 
@@ -66,6 +73,7 @@ export const {
   useRegisterMutation,
   usePasswordResetRequestMutation,
   useResetPasswordMutation,
+  useSocialLoginMutation,
   useLoginMutation,
   useCreatePaymentMutation,
   useSendOtpMutation,

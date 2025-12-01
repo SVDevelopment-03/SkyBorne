@@ -123,9 +123,9 @@ const Hero = () => {
               />
             </div>
             <ul>
-              <LiText text="Yoga Classes" link="/" />
-              <LiText text="Group Therapy" link="/" />
-              <LiText text="Nutrition Consults" link="/" />
+              <LiText text="Yoga Classes" link="/yoga-detail" />
+              <LiText text="Group Therapy" link="/coming-soon" />
+              <LiText text="Nutrition Consults" link="/coming-soon" />
             </ul>
           </div>
         </div>

@@ -44,7 +44,6 @@ export const meetingApi = createApi({
         data: body,
       }),
     }),
-
     // ---------------------------------------
     // LEAVE MEETING
     // ---------------------------------------
