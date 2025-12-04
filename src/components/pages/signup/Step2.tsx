@@ -275,7 +275,7 @@ const Step2 = () => {
                   </Link>
                   <span className="mx-1">and</span>
                   <Link
-                    href="/data-policy"
+                    href="/cookie-policy"
                     className="text-[#B95E82] underline-offset-2 hover:underline"
                     target="_blank"
                   >

@@ -3,6 +3,7 @@ import { PackageType } from './PackageSelection';
 import { ChevronLeft, CreditCard, Smartphone, Lock, Loader2 } from 'lucide-react';
 import { useCreatePaymentOrderMutation } from '@/store/api/paymentApi';
 import useGetUser from '@/hooks/useGetUser';
+import Link from 'next/link';
 
 interface PaymentProps {
   selectedPackage: PackageType;
@@ -185,7 +186,22 @@ const handlePayment = async () => {
         </button>
 
         <p className="text-center text-xs text-gray-500 mt-4">
-          {`By clicking "Pay Now", you agree to our Terms of Service and Privacy Policy`}
+          {`By clicking "Pay Now", you agree to our`}
+           <Link
+                    href="/terms"
+                    className="text-[#B95E82] underline-offset-2 hover:underline ml-1"
+                    target="_blank"
+                  >
+                    Terms
+                  </Link>
+                  <span className="mx-1">and</span>
+                  <Link
+                    href="/privacy-policy"
+                    className="text-[#B95E82] underline-offset-2 hover:underline"
+                    target="_blank"
+                  >
+                    Privacy Policy
+                  </Link>
         </p>
       </div>
     </div>
