@@ -125,7 +125,7 @@ const Sidebar = () => {
       {showAlert && (
         <LogoutAlert
           onConfirm={handleLogoutConfirm}
-          onClose={() => setShowAlert(false)} // reset state
+          onClose={() => setShowAlert(false)}
         />
       )}
     </div>

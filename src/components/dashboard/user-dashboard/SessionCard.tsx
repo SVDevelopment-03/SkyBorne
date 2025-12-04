@@ -26,7 +26,9 @@ const SessionCard = ({
   userId,
   startTime,
   joined,
+  region, 
   trainer,
+  isLive,
   participants,
   participantsCount,
   image,
@@ -35,7 +37,7 @@ const SessionCard = ({
   title,
   duration,
 }: SessionProps) => {
-  console.log("meeting", userId, meetingId);
+
   const classItem = {
     meetingId,
     userId,
@@ -57,22 +59,22 @@ const SessionCard = ({
   const [showClassModal, setShowClassModal] = useState(false);
 
 const handleJoin = async () => {
-  if (!meetingId || !userId) {
+  if (!meetingId || !userId || !region) {
     toast.error("Missing meeting or user information");
     return;
   }
 
   try {
-    const res = await joinMeeting({ meetingId, userId }).unwrap();
+    const res = await joinMeeting({ meetingId, userId ,region}).unwrap();
+    const joinUrl =  res?.data?.accessUrl;
 
-    if (res?.joinUrl) {
+    if (joinUrl) {
       toast.success("Joining meeting...");
       window.open(
-        res.joinUrl,
+        joinUrl,
         "zoomMeetingPopup",
         "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
       );
-      // window.open(res.joinUrl, "_blank");
     } else {
       toast.error("Join URL not found");
     }
@@ -267,6 +269,7 @@ const handleJoin = async () => {
       {/* Zoom Session Flow */}
       <ZoomSessionFlow
         isOpen={showZoomFlow}
+        isLive={isLive}
         joinMeeting={handleJoin}
         onClose={() => setShowZoomFlow(false)}
         session={selectedClass}

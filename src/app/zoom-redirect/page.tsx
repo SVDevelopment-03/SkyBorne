@@ -2,7 +2,6 @@
 
 export const dynamic = "force-dynamic";
 
-
 import { useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { useRedirectMutation } from "@/store/api/publicApi";
@@ -15,10 +14,6 @@ export default function Page() {
     </Suspense>
   );
 }
-
-
-
-
 
 
  function ZoomRedirect() {

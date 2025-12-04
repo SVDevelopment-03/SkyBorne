@@ -79,7 +79,7 @@ const Step3 = () => {
                     <div className="flex-1">
                       <PhoneInput
                         international
-                        defaultCountry="SA"
+                        defaultCountry="AE"
                         value={values.phoneNumber}
                         onChange={(value) =>
                           setFieldValue("phoneNumber", value)

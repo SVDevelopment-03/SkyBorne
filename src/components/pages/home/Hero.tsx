@@ -1,5 +1,4 @@
 "use client";
-import React from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -124,8 +123,8 @@ const Hero = () => {
             </div>
             <ul>
               <LiText text="Yoga Classes" link="/yoga-detail" />
-              <LiText text="Group Therapy" link="/coming-soon" />
-              <LiText text="Nutrition Consults" link="/coming-soon" />
+              <LiText text="Group Therapy" link="/fitness-detail/1" />
+              <LiText text="Nutrition Consults" link="/diet-detail/1" />
             </ul>
           </div>
         </div>

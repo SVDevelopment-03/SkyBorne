@@ -1,8 +1,18 @@
 import Signup from "@/components/pages/signup";
-import React from "react";
 
-const page = () => {
-  return <Signup />;
+interface SignupPageProps {
+  searchParams: {
+    step?: string;
+    [key: string]: string | string[] | undefined; // allow additional params safely
+  };
+}
+
+const Page =async ({ searchParams }: SignupPageProps) => {
+  const { step } = await searchParams;
+  console.log("aaaa", step);
+  
+
+  return <Signup step={step as string}  />;
 };
 
-export default page;
+export default Page;

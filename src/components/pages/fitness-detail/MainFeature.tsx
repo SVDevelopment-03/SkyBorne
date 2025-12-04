@@ -1,0 +1,82 @@
+import { Badge } from "@/components/ui/badge";
+import { Typography } from "@/components/ui/heading";
+import HeadingDiv from "@/components/ui/HeadingDiv";
+import Image from "next/image";
+import React from "react";
+
+const MainFeature = () => {
+  return (
+    <div className="max-w-[1068px] mx-auto w-full">
+      <div className="flex flex-col items-center justify-center rounded-xl md:rounded-[30px]">
+        <Typography
+          title="What’s Included With Skyborne Fitness"
+          type="xl"
+          cssClass="!text-[#494949] mb-10 md:mb-16.5 max-w-[274px] md:max-w-[687px] text-center"
+        />
+        <div className="flex items-stretch justify-center max-md:flex-col gap-4 md:gap-7.5 mb-[22px] w-full">
+          <div className="relative shrink-0 bg-[#B95E82]/25 md:w-[404px] rounded-2xl min-h-[402px] lg:min-h-[593px]">
+            <Image
+              src={"/images/fitness-4.jpg"}
+              alt="main-feature-1"
+              width={404}
+              height={593}
+              className="object-cover rounded-2xl size-full"
+            />
+            <div className="absolute inset-0 p-9.5 flex flex-col items-center justify-end gap-32 h-full text-white">
+              <div className="flex items-center justify-center bg-white/30 backdrop-blur-lg rounded-xl size-20 md:size-30">
+                <h4 className="text-[22px] md:text-[33px] font-satoshi-500 text-white">83%</h4>
+              </div>
+              <div className="text-center max-sm:max-w-[193px]">
+                <h6 className="font-satoshi-500 text-lg md:text-xl lg:text-3xl">
+                  Personal Progress Achieved
+                </h6>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col items-start min-h-[250px] md:min-h-[593px] bg-[#FBEFD8] rounded-xl p-4 md:p-9 flex-1">
+            <div className="flex flex-col gap-3">
+              <Badge variant={"black"}>Main feature</Badge>
+              <Typography
+                title="Live and On-Demand Fitness Classes"
+                type="xl2"
+                cssClass="max-w-[336px] !text-lg md:!text-3xl"
+              />
+            </div>
+            <Typography
+              cssClass="max-w-[464px] mt-auto"
+              title="Access guided strength, cardio, and mobility workouts in real time or replay sessions whenever it suits your schedule"
+            />
+          </div>
+        </div>
+
+        <div className="flex items-stretch justify-center max-md:flex-col gap-4 md:gap-7.5 w-full">
+          <div className="flex flex-col items-start min-h-[197px] md:min-h-[314px] bg-[#FBEFD8] rounded-xl p-4 md:p-9 flex-1">
+            <div className="flex-1 flex flex-col gap-3">
+              <Badge variant={"black"}>Bespoke Coaching</Badge>
+              <Typography
+                title="Personalized Training Support"
+                type="xl2"
+                cssClass="max-w-[397px] !text-lg md:!text-[25px]"
+              />
+            </div>
+            <Typography
+              cssClass="max-w-[397px] mt-auto"
+              title="Get tailored guidance on form, intensity, and recovery so every workout fits your goals whether you are building strength, improving stamina, or getting back into routin"
+            />
+          </div>
+          <div className="shrink-0 bg-[#B95E82]/25 md:w-[404px] rounded-2xl ">
+            <Image
+              src={"/images/fitness-5.jpg"}
+              alt="main-feature-1"
+              width={436}
+              height={314}
+              className="object-cover rounded-2xl size-full"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MainFeature;

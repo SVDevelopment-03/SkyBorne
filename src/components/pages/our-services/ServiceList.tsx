@@ -5,31 +5,32 @@ import ServiceCard from "@/components/ui/service-card";
 const ServiceList = () => {
   const serviceListDetail = [
     {
-      id: 1,
+      id: "1",
       image: "/images/services-1.jpg",
       buttonText: "know more",
       heading: "Yoga",
+      url:'/yoga-detail/1'
     },
     {
-      id: 2,
+      id: "2",
       image: "/images/services-2.jpg",
       buttonText: "know more",
       heading: "Fitness Classes",
-      comingSoon: true,
+      url:'/fitness-detail/1'
     },
     {
-      id: 3,
+      id: "3",
       image: "/images/services-3.jpg",
       buttonText: "know more",
       heading: "Diet & Nutrition",
-      comingSoon: true,
+        url:'/diet-detail/1'
     },
     {
-      id: 4,
+      id: "4",
       image: "/images/services-4.jpg",
       buttonText: "know more",
       heading: "Zumba Dance",
-      comingSoon: true
+        url:'/zumba-detail/1'
     },
   ];
   return (
@@ -44,7 +45,7 @@ const ServiceList = () => {
           }}
         />
         <div className="grid grid-cols-1 md:grid-cols-2 justify-start xl:justify-center gap-5 lg:gap-7.5">
-          {serviceListDetail.map((service, i) => (
+          {serviceListDetail?.map((service, i) => (
             <div
               key={service.id}
               className="w-full"
@@ -52,7 +53,9 @@ const ServiceList = () => {
             >
               <MotionDiv position={i % 2 == 0 ? "left" : "right"}>
                 <ServiceCard
-                  comingSoon={service?.comingSoon}
+                  comingSoon={false}
+                  id={service?.id}
+                  url={service?.url}
                   src={service.image}
                   buttonText={service.buttonText}
                   heading={service.heading}
