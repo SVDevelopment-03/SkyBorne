@@ -15,12 +15,13 @@ import { GoogleIcon } from "@/icons/helpIcon";
 import { useGoogleLogin } from "@react-oauth/google";
 
 import toast from "react-hot-toast";
-import { useLoginMutation } from "@/store/api/authApi";
+import { useLoginMutation, useSocialLoginMutation } from "@/store/api/authApi";
 import { storage } from "@/lib/storage";
 import { setCredentials } from "@/store/slices/authSlice";
 import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import HomeIcon from "@/utils/homeIcon";
+import AppleSignInButton from "react-apple-signin-auth";
 interface LoginError {
   data: { message: string };
 }
@@ -44,39 +45,78 @@ const Login = () => {
   const dispatch = useDispatch();
   const [showPass, setShowPass] = useState(false);
   const [login, { isLoading, error }] = useLoginMutation();
+  const [socialLogin, { isLoading:isSocialLoading }] = useSocialLoginMutation();
 
-  const googleLogin = useGoogleLogin({
-    onSuccess: async (tokenResponse) => {
+
+const googleLogin = useGoogleLogin({
+  onSuccess: async (tokenResponse) => {
+    try {
       const { access_token } = tokenResponse;
 
-      // Fetch user info from Google
-      const userInfo = await fetch(
-        "https://www.googleapis.com/oauth2/v3/userinfo",
-        {
-          headers: {
-            Authorization: `Bearer ${access_token}`,
-          },
-        }
-      ).then((res) => res.json());
+      const userInfo = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+        headers: { Authorization: `Bearer ${access_token}` },
+      }).then((res) => res.json());
 
-      console.log("Google User:", userInfo);
+      console.log("user info", userInfo);
+      
 
-      // Extract needed data
-      const googleData = {
-        firstName: userInfo.given_name || "",
-        lastName: userInfo.family_name || "",
+      const payload = {
+        provider: "google",
         email: userInfo.email,
-        picture: userInfo.picture,
-        authProvider: "google",
-        googleId: userInfo?.sub,
+        googleId: userInfo.sub,
       };
 
-      console.log("googleData:", googleData);
-    },
-    onError: () => {
-      toast.error("Google login failed");
-    },
-  });
+      const res = await socialLogin(payload).unwrap();
+
+      const { user, accessToken, refreshToken } = res.data;
+
+      storage.set(process.env.NEXT_PUBLIC_USER as string, user);
+      localStorage.setItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, accessToken);
+      localStorage.setItem(process.env.NEXT_PUBLIC_REFRESH_TOKEN as string, refreshToken);
+
+      dispatch(setCredentials({ user, accessToken, refreshToken }));
+
+      toast.success("Logged in successfully!");
+      router.push("/dashboard");
+
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Google login failed");
+    }
+  },
+  onError: () => toast.error("Google login failed"),
+});
+
+
+const handleAppleSuccess = async (response: any) => {
+  try {
+    const idToken = response.authorization.id_token;
+    const decoded: any = JSON.parse(atob(idToken.split(".")[1]));
+
+    const payload = {
+      provider: "apple",
+      email: decoded.email,  
+      appleId: decoded.sub,
+    };
+
+    const res = await socialLogin(payload).unwrap();
+
+    const { user, accessToken, refreshToken } = res.data;
+
+    storage.set(process.env.NEXT_PUBLIC_USER as string, user);
+    localStorage.setItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, accessToken);
+    localStorage.setItem(process.env.NEXT_PUBLIC_REFRESH_TOKEN as string, refreshToken);
+
+    dispatch(setCredentials({ user, accessToken, refreshToken }));
+
+    toast.success("Logged in successfully!");
+    router.push("/dashboard");
+
+  } catch (err: any) {
+    toast.error(err?.data?.message || "Apple login failed");
+  }
+};
+
+
 
   const initialValues = {
     email: "",
@@ -228,7 +268,7 @@ const Login = () => {
                         </Link>
                         <span className="mx-1">and</span>
                         <Link
-                          href="/data-policy"
+                          href="/cookie-policy"
                           className="text-[#B95E82] underline-offset-2 hover:underline"
                           target="_blank"
                         >
@@ -276,14 +316,28 @@ const Login = () => {
                         <GoogleIcon />
                         Sign in with Google
                       </Button>
-                      <Button
-                        variant={"outlineBlackRect"}
-                        className="py-[17px]! px-[123px]!"
-                        type="button"
-                      >
-                        <AppleIcon />
-                        Sign in with Apple
-                      </Button>
+                      <AppleSignInButton
+                  uiType="dark"
+                  authOptions={{
+                    clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID as string,
+                    scope: "email name",
+                    redirectURI: process.env
+                      .NEXT_PUBLIC_APPLE_REDIRECT_URI as string,
+                    usePopup: true,
+                  }}
+                  onSuccess={(response: any) => handleAppleSuccess(response)}
+                  onError={() => toast.error("Apple signup failed")}
+                  render={(props: any) => (
+                    <Button
+                      variant="outlineBlackRect"
+                      className="py-[17px]! px-[123px]!"
+                      {...props}
+                    >
+                      <AppleIcon />
+                      Sign up with Apple
+                    </Button>
+                  )}
+                />
                     </div>
                   </Form>
                 )}

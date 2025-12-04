@@ -3,7 +3,7 @@
 import { useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/token";
-import { storage } from "@/lib/storage";
+import useGetUser from "@/hooks/useGetUser";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -12,6 +12,9 @@ interface AuthLayoutProps {
 export default function AuthLayout({ children }: AuthLayoutProps) {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
+  const {user} = useGetUser();
+  console.log("user", user);
+  
 
   useEffect(() => {
     const token = typeof window !== "undefined"
@@ -20,8 +23,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
 
       console.log("token",getAccessToken());
       
+    // if (token && user?.onboardingCompleted) {
 
-    if (token) {
+    if (token && user?.onboardingCompleted) {
       router.replace("/dashboard");
     } else {
         setTimeout(() => {

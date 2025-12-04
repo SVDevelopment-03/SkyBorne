@@ -1,9 +1,11 @@
+"use client"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import HeadingDiv from "@/components/ui/HeadingDiv";
 import { coachDetail } from "@/constants/about-us.constant";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 interface ServiceDetailProp {
@@ -21,6 +23,7 @@ const Coach = ({
   src = "",
   cssClass,
 }: ServiceDetailProp) => {
+  const router = useRouter();
   return (
     <div
       className={`bg-[#FFF8F5] hover:bg-[#FFF8F5]/80 rounded-xl p-4 md:py-6 md:px-5 flex flex-col items-start max-md:min-w-[230px] xl:max-w-[391px] gap-6 md:gap-7.5 max-md:w-[250px] h-full ${cssClass}`}
@@ -67,6 +70,7 @@ const Coach = ({
           <Button
             variant={"theme"}
             className="px-7! py-2.5! text-sm! md:text-base! leading-5! font-montserrat pt-2.5 md:max-w-[150px]"
+            onClick={() => router.push("/signup")}
           >
             Join a Class
           </Button>

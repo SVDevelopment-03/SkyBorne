@@ -66,6 +66,8 @@ export interface SessionProps {
   startTime:string;
   joined: boolean;
   trainer:string;
+  region:string;
+  isLive:boolean;
   participants: {
     avatar?: string;
     name?: string;

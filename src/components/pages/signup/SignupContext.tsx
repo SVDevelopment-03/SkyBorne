@@ -43,14 +43,14 @@ const STORAGE_KEY = process.env.NEXT_PUBLIC_STORAGE_KEY as string;
 const STEP_KEY = process.env.NEXT_PUBLIC_STEP_KEY as string;
 const SignupContext = createContext<SignupContextType | undefined>(undefined);
 
-export const SignupProvider = ({ children }: { children: ReactNode }) => {
+export const SignupProvider = ({ children ,initialStep}: { children: ReactNode,initialStep:string }) => {
   const totalSteps = 8;
 
   const [step, setStep] = useState<number>(() => {
     if (typeof window === "undefined") return 0;
 
     const savedStep = localStorage.getItem(STEP_KEY);
-    return savedStep ? Number(savedStep) : 0;
+    return initialStep ? Number(initialStep) : savedStep ? Number(savedStep) : 0;
   });
 
   const [formData, setFormData] = useState<SignupFormData>(() => {

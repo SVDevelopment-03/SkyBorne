@@ -2,6 +2,10 @@
 @import "swiper/css";
 @import "swiper/css/pagination";
 @import "tw-animate-css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
 
 @font-face {
   font-family: "Satoshi-Regular";
@@ -35,13 +39,18 @@
 html,
 html body {
   height: auto;
-  font-family: "Satoshi-Regular";
+  font-family: "Satoshi-Medium";
+  overflow-x: hidden;
 }
 
 html.lenis,
 html.lenis body {
   height: auto;
-  font-family: "Satoshi-Regular";
+  font-family: "Satoshi-Medium";
+}
+
+.font-inter {
+  font-family: "Inter", sans-serif !important;
 }
 
 .lenis.lenis-smooth {
@@ -167,10 +176,15 @@ html.lenis body {
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-rose-light: #d4849f;
+  --color-rose-light: #d4849f;
+  --color-purple: #8b7ba8;
+  --color-teal: #5eb9b4;
 }
 
 :root {
   --radius: 0.625rem;
+  --font-inter: "Inter", sans-serif;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -288,4 +302,48 @@ html.lenis body {
 
 .swal2-cancel {
   cursor: pointer;
+}
+
+small {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--color-gray-500);
+}
+
+/* Utilities */
+.gradient-primary {
+  background: linear-gradient(
+    135deg,
+    var(--color-purple) 0%,
+    var(--color-teal) 100%
+  );
+}
+
+.gradient-soft {
+  background: linear-gradient(
+    135deg,
+    var(--color-rose-light) 0%,
+    var(--color-peach-light) 100%
+  );
+}
+
+.text-large                                       {
+  font-size: 1.25rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-gray-800);
+}
+
+h4 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--color-gray-700);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--color-gray-900);
 }

@@ -4,13 +4,10 @@
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import { ClockIcon, DashboardCalenderIcon } from "@/icons/dashboardIcon";
-import { RootState } from "@/store";
 import { useJoinMeetingMutation } from "@/store/api/meetingApi";
 import { SessionProps } from "@/types/home.type";
-import { formatLocalTime } from "@/utils/LocalTime";
 import Image from "next/image";
 import toast from "react-hot-toast";
-import { useSelector } from "react-redux";
 import { ZoomSessionFlow } from "./ZoomSessionFlow";
 import { useState } from "react";
 import {
@@ -29,7 +26,9 @@ const SessionCard = ({
   userId,
   startTime,
   joined,
+  region, 
   trainer,
+  isLive,
   participants,
   participantsCount,
   image,
@@ -38,7 +37,7 @@ const SessionCard = ({
   title,
   duration,
 }: SessionProps) => {
-  console.log("meeting", userId, meetingId);
+
   const classItem = {
     meetingId,
     userId,
@@ -59,42 +58,33 @@ const SessionCard = ({
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [showClassModal, setShowClassModal] = useState(false);
 
-  const handleJoin = async () => {
-    if (!meetingId || !userId) {
-      toast.error("Missing meeting or user information");
-      return;
+const handleJoin = async () => {
+  if (!meetingId || !userId || !region) {
+    toast.error("Missing meeting or user information");
+    return;
+  }
+
+  try {
+    const res = await joinMeeting({ meetingId, userId ,region}).unwrap();
+    const joinUrl =  res?.data?.accessUrl;
+
+    if (joinUrl) {
+      toast.success("Joining meeting...");
+      window.open(
+        joinUrl,
+        "zoomMeetingPopup",
+        "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
+      );
+    } else {
+      toast.error("Join URL not found");
     }
+  } catch (err: any) {
+    console.error("Join meeting error:", err);
+    toast.error(err?.data?.message || err?.message || "Failed to join meeting");
+  }
+};
 
-    try {
-      // call backend join API which creates attendance record and returns joinUrl + attendanceId
-      const res = await joinMeeting({ meetingId, userId }).unwrap();
 
-      if (res?.joinUrl) {
-        // store attendanceId to localStorage so Leave API can use it later
-        if (res.attendanceId) {
-          try {
-            localStorage.setItem("attendanceId", String(res.attendanceId));
-          } catch (e) {
-            // ignore storage errors
-          }
-        }
-
-        const joinUrl = res.joinUrl;
-
-        toast.success("Joining meeting...");
-
-        // open zoom web client in a new tab
-        window.open(joinUrl, "_blank");
-      } else {
-        toast.error("Join URL not found");
-      }
-    } catch (err: any) {
-      console.error("Join meeting error:", err);
-      const msg =
-        err?.data?.message || err?.message || "Failed to join meeting";
-      toast.error(msg);
-    }
-  };
 
   const handleJoinClass = (classItem: any) => {
     setSelectedClass(classItem);
@@ -279,6 +269,7 @@ const SessionCard = ({
       {/* Zoom Session Flow */}
       <ZoomSessionFlow
         isOpen={showZoomFlow}
+        isLive={isLive}
         joinMeeting={handleJoin}
         onClose={() => setShowZoomFlow(false)}
         session={selectedClass}

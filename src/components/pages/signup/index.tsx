@@ -2,9 +2,9 @@ import React from "react";
 import SignupContainer from "./SignupContainer";
 import { SignupProvider } from "./SignupContext";
 
-const Signup = () => {
+const Signup = ({step}:{step:string}) => {
   return (
-    <SignupProvider>
+    <SignupProvider initialStep={step}>
       <SignupContainer />
     </SignupProvider>
   );

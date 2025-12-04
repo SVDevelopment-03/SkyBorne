@@ -40,7 +40,7 @@ const Step3 = () => {
   };
 
   const nextStep = () => {
-    if (step < totalSteps) setStep(step + 2);
+    if (step < totalSteps) setStep(step + 1);
   };
 
   const prevStep = () => {
@@ -79,7 +79,7 @@ const Step3 = () => {
                     <div className="flex-1">
                       <PhoneInput
                         international
-                        defaultCountry="SA"
+                        defaultCountry="AE"
                         value={values.phoneNumber}
                         onChange={(value) =>
                           setFieldValue("phoneNumber", value)

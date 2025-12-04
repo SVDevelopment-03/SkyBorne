@@ -59,13 +59,28 @@ export const authApi = createApi({
         data: body,
       }),
     }),
+    socialLogin: builder.mutation({
+      query: (body) => ({
+        url: "/social-login",
+        method: "POST",
+        data:body,
+      }),
+    }),
+        getMe: builder.query({
+      query: () => ({
+        url: "/me",
+        method: "GET",
+      }),
+    }),
   }),
 });
 
 export const {
   useRegisterMutation,
+  useLazyGetMeQuery,
   usePasswordResetRequestMutation,
   useResetPasswordMutation,
+  useSocialLoginMutation,
   useLoginMutation,
   useCreatePaymentMutation,
   useSendOtpMutation,

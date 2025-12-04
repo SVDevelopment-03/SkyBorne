@@ -2,7 +2,7 @@
 
 "use client";
 import Sidebar from "@/components/layout/sidebar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import DashboardBanner from "./DashboardBanner";
 import { Typography } from "@/components/ui/heading";
 import {
@@ -26,6 +26,8 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
+import { Bell } from "lucide-react";
+import { getUserRegion } from "@/utils/timezone";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -48,7 +50,7 @@ const options: ApexOptions = {
   stroke: { width: 0 },
 
   tooltip: {
-    enabled: false, // ❗ stop hover percentage
+    enabled: false,
   },
 
   dataLabels: {
@@ -104,33 +106,88 @@ const options: ApexOptions = {
 };
 
 export default function Page() {
+  const [userRegion, setUserRegion] = useState<{
+    timezone: string;
+    region: string;
+  } | null>(null);
+
+  useEffect(() => {
+    const region = getUserRegion();
+    console.log("region", region);
+
+    setTimeout(() => {
+      setUserRegion(region);
+    }, 0);
+  }, []);
+
   const { data: upcomingData, isLoading: loadingMeetings } =
-    useGetUpcomingMeetingsQuery(undefined);
-    const today = format(new Date(), "dd/MM/yyyy");
+    useGetUpcomingMeetingsQuery(userRegion?.region);
+  const today = format(new Date(), "dd/MM/yyyy");
 
+  const { user } = useSelector((state: RootState) => state.auth);
+  const avatarName =
+    user?.firstName[0] + (user?.lastName ? user?.lastName[0] : "");
+  const fullName = toTitleCase(
+    user?.firstName + " " + (user?.lastName ? user?.lastName : "")
+  );
 
-  const {user} = useSelector((state:RootState)=>state.auth);
-  const avatarName = user?.firstName[0] + (user?.lastName ? user?.lastName[0] :'' );
-  const fullName =toTitleCase( user?.firstName +' ' + (user?.lastName ? user?.lastName :'' ));
+  const formatDateWithTimezone = (isoString: string, timezone?: string) => {
+    if (!isoString) return "N/A";
 
-  const formatDate = (iso: string) => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    return d.toLocaleDateString("en-US", { day: "numeric", month: "short" });
+    try {
+      const date = new Date(isoString);
+
+      // Validate date
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+
+      // Use timezone if available, otherwise user's local timezone
+      const options = {
+        day: "numeric" as const,
+        month: "short" as const,
+        timeZone: timezone || undefined,
+      };
+
+      return date.toLocaleDateString("en-US", options);
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "N/A";
+    }
   };
 
-  const formatTime = (iso: string) => {
-    if (!iso) return "";
-    console.log("iso", iso);
+  const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
+    console.log("time",isoString,timezone);
+    
+    if (!isoString) return "N/A";
 
-    const d = new Date(iso);
-    console.log("iso2", d);
-    const e = d.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-    console.log("e", e);
-    return e;
+    try {
+      const date = new Date(isoString);
+
+      // Validate date
+      if (isNaN(date.getTime())) {
+        return "Invalid Time";
+      }
+
+      const options = {
+        hour: "numeric" as const,
+        minute: "2-digit" as const,
+        hour12: true,
+        timeZone: timezone || undefined,
+      };
+
+      return date.toLocaleTimeString("en-US", options);
+    } catch (error) {
+      console.error("Time formatting error:", error);
+      return "N/A";
+    }
+  };
+
+  // Combined format: "Oct 28, 2:30 PM"
+  const formatDateTimeWithTimezone = (isoString: string, timezone?: string) => {
+    const date = formatDateWithTimezone(isoString, timezone);
+    const time = formatTimeWithTimezone(isoString, timezone);
+    return `${date}, ${time}`;
   };
 
   const users: UserData[] = [
@@ -267,13 +324,22 @@ export default function Page() {
                 />
               </svg>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <UserAvatar name={avatarName}/>
-              <div>
-                <Typography title={fullName} cssClass="text-[#212C26]!"/>
-                <Typography title="Premium Member" cssClass="text-[#878787]! text-[16px]!"/>
+            <div className="flex items-center gap-10 text-[#212C26]">
+              <div className="relative">
+                <Bell className="h-8 w-8" />
+                {/* <div className="bg-[#E05252] absolute -top-1.5 -right-1 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] rounded-full h-5 w-5 px-1.5 py-0.5">
+                <h2 className="text-white  text-[12px] font-semibold font-inter!"  style={{ fontFamily: "Inter, sans-serif" }}>3</h2>
+              </div> */}
               </div>
+              <div className="flex items-center gap-2">
+                <UserAvatar name={avatarName} />
+                <div>
+                  <Typography title={fullName} cssClass="text-[#212C26]!" />
+                  <Typography
+                    title="Premium Member"
+                    cssClass="text-[#878787]! text-[16px]!"
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -357,30 +423,44 @@ export default function Page() {
                     {!loadingMeetings &&
                       upcomingData?.meetings?.map(
                         (meeting: any, index: number) => {
-                          const time = formatTime(meeting?.startTime);
-                          const date = formatDate(meeting?.startTime);
+                          const formattedTime = formatTimeWithTimezone(
+                            meeting?.localTime,
+                            userRegion?.timezone
+                          );
+                          const formattedDate = formatDateWithTimezone(
+                            meeting?.startDate,
+                            userRegion?.timezone
+                          );
                           const trainer = meeting?.createdBy
                             ? `${meeting.createdBy.firstName || ""} ${
                                 meeting.createdBy.lastName || ""
                               }`.trim()
                             : "";
 
+                          const regionInfo = meeting?.regions?.find(
+                            (r: any) => r.region == userRegion?.region
+                          );
+
+                          console.log("kpr", userRegion?.region);
+
                           return (
                             <SessionCard
                               key={index}
                               meetingId={meeting?._id}
-                              userId={"6925ef6c19f63bed6b81b619"}
+                              userId={user?.id}
+                              isLive={regionInfo?.mode === "live"}
                               trainer={trainer}
+                              region ={userRegion?.region as string}
                               joined={meeting?.joined ?? false}
                               participants={meeting?.participants ?? []}
                               participantsCount={
                                 meeting?.participantsCount ?? 0
                               }
                               image="/images/upcoming-ico.jpg"
-                              startTime={meeting?.startTime}
-                              time={time ?? ""}
-                              date={date ?? ""}
-                              title={meeting?.topic ?? "Untitled"}
+                              startTime={meeting?.localTime}
+                              time={formattedTime} // Use formatted time
+                              date={formattedDate} // Use formatted date
+                              title={meeting?.title ?? "Untitled"}
                               duration={`${meeting?.duration ?? 0} min`}
                             />
                           );

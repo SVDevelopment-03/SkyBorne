@@ -43,34 +43,21 @@ const HelpDetail = ({
 
 const Help = () => {
   const helpDetails = [
-    {
-      id: 1,
-      image: "/images/help-3.jpg",
-      title: "Chat with Us",
-      description: "+971 89359298",
-      icon: "whatsapp",
-    },
+   
     {
       id: 2,
       image: "/images/help-2.jpg",
       title: "Email Support",
       description: "support@skyborne.com",
       icon: "email",
-    },
-    {
-      id: 3,
-      image: "/images/help-1.jpg",
-      title: "Quick Help",
-      description: "Response time: within 24 hours",
-      icon: "timer",
-    },
+    }
   ];
 
   return (
     <div className="flex flex-col gap-7.5 md:gap-[50px] items-center">
       <Typography title="We’re Here to Help" type="xl" />
       <div className="max-lg:w-full max-lg:overflow-x-auto max-lg:[scrollbar-width:none]">
-        <div className="md:mt-4.5 flex items-start md:grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="md:mt-4.5 flex items-start md:grid md:grid-cols-1 lg:grid-cols-1 gap-6">
           {helpDetails?.map((help) => (
             <div
               className="bg-[#FFE8E8] rounded-2xl p-2.5 md:p-4 pt-6 max-md:w-[298px] shrink-0"

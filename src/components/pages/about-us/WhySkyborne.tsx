@@ -1,10 +1,13 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import MotionDiv from "@/components/ui/MotionDiv";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 const WhySkyborne = () => {
+  const router = useRouter();
   return (
     <div className="max-w-[1268px] w-full mx-auto">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-7.5 md:gap-12 lg:gap-16">
@@ -24,7 +27,7 @@ const WhySkyborne = () => {
               type="lgBlack"
               cssClass="max-w-[492px] max-md:text-sm"
             />
-            <Button variant={"theme"} className="max-w-56">
+            <Button variant={"theme"} className="max-w-56" onClick={()=>router.push("/signup")}>
               Start Your Journey
             </Button>
           </div>

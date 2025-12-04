@@ -1,10 +1,13 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import Heading, { BannerHeading, Typography } from "@/components/ui/heading";
 import MotionDiv from "@/components/ui/MotionDiv";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import React from "react";
 
 const OurServices = () => {
+  const router = useRouter();
   return (
     <div className="max-w-[1268px] w-full mx-auto">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-12 lg:gap-[142px] items-end">
@@ -49,7 +52,8 @@ const OurServices = () => {
                 cssClass=""
               />
             </div>
-            <Button variant={"theme"} className="max-w-56">
+            <Button variant={"theme"} className="max-w-56"
+            onClick={()=>router.push("/our-services")}>
               Explore services
             </Button>
           </div>

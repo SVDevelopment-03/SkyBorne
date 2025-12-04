@@ -31,10 +31,10 @@ const Step6 = () => {
 
   const nextStep = async () => {
     try {
-      // if (!tempUserId) {
-      //   toast.error("Invalid tempUserId. Please restart signup.");
-      //   return;
-      // }
+      if (!tempUserId) {
+        toast.error("Invalid tempUserId. Please restart signup.");
+        return;
+      }
 
       const payload: SignupFormValidation = {
         ...step1,

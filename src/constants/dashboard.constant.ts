@@ -70,3 +70,28 @@ export const SidebarNav = {
     },
   ],
 };
+
+
+export const AdminNav = {
+  navMain: [
+    {
+      title: "Dashboard",
+      url: "/admin-dashboard",
+      icon: DashboardIcon,
+      items: [],
+    },
+    {
+      title: "Class Schedular",
+      url: "/schedule-session",
+      icon: SessionsIcon,
+      items: [],
+    },
+    {
+      title: "Logout",
+      logout: true,
+      url: "#",
+      icon: LogoutIconDark,
+      items: [],
+    },
+  ],
+};

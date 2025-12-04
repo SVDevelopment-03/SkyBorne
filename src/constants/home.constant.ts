@@ -197,7 +197,7 @@ export const footerSections = [
     title: "QUICK LINKS",
     links: [
       { title: "About Us", link: "/about-us" },
-      { title: "Classes", link: null },
+      { title: "Classes", link: '/coming-soon' },
       { title: "How it works", link: "/how-works" },
       { title: "Pricing plans", link: "/packages" },
       { title: "Contact Us", link: "/contact-us" },
@@ -206,18 +206,18 @@ export const footerSections = [
   {
     title: "RESOURCES",
     links: [
-      { title: "Schedule", link: null },
-      { title: "Pricing", link: null },
+      { title: "Schedule", link: '/coming-soon' },
+      { title: "Pricing", link: '/coming-soon' },
       { title: "FAQ", link: "/faq" },
-      { title: "Memberships", link: null },
-      { title: "Guides", link: null },
+      { title: "Memberships", link: '/coming-soon' },
+      { title: "Guides", link: '/coming-soon' },
     ],
   },
   {
     title: "SUPPORT",
     links: [
-      { title: "Help Center", llink: null },
-      { title: "Accessibility", link: null },
+      { title: "Help Center", link: '/coming-soon' },
+      { title: "Accessibility", link: '/coming-soon' },
     ],
   },
 ];

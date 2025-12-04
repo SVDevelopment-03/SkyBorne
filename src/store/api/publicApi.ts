@@ -43,6 +43,13 @@ export const publicApi = createApi({
         data: body,
       }),
     }),
+    redirect: builder.mutation({
+      query: (body) => ({
+        url: "/meetings/redirect",
+        method: "POST",
+        data: body,
+      }),
+    }),
   }),
 });
 
@@ -50,6 +57,7 @@ export const {
   useGetServicesQuery,
   useGetPlansQuery,
   useGetTestimonialsQuery,
+  useRedirectMutation,
   useNewsLetterMutation,
   useCreatConsultationMutation,
   useGetFAQQuery,

@@ -33,8 +33,10 @@ import { RootState } from "@/store";
 interface ZoomSessionFlowProps {
   isOpen: boolean;
   joinMeeting:()=>void;
+  isLive:boolean;
   onClose: () => void;
   session: {
+    localTime:string;
     title: string;
     trainer: string;
     time: string;
@@ -74,6 +76,7 @@ const formatCountdown = (sec: number) => {
 export function ZoomSessionFlow({
   isOpen,
   onClose,
+  isLive,
   joinMeeting,
   session,
 }: ZoomSessionFlowProps) {
@@ -141,6 +144,7 @@ export function ZoomSessionFlow({
   };
 
   const handleJoinNow = () => {
+    handleClose()
     joinMeeting()
   };
 
@@ -164,7 +168,6 @@ export function ZoomSessionFlow({
   const handleClose = () => {
     setCurrentStep("upcoming");
     setProgress(0);
-    setCountdown(120);
     setMeetingDuration(0);
     onClose();
   };
@@ -216,10 +219,15 @@ export function ZoomSessionFlow({
                       <Calendar className="w-4 h-4" />
                       <span>{session.time}</span>
                     </div>
-                    <Badge className="bg-blue-500 text-white border-0 py-0.5! px-2! text-xs!">
+                    {isLive ? <Badge className="bg-blue-500 text-white border-0 py-0.5! px-2! text-xs!">
                       <Video className="w-3 h-3 mr-1" />
                       Live Session
                     </Badge>
+                    : <Badge className="bg-yellow-500 text-black border-0 py-0.5! px-2! text-xs!">
+                      <Video className="w-3 h-3 mr-1" />
+                      Record Session
+                    </Badge>
+                    }
                   </div>
 
                   <p className="text-sm text-[#717182] mt-3">

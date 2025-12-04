@@ -11,6 +11,7 @@ interface BannerUiProps {
   cssClass?: string;
   id?: string;
   comingSoon?: boolean;
+  url?:string
 }
 
 const ServiceCard = ({
@@ -19,12 +20,13 @@ const ServiceCard = ({
   heading,
   id,
   comingSoon,
+  url=''
 }: BannerUiProps) => {
   const router = useRouter();
 
   const handleRedirect = () => {
     if (id) {
-      router.push(`/yoga-detail/${id}`);
+      router.push(url);
     } else {
       router.push(`/yoga-detail`);
     }
