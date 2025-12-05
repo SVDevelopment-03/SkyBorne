@@ -45,25 +45,63 @@ const Login = () => {
   const dispatch = useDispatch();
   const [showPass, setShowPass] = useState(false);
   const [login, { isLoading, error }] = useLoginMutation();
-  const [socialLogin, { isLoading:isSocialLoading }] = useSocialLoginMutation();
+  const [socialLogin, { isLoading: isSocialLoading }] =
+    useSocialLoginMutation();
 
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        const { access_token } = tokenResponse;
 
-const googleLogin = useGoogleLogin({
-  onSuccess: async (tokenResponse) => {
+        const userInfo = await fetch(
+          "https://www.googleapis.com/oauth2/v3/userinfo",
+          {
+            headers: { Authorization: `Bearer ${access_token}` },
+          }
+        ).then((res) => res.json());
+
+        console.log("user info", userInfo);
+
+        const payload = {
+          provider: "google",
+          email: userInfo.email,
+          googleId: userInfo.sub,
+        };
+
+        const res = await socialLogin(payload).unwrap();
+
+        const { user, accessToken, refreshToken } = res.data;
+
+        storage.set(process.env.NEXT_PUBLIC_USER as string, user);
+        localStorage.setItem(
+          process.env.NEXT_PUBLIC_ACCESS_TOKEN as string,
+          accessToken
+        );
+        localStorage.setItem(
+          process.env.NEXT_PUBLIC_REFRESH_TOKEN as string,
+          refreshToken
+        );
+
+        dispatch(setCredentials({ user, accessToken, refreshToken }));
+
+        toast.success("Logged in successfully!");
+        router.push("/dashboard");
+      } catch (err: any) {
+        toast.error(err?.data?.message || "Google login failed");
+      }
+    },
+    onError: () => toast.error("Google login failed"),
+  });
+
+  const handleAppleSuccess = async (response: any) => {
     try {
-      const { access_token } = tokenResponse;
-
-      const userInfo = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: { Authorization: `Bearer ${access_token}` },
-      }).then((res) => res.json());
-
-      console.log("user info", userInfo);
-      
+      const idToken = response.authorization.id_token;
+      const decoded: any = JSON.parse(atob(idToken.split(".")[1]));
 
       const payload = {
-        provider: "google",
-        email: userInfo.email,
-        googleId: userInfo.sub,
+        provider: "apple",
+        email: decoded.email,
+        appleId: decoded.sub,
       };
 
       const res = await socialLogin(payload).unwrap();
@@ -71,52 +109,23 @@ const googleLogin = useGoogleLogin({
       const { user, accessToken, refreshToken } = res.data;
 
       storage.set(process.env.NEXT_PUBLIC_USER as string, user);
-      localStorage.setItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, accessToken);
-      localStorage.setItem(process.env.NEXT_PUBLIC_REFRESH_TOKEN as string, refreshToken);
+      localStorage.setItem(
+        process.env.NEXT_PUBLIC_ACCESS_TOKEN as string,
+        accessToken
+      );
+      localStorage.setItem(
+        process.env.NEXT_PUBLIC_REFRESH_TOKEN as string,
+        refreshToken
+      );
 
       dispatch(setCredentials({ user, accessToken, refreshToken }));
 
       toast.success("Logged in successfully!");
       router.push("/dashboard");
-
     } catch (err: any) {
-      toast.error(err?.data?.message || "Google login failed");
+      toast.error(err?.data?.message || "Apple login failed");
     }
-  },
-  onError: () => toast.error("Google login failed"),
-});
-
-
-const handleAppleSuccess = async (response: any) => {
-  try {
-    const idToken = response.authorization.id_token;
-    const decoded: any = JSON.parse(atob(idToken.split(".")[1]));
-
-    const payload = {
-      provider: "apple",
-      email: decoded.email,  
-      appleId: decoded.sub,
-    };
-
-    const res = await socialLogin(payload).unwrap();
-
-    const { user, accessToken, refreshToken } = res.data;
-
-    storage.set(process.env.NEXT_PUBLIC_USER as string, user);
-    localStorage.setItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string, accessToken);
-    localStorage.setItem(process.env.NEXT_PUBLIC_REFRESH_TOKEN as string, refreshToken);
-
-    dispatch(setCredentials({ user, accessToken, refreshToken }));
-
-    toast.success("Logged in successfully!");
-    router.push("/dashboard");
-
-  } catch (err: any) {
-    toast.error(err?.data?.message || "Apple login failed");
-  }
-};
-
-
+  };
 
   const initialValues = {
     email: "",
@@ -156,7 +165,11 @@ const handleAppleSuccess = async (response: any) => {
           setCredentials({ user: data?.user, accessToken, refreshToken })
         );
         toast.success(res?.message || "Login successful!");
-        router.push("/dashboard");
+        if (data?.user?.role == "admin") {
+          router.push("/admin-dashboard");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (err: any) {
       console.log("RAW LOGIN ERROR:", err);
@@ -317,27 +330,30 @@ const handleAppleSuccess = async (response: any) => {
                         Sign in with Google
                       </Button>
                       <AppleSignInButton
-                  uiType="dark"
-                  authOptions={{
-                    clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID as string,
-                    scope: "email name",
-                    redirectURI: process.env
-                      .NEXT_PUBLIC_APPLE_REDIRECT_URI as string,
-                    usePopup: true,
-                  }}
-                  onSuccess={(response: any) => handleAppleSuccess(response)}
-                  onError={() => toast.error("Apple signup failed")}
-                  render={(props: any) => (
-                    <Button
-                      variant="outlineBlackRect"
-                      className="py-[17px]! px-[123px]!"
-                      {...props}
-                    >
-                      <AppleIcon />
-                      Sign up with Apple
-                    </Button>
-                  )}
-                />
+                        uiType="dark"
+                        authOptions={{
+                          clientId: process.env
+                            .NEXT_PUBLIC_APPLE_CLIENT_ID as string,
+                          scope: "email name",
+                          redirectURI: process.env
+                            .NEXT_PUBLIC_APPLE_REDIRECT_URI as string,
+                          usePopup: true,
+                        }}
+                        onSuccess={(response: any) =>
+                          handleAppleSuccess(response)
+                        }
+                        onError={() => toast.error("Apple signup failed")}
+                        render={(props: any) => (
+                          <Button
+                            variant="outlineBlackRect"
+                            className="py-[17px]! px-[123px]!"
+                            {...props}
+                          >
+                            <AppleIcon />
+                            Sign up with Apple
+                          </Button>
+                        )}
+                      />
                     </div>
                   </Form>
                 )}

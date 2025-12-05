@@ -9,7 +9,6 @@ interface SignupPageProps {
 
 const Page =async ({ searchParams }: SignupPageProps) => {
   const { step } = await searchParams;
-  console.log("aaaa", step);
   
 
   return <Signup step={step as string}  />;

@@ -19,20 +19,21 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   useEffect(() => {
     const token = typeof window !== "undefined"
       ? getAccessToken()
-      : null;
-
-      console.log("token",getAccessToken());
-      
+      : null;      
     // if (token && user?.onboardingCompleted) {
 
     if (token && user?.onboardingCompleted) {
       router.replace("/dashboard");
-    } else {
+    }
+    // if(token && !user?.onboardingCompleted){
+    //   router.replace("/signup?step=7");
+    // }
+     else {
         setTimeout(() => {
             setChecking(false);
         }, 0);
     }
-  }, [router]);
+  }, [router,user?.onboardingCompleted]);
 
   if (checking) return null; 
 

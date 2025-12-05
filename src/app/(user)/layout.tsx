@@ -25,12 +25,12 @@ export default function UserLayout({ children }: AuthLayoutProps) {
         router.replace("/login");
       }, 0);
     }
-    // else if (token && !user?.onboardingCompleted){
-    //    setTimeout(() => {
-    //     router.replace("/signup?step=7");
-    //   }, 0);
+    else if (token && !user?.onboardingCompleted){
+       setTimeout(() => {
+        router.replace("/signup?step=7");
+      }, 0);
 
-    // }
+    }
      else {
       setTimeout(() => {
         setChecking(false);

@@ -60,6 +60,10 @@ API.interceptors.response.use(
         return API(originalRequest);
       } catch (refreshError) {
         removeTokens();
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
+
         return Promise.reject(refreshError);
       }
     }

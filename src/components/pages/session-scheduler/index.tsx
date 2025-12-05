@@ -63,7 +63,7 @@ interface FormValues {
 
 const validationSchema = Yup.object().shape({
   service: Yup.string().required("Service is required"),
-    title: Yup.string().required("Title is required"),
+  title: Yup.string().required("Title is required"),
   date: Yup.date().required("Date is required").typeError("Date is required"),
   liveRegion: Yup.string().required("Live region is required"),
   liveTime: Yup.string().required("Live time is required"),
@@ -83,7 +83,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
   const { data, isLoading, isError } = useGetTrainersQuery(undefined);
   const [createMeeting] = useCreateMeetingMutation();
   const { user } = useGetUser();
-  let timezoneConversions:any;
+  let timezoneConversions: any;
 
   const {
     data: serviceData,
@@ -143,6 +143,13 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
     "uk-europe": "Europe/London",
   };
 
+  const fixedRegionTimes: Record<string, string> = {
+    gulf: "10:00 AM",
+    apac: "2:00 PM",
+    "canada-usa": "6:00 PM",
+    "uk-europe": "9:00 PM",
+  };
+
   const getTimezoneConversions = (
     liveRegion: string,
     liveTime: string,
@@ -150,21 +157,19 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
   ): TimezoneConversion[] => {
     if (!liveRegion || !liveTime || !date) return [];
 
-    const time24 = convertTimeTo24Hour(liveTime);
-    const regionTZ = regionTimezones[liveRegion];
-
-    const liveDateTime = dayjs.tz(
-      `${format(date, "yyyy-MM-dd")} ${time24}`,
-      regionTZ
-    );
+    // Fixed meeting times for each region
+    const fixedTimes: Record<string, string> = {
+      gulf: "10:00 AM",
+      apac: "2:00 PM",
+      "canada-usa": "6:00 PM",
+      "uk-europe": "9:00 PM",
+    };
 
     return Object.entries(regionTimezones).map(([regionKey, tz]) => {
-      const converted = liveDateTime.tz(tz).format("hh:mm A");
-
       return {
         region:
           regionOptions.find((r) => r.value === regionKey)?.label || regionKey,
-        localTime: converted,
+        localTime: fixedTimes[regionKey],
         timezone: tz,
         mode: regionKey === liveRegion ? "live" : "replay",
       };
@@ -272,7 +277,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
       onSubmit={handleSubmit}
     >
       {({ values, errors, touched, isSubmitting, setFieldValue }) => {
-         timezoneConversions = getTimezoneConversions(
+        timezoneConversions = getTimezoneConversions(
           values.liveRegion,
           values.liveTime,
           values.date
@@ -285,12 +290,18 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
           values.date
         );
 
+        const currentService = serviceOptions?.find(
+          (s) => s.value === values?.service
+        );
+        const serviceName = currentService?.label;
+        console.log("aaa", serviceName);
+
         const isFormValid =
           values.service &&
           values.date &&
           values.liveRegion &&
           values.trainer &&
-          values?.title && 
+          values?.title &&
           values.duration > 0;
 
         return (
@@ -410,7 +421,11 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                         <Select
                           label="🌍 Select Region"
                           value={values.liveRegion}
-                          onChange={(val) => setFieldValue("liveRegion", val)}
+                          onChange={(val) => {
+                            setFieldValue("liveRegion", val);
+                            // Auto-update time based on selected region
+                            setFieldValue("liveTime", fixedRegionTimes[val]);
+                          }}
                           options={regionOptions}
                           placeholder="Choose region..."
                         />
@@ -508,39 +523,41 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                           </tr>
                         </thead>
                         <tbody>
-                          {timezoneConversions.map((conversion:any, index:number) => (
-                            <tr
-                              key={index}
-                              className={`border-b border-[#e5e5e5] last:border-b-0 transition-colors ${
-                                conversion.mode === "live"
-                                  ? "bg-[#e8f5e9]"
-                                  : "bg-[#fff9e6]"
-                              }`}
-                            >
-                              <td className="px-4 py-3 text-[#262626]">
-                                {conversion.region}
-                              </td>
-                              <td className="px-4 py-3 text-[#525252]">
-                                {conversion.localTime}
-                              </td>
-                              <td className="px-4 py-3 text-[#737373]">
-                                {conversion?.timezone}
-                              </td>
-                              <td className="px-4 py-3">
-                                {conversion.mode === "live" ? (
-                                  <Badge type="live">
-                                    <Star className="w-3.5 h-3.5" />
-                                    Live
-                                  </Badge>
-                                ) : (
-                                  <Badge type="replay">
-                                    <RotateCw className="w-3.5 h-3.5" />
-                                    Replay
-                                  </Badge>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
+                          {timezoneConversions.map(
+                            (conversion: any, index: number) => (
+                              <tr
+                                key={index}
+                                className={`border-b border-[#e5e5e5] last:border-b-0 transition-colors ${
+                                  conversion.mode === "live"
+                                    ? "bg-[#e8f5e9]"
+                                    : "bg-[#fff9e6]"
+                                }`}
+                              >
+                                <td className="px-4 py-3 text-[#262626]">
+                                  {conversion.region}
+                                </td>
+                                <td className="px-4 py-3 text-[#525252]">
+                                  {conversion.localTime}
+                                </td>
+                                <td className="px-4 py-3 text-[#737373]">
+                                  {conversion?.timezone}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {conversion.mode === "live" ? (
+                                    <Badge type="live">
+                                      <Star className="w-3.5 h-3.5" />
+                                      Live
+                                    </Badge>
+                                  ) : (
+                                    <Badge type="replay">
+                                      <RotateCw className="w-3.5 h-3.5" />
+                                      Replay
+                                    </Badge>
+                                  )}
+                                </td>
+                              </tr>
+                            )
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -614,7 +631,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                   <div className="bg-gradient-to-r from-[#d4849f]/10 to-[#f9d5c7]/10 rounded-xl p-4 space-y-3">
                     <div className="space-y-1">
                       <h4 className="text-[#262626] capitalize">
-                        {values.service.replace("-", " ")} — Week 1
+                        {serviceName} — Week 1
                       </h4>
                       <p className="text-[#737373]">
                         Date:{" "}
@@ -635,12 +652,12 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                       <p className="text-[#737373]">
                         Replay Regions:{" "}
                         {timezoneConversions
-                          .filter((t:any) => t.mode === "replay")
-                          .map((t:any) => t.region)
+                          .filter((t: any) => t.mode === "replay")
+                          .map((t: any) => t.region)
                           .join(" • ")}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 text-[#b95e82]">
+                    {/* <div className="flex items-center gap-2 text-[#b95e82]">
                       <RotateCw className="w-4 h-4" />
                       <span>Recording Needed After Session</span>
                     </div>
@@ -649,7 +666,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                       className="bg-[#b95e82] text-white px-6 py-2 rounded-lg hover:bg-[#9a4c6d] transition-colors"
                     >
                       Upload Recording
-                    </button>
+                    </button> */}
                   </div>
                 </div>
               )}
