@@ -428,7 +428,7 @@ export default function Page() {
                             userRegion?.timezone
                           );
                           const formattedDate = formatDateWithTimezone(
-                            meeting?.startDate,
+                            meeting?.localTime,
                             userRegion?.timezone
                           );
                           const trainer = meeting?.createdBy

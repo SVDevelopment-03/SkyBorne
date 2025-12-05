@@ -33,7 +33,7 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
         setChecking(false);
       }, 0);
     }
-  }, [router]);
+  }, [router, user?.role]);
 
   if (checking) return null;
 
