@@ -423,6 +423,10 @@ export default function Page() {
                     {!loadingMeetings &&
                       upcomingData?.meetings?.map(
                         (meeting: any, index: number) => {
+                          const regionInfo = meeting?.regions?.find(
+                            (r: any) => r.region == userRegion?.region
+                          );
+
                           const formattedTime = formatTimeWithTimezone(
                             meeting?.localTime,
                             userRegion?.timezone
@@ -437,9 +441,7 @@ export default function Page() {
                               }`.trim()
                             : "";
 
-                          const regionInfo = meeting?.regions?.find(
-                            (r: any) => r.region == userRegion?.region
-                          );
+                          
 
                           console.log("kpr", userRegion?.region);
 
@@ -458,7 +460,7 @@ export default function Page() {
                               }
                               image="/images/upcoming-ico.jpg"
                               startTime={meeting?.localTime}
-                              time={formattedTime} // Use formatted time
+                              time={regionInfo?.localTime} // Use formatted time
                               date={formattedDate} // Use formatted date
                               title={meeting?.title ?? "Untitled"}
                               duration={`${meeting?.duration ?? 0} min`}
