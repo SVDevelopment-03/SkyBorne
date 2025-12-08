@@ -1,8 +1,13 @@
 import { BadgeIcon } from "@/icons/helpIcon";
+import { toTitleCase } from "@/utils/Titlecase";
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 export type UserData = {
   id: string;
   sessionName: string;
+  meeting:{
+    title:string
+  }
   date: string;
   duration: string;
   status: string;
@@ -12,56 +17,59 @@ export type UserData = {
 
 export const columns: ColumnDef<UserData>[] = [
   {
-    accessorKey: "sessionName",
+    accessorKey: "meeting",
     header: "Session Name",
-    cell: ({ row }) => (
+    cell: ({ row }) => {
+    const sessionName = row?.original?.meeting?.title;
+      return (
       <div className="text-[16px] font-satoshi-500">
-        {row.getValue("sessionName")}
+        {sessionName}
       </div>
-    ),
+    )},
   },
 
-  {
-    accessorKey: "date",
-    header: "Date",
-    cell: ({ row }) => (
-      <div className="text-[16px] font-satoshi-500">
-        {row.getValue("date")}
-      </div>
-    ),
+{
+  accessorKey: "joinedAt",
+  header: "Joined At",
+  cell: ({ row }) => {
+    const date = new Date(row.getValue("joinedAt"));
+    return format(date, "d LLL, yyyy"); // → "8 Dec, 2025"
   },
+},
 
-  {
-    accessorKey: "duration",
-    header: "Duration",
-    cell: ({ row }) => (
-      <div className="text-[16px] font-satoshi-500">
-        {row.getValue("duration")}
-      </div>
-    ),
-  },
+  // {
+  //   accessorKey: "totalDuration",
+  //   header: "Duration",
+  //   cell: ({ row }) => (
+  //     <div className="text-[16px] font-satoshi-500">
+  //       {row.getValue("totalDuration")}
+  //     </div>
+  //   ),
+  // },
 
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <div className="text-[16px] font-satoshi-500">
-        {row.getValue("status")}
-      </div>
-    ),
-  },
-
-  {
-    accessorKey: "badge",
-    header: "Badges",
     cell: ({ row }) => {
-      const hasBadge = row.getValue("badge");
-
+      const status= row.getValue("status") as string;
       return (
-        <div className="flex items-center justify-center h-full max-h-[20px]">
-          {hasBadge ? <BadgeIcon /> : "-"}
-        </div>
-      );
-    },
+      <div className="text-[16px] font-satoshi-500">
+        {toTitleCase(status=="joined"? "completed":status) }
+      </div>
+    )},
   },
+
+  // {
+  //   accessorKey: "badge",
+  //   header: "Badges",
+  //   cell: ({ row }) => {
+  //     const hasBadge = row.getValue("badge");
+
+  //     return (
+  //       <div className="flex items-center justify-center h-full max-h-[20px]">
+  //         {hasBadge ? <BadgeIcon /> : "-"}
+  //       </div>
+  //     );
+  //   },
+  // },
 ];

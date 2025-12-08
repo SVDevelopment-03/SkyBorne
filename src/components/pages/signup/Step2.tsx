@@ -287,7 +287,7 @@ const Step2 = () => {
                 <p className="text-red-500 text-sm">{errors.agreeTerms}</p>
               )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-[26px] pt-[20px]">
+              <div className="grid grid-cols-1  gap-4 px-[26px] pt-[20px]">
                 <Button
                   variant={"outlineBlackRect"}
                   className="py-[17px]! px-[123px]!"
@@ -297,7 +297,7 @@ const Step2 = () => {
                   <GoogleIcon />
                   Sign up with Google
                 </Button>
-                <AppleSignin
+                {/* <AppleSignin
                   uiType="dark"
                   authOptions={{
                     clientId: process.env.NEXT_PUBLIC_APPLE_CLIENT_ID as string,
@@ -318,7 +318,7 @@ const Step2 = () => {
                       Sign up with Apple
                     </Button>
                   )}
-                />
+                /> */}
 
                 {/* <Button
                   variant={"outlineBlackRect"}

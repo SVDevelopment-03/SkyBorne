@@ -80,7 +80,8 @@ Consistent fitness improves heart health, builds stamina, and reduces stress, ma
                   paragraph: "max-md:text-[13px] max-w-[487px]",
                 }}
               />
-              <Button variant={"yellow"} className="mt-auto">
+              <Button variant={"yellow"} className="mt-auto"
+              onClick={()=>router.push("/dashboard")}>
                 Book classes
               </Button>
             </div>

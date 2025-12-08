@@ -319,7 +319,7 @@ const Login = () => {
                         Signup
                       </Button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-[26px] pt-12">
+                    <div className="grid grid-cols-1  gap-4 py-[26px] pt-12">
                       <Button
                         variant={"outlineBlackRect"}
                         className="py-[17px]! px-[123px]!"
@@ -329,7 +329,7 @@ const Login = () => {
                         <GoogleIcon />
                         Sign in with Google
                       </Button>
-                      <AppleSignInButton
+                      {/* <AppleSignInButton
                         uiType="dark"
                         authOptions={{
                           clientId: process.env
@@ -353,7 +353,7 @@ const Login = () => {
                             Sign up with Apple
                           </Button>
                         )}
-                      />
+                      /> */}
                     </div>
                   </Form>
                 )}
