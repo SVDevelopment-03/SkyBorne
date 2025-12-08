@@ -9,28 +9,30 @@ const ServiceList = () => {
       image: "/images/services-1.jpg",
       buttonText: "know more",
       heading: "Yoga",
-      url:'/yoga-detail/1'
+      url:'/yoga-detail'
     },
     {
       id: "2",
       image: "/images/services-2.jpg",
       buttonText: "know more",
       heading: "Fitness Classes",
-      url:'/fitness-detail/1'
+      url:'/fitness-detail'
     },
     {
       id: "3",
       image: "/images/services-3.jpg",
       buttonText: "know more",
       heading: "Diet & Nutrition",
-        url:'/diet-detail/1'
+      url:'/diet-detail',
+      comingSoon:true
+        
     },
     {
       id: "4",
       image: "/images/services-4.jpg",
       buttonText: "know more",
       heading: "Zumba Dance",
-        url:'/zumba-detail/1'
+        url:'/zumba-detail'
     },
   ];
   return (
@@ -53,7 +55,7 @@ const ServiceList = () => {
             >
               <MotionDiv position={i % 2 == 0 ? "left" : "right"}>
                 <ServiceCard
-                  comingSoon={false}
+                  comingSoon={service?.comingSoon}
                   id={service?.id}
                   url={service?.url}
                   src={service.image}

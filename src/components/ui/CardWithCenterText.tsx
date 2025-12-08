@@ -1,5 +1,7 @@
+"use client"
 import { BannerHeading, Typography } from "@/components/ui/heading";
 import { Button } from "./button";
+import { useRouter } from "next/navigation";
 
 interface CenterCardProps {
   src: string;
@@ -15,6 +17,7 @@ const CenterCard = ({
   heading,
   description,
 }: CenterCardProps) => {
+  const router = useRouter();
   return (
     <div className="relative overflow-hidden rounded-xl md:rounded-[30px]">
       <div
@@ -32,6 +35,7 @@ const CenterCard = ({
           />
           <Button
             variant={"outline"}
+            onClick={()=>router.push("/dashboard")}
             className="bg-[#FFF7DD] text-[#494949] text-xs! md:text-[19px]! hover:text-white hover:border-[#B95E82] hover:bg-[#B95E82]"
           >
             {buttonText}

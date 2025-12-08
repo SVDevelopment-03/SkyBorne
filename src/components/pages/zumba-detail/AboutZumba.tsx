@@ -1,11 +1,17 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { WhiteHeading } from "@/components/ui/heading";
 import HeadingDiv from "@/components/ui/HeadingDiv";
 import Image from "next/image";
 import React from "react";
 import MotionDiv from "@/components/ui/MotionDiv";
+import useGetUser from "@/hooks/useGetUser";
+import useRedirectUser from "@/hooks/useRedirectUser";
 
 const AboutZumba = () => {
+
+    const {user} = useGetUser();
+  const {redirectUser} = useRedirectUser()
   return (
     <div className="max-w-[1390px] mx-auto">
       <div className="bg-[#FFE8E8] gap-12 md:gap-15 rounded-2xl md:rounded-[30px] max-md:pb-4 max-md:px-2.5 max-lg:px-7.5 py-14 text-[#494949]">
@@ -20,9 +26,10 @@ const AboutZumba = () => {
                 title="What is Zumba, Really?"
                 description="Zumba blends Latin rhythms with easy-to-follow moves, creating a dynamic workout that feels more like a party than exercise. Ignite your body, boost coordination, burn calories, and feel the music lift your mood"
               />
-              <Button variant={"theme"} className="mt-2.5">
+             { !user &&  <Button variant={"theme"} className="mt-2.5"
+             onClick={()=>redirectUser('/signup')}>
                 Sign up for a class
-              </Button>
+              </Button>}
             </div>
           </MotionDiv>
           <MotionDiv>
@@ -72,7 +79,8 @@ Whether new to fitness or active, routines are easily modified to suit your pace
                   paragraph: "max-md:text-[13px] max-w-[487px]",
                 }}
               />
-              <Button variant={"yellow"} className="mt-auto">
+              <Button variant={"yellow"} className="mt-auto"
+              onClick={()=>redirectUser("/signup")}>
                 Book classes
               </Button>
             </div>

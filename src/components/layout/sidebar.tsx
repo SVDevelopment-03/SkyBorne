@@ -115,7 +115,8 @@ const Sidebar = () => {
                 type="regular"
                 cssClass="text-[#717182]! text-[15px]!"
               />
-              <Button variant={"themeRegular"} className="mt-6">
+              <Button variant={"themeRegular"} className="mt-6"
+              onClick={()=>router.push("/contact-us")}>
                 Get Help
               </Button>
             </div>

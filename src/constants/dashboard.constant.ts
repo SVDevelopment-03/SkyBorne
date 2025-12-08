@@ -15,49 +15,49 @@ export const SidebarNav = {
   navMain: [
     {
       title: "Dashboard",
-      url: "#",
+      url: "/dashboard",
       icon: DashboardIcon,
       items: [],
     },
     {
       title: "Sessions",
-      url: "#",
+      url: "/upcoming",
       icon: SessionsIcon,
       items: [],
     },
     {
       title: "Progress",
-      url: "#",
+      url: "/upcoming",
       icon: ProgressIcon,
       items: [],
     },
     {
       title: "Packages",
-      url: "#",
+      url: "/upcoming",
       icon: PackagesIcon,
       items: [],
     },
     {
       title: "Notifications",
-      url: "#",
+      url: "/upcoming",
       icon: NotificationsIcon,
       items: [],
     },
     {
       title: "Payments",
-      url: "#",
+      url: "/upcoming",
       icon: PaymentsIcon,
       items: [],
     },
     {
       title: "Profile",
-      url: "#",
+      url: "/upcoming",
       icon: ProfileIcon,
       items: [],
     },
     {
       title: "Feedback",
-      url: "#",
+      url: "/upcoming",
       icon: FeedbackIcon,
       items: [],
     },
@@ -70,7 +70,6 @@ export const SidebarNav = {
     },
   ],
 };
-
 
 export const AdminNav = {
   navMain: [

@@ -123,8 +123,8 @@ const Hero = () => {
             </div>
             <ul>
               <LiText text="Yoga Classes" link="/yoga-detail" />
-              <LiText text="Group Therapy" link="/fitness-detail/1" />
-              <LiText text="Nutrition Consults" link="/diet-detail/1" />
+              <LiText text="Group Therapy" link="/fitness-detail" />
+              <LiText text="Nutrition Consults" link="/diet-detail" />
             </ul>
           </div>
         </div>

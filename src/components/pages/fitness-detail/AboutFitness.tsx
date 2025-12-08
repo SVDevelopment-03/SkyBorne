@@ -1,3 +1,4 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { WhiteHeading } from "@/components/ui/heading";
 import HeadingDiv from "@/components/ui/HeadingDiv";
@@ -5,8 +6,14 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import React from "react";
 import MotionDiv from "@/components/ui/MotionDiv";
+import useGetUser from "@/hooks/useGetUser";
+import { useRouter } from "next/navigation";
+
 
 const AboutFitness = () => {
+      const {user} = useGetUser();
+      const router = useRouter()
+
   return (
     <div className="max-w-[1390px] mx-auto">
       <div className="bg-[#FFE8E8] gap-12 md:gap-15 rounded-2xl md:rounded-[30px] max-md:pb-4 max-md:px-2.5 max-lg:px-7.5 py-14 text-[#494949]">
@@ -21,9 +28,9 @@ const AboutFitness = () => {
                 title="What is Fitness, Really?"
                 description="Fitness isn’t just about lifting weights or running. It’s about building the energy and capability to enjoy everyday life, handle challenges, and feel confident in your body. Our classes blend cardio, strength, HIIT, and mobility techniques for a well-balanced, effective routine"
               />
-              <Button variant={"theme"} className="mt-2.5">
-                Sign up for a class
-              </Button>
+               {!user &&  <Button variant={"theme"} className="mt-2.5"  onClick={()=>router.push('/signup')}>
+                              Sign up for a class
+                            </Button>}
             </div>
           </MotionDiv>
           <MotionDiv>
