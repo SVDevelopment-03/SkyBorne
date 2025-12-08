@@ -5,6 +5,8 @@ import Heading, { Typography } from "./heading";
 import { Button } from "./button";
 import { MouseEventHandler, useState } from "react";
 import { RadioGroup, RadioGroupItem } from "./radio-group";
+import useGetUser from "@/hooks/useGetUser";
+import useRedirectUser from "@/hooks/useRedirectUser";
 
 interface SubscriptionProp {
   name: string;
@@ -23,6 +25,8 @@ const SubscriptionPanUi = ({
   features,
   isMain = false,
 }: SubscriptionProp) => {
+      const {user} = useGetUser();
+  const {redirectUser} = useRedirectUser()
   return (
     <div
       className={`rounded-[18px] ${
@@ -63,12 +67,13 @@ const SubscriptionPanUi = ({
               {feature}
             </li>
           ))}
-          <Button
+         {!user &&  <Button
             variant={"theme"}
             className="px-8! py-4! text-sm! md:text-lg! leading-5! font-montserrat mt-3.5"
+             onClick={()=>redirectUser('/signup')}
           >
             Sign up & Claim
-          </Button>
+          </Button>}
         </ul>
         <div></div>
       </div>

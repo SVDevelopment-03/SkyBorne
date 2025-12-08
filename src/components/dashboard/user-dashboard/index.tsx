@@ -20,7 +20,10 @@ import { columns, UserData } from "./Columns";
 import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Input2 } from "@/components/ui/input";
-import { useGetUpcomingMeetingsQuery } from "@/store/api/meetingApi";
+import {
+  useGetAllMeetingsQuery,
+  useGetUpcomingMeetingsQuery,
+} from "@/store/api/meetingApi";
 import { format } from "date-fns";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
@@ -28,88 +31,132 @@ import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
 import { Bell } from "lucide-react";
 import { getUserRegion } from "@/utils/timezone";
+import { useGetDashboardStatsQuery } from "@/store/api/authApi";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-const options: ApexOptions = {
-  chart: {
-    type: "donut",
-    height: 450,
-  },
-  series: [75, 25, 100],
+const getCreditsChartOptions = (
+  totalCredits: number,
+  usedCredits: number
+): ApexOptions => {
+  // Calculate remaining credits
+  const remainingCredits = Math.max(0, totalCredits - usedCredits);
+  console.log("credits", totalCredits, usedCredits, remainingCredits);
 
-  labels: ["Completed", "Remaining", "Goal"],
+  const options: ApexOptions = {
+    chart: {
+      type: "donut",
+      height: 450,
+    },
+    series: [usedCredits, remainingCredits, totalCredits],
 
-  colors: ["#FBEFD8", "#494949", "#B95E82"],
-  states: {
-    hover: { filter: { type: "darke" } },
-    active: { filter: { type: "none" } },
-  },
-  stroke: { width: 0 },
+    labels: ["Used Credits", "Remaining Credits", "Total Credits"],
 
-  tooltip: {
-    enabled: false,
-  },
+    colors: ["#FBEFD8", "#494949", "#B95E82"],
+    states: {
+      hover: { filter: { type: "darke" } },
+      active: { filter: { type: "none" } },
+    },
+    stroke: { width: 0 },
 
-  dataLabels: {
-    enabled: false,
-  },
+    tooltip: {
+      enabled: false,
+    },
 
-  plotOptions: {
-    pie: {
-      donut: {
-        size: "65%",
-        labels: {
-          show: true,
-          name: { show: false },
-          total: {
+    dataLabels: {
+      enabled: false,
+    },
+
+    plotOptions: {
+      pie: {
+        donut: {
+          size: "65%",
+          labels: {
             show: true,
-            showAlways: true,
-            fontSize: "18px",
-            fontWeight: 500,
-            color: "#494949",
+            name: { show: false },
+            total: {
+              show: true,
+              showAlways: true,
+              fontSize: "18px",
+              fontWeight: 500,
+              color: "#494949",
 
-            formatter: function (w) {
-              const completed = w.globals.series[0]; // 75
-              const remaining = w.globals.series[1]; // 25
+              formatter: function (w) {
+                const completed = w.globals.series[0]; // 75
+                const remaining = w.globals.series[1]; // 25
 
-              const percent = (completed / (completed + remaining)) * 100;
+                const percent = (completed / (completed + remaining)) * 100;
 
-              return percent.toFixed(0) + "% Completed";
+                return percent.toFixed(0) + "% Completed";
+              },
             },
           },
         },
       },
     },
-  },
 
-  legend: {
-    show: true,
-    position: "bottom",
-    fontSize: "18px",
-    fontWeight: 500,
-    labels: {
-      colors: "#000",
+    legend: {
+      show: true,
+      position: "bottom",
+      fontSize: "18px",
+      fontWeight: 500,
+      labels: {
+        colors: "#000",
+      },
+      markers: {
+        size: 10,
+        strokeWidth: 0,
+        offsetX: -10,
+      },
+      itemMargin: {
+        horizontal: 10,
+        vertical: 6,
+      },
     },
-    markers: {
-      size: 10,
-      strokeWidth: 0,
-      offsetX: -10,
-    },
-    itemMargin: {
-      horizontal: 10,
-      vertical: 6,
-    },
-  },
+  };
+
+  return options;
 };
+
+type MeetingStatus = "registered" | "joined" | "completed" | "missed";
+
+interface GetMeetingsParams {
+  status?: MeetingStatus;
+  page?: number;
+  limit?: number;
+}
 
 export default function Page() {
   const [userRegion, setUserRegion] = useState<{
     timezone: string;
     region: string;
   } | null>(null);
+
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const [status, setStatus] = useState<MeetingStatus | undefined>("joined");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1); // Reset to first page when limit changes
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   useEffect(() => {
     const region = getUserRegion();
@@ -120,16 +167,77 @@ export default function Page() {
     }, 0);
   }, []);
 
-  const { data: upcomingData, isLoading: loadingMeetings } =
-    useGetUpcomingMeetingsQuery(userRegion?.region);
+  const {
+    data: upcomingData,
+    isLoading: loadingMeetings,
+    isFetching,
+  } = useGetUpcomingMeetingsQuery({
+    region: userRegion?.region,
+    search: debouncedSearch,
+  });
+
+  const {
+    data: dashboardData,
+    isLoading: tileLoading,
+    error: tileerror,
+  } = useGetDashboardStatsQuery(undefined);
+
+  const totalCredits = dashboardData?.data?.totalCredits || 0;
+  const classesAttended = dashboardData?.data?.classesAttended || 0;
+
+  const usedCredits = classesAttended;
+
+  const chartOptions = getCreditsChartOptions(totalCredits, usedCredits);
+
+  // Generate series data: [used, remaining, total]
+  const remainingCredits = Math.max(0, totalCredits - usedCredits);
+  const chartSeries = [usedCredits, remainingCredits, totalCredits];
+
+  // Helper function to format next upcoming session
+  const getNextUpcomingSessionText = (upcomingSessions: number): string => {
+    if (upcomingSessions === 0) return "No upcoming sessions";
+    return upcomingSessions === 1
+      ? "1 session"
+      : `${upcomingSessions} sessions`;
+  };
+
+  // Helper function to get plan expiry text
+  const getPlanExpiryText = (plan: string | undefined): string => {
+    // You can customize this based on your plan expiry logic
+    const today = new Date();
+    const daysUntilExpiry = 98; // Example: 98 days until expiry
+
+    if (!plan) return "No plan selected";
+
+    const expiryDate = new Date(today);
+    expiryDate.setDate(expiryDate.getDate() + daysUntilExpiry);
+
+    const month = expiryDate.toLocaleString("en-US", { month: "short" });
+    const day = expiryDate.getDate();
+
+    return `Expires ${month} ${day}`;
+  };
+
+  console.log("dashboard", dashboardData);
+
   const today = format(new Date(), "dd/MM/yyyy");
 
   const { user } = useSelector((state: RootState) => state.auth);
+  const { data, isLoading, error, refetch }: any = useGetAllMeetingsQuery({
+    userId: user?.id,
+    status,
+    page,
+    limit,
+  } as GetMeetingsParams);
+
+  console.log("meeting data", data);
+
   const avatarName =
     user?.firstName[0] + (user?.lastName ? user?.lastName[0] : "");
   const fullName = toTitleCase(
     user?.firstName + " " + (user?.lastName ? user?.lastName : "")
   );
+  type TimeFilter = "3months" | "6months" | "1year";
 
   const formatDateWithTimezone = (isoString: string, timezone?: string) => {
     if (!isoString) return "N/A";
@@ -146,10 +254,11 @@ export default function Page() {
       const options = {
         day: "numeric" as const,
         month: "short" as const,
+        year: "numeric" as const,
         timeZone: timezone || undefined,
       };
 
-      return date.toLocaleDateString("en-US", options);
+      return date.toLocaleDateString("en-GB", options).replace(",", "");
     } catch (error) {
       console.error("Date formatting error:", error);
       return "N/A";
@@ -157,8 +266,8 @@ export default function Page() {
   };
 
   const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
-    console.log("time",isoString,timezone);
-    
+    console.log("time", isoString, timezone);
+
     if (!isoString) return "N/A";
 
     try {
@@ -190,43 +299,27 @@ export default function Page() {
     return `${date}, ${time}`;
   };
 
-  const users: UserData[] = [
-    {
-      id: "1",
-      sessionName: "Yoga Flow",
-      date: "Oct 28",
-      duration: "20 min",
-      status: "12/30",
-      badge: false,
-    },
-    {
-      id: "2",
-      sessionName: "Mindful Meditation",
-      date: "Oct 28",
-      duration: "45 min",
-      status: "10/20",
-      badge: true,
-    },
-    {
-      id: "3",
-      sessionName: "Session Name",
-      date: "Date",
-      duration: "Duration",
-      status: "Completed",
-      badge: false,
-    },
-    {
-      id: "4",
-      sessionName: "Session Name",
-      date: "Date",
-      duration: "Duration",
-      status: "Status",
-      badge: true,
-    },
-  ];
-
   const STORAGE_KEY = process.env.NEXT_PUBLIC_STORAGE_KEY as string;
   const STEP_KEY = process.env.NEXT_PUBLIC_STEP_KEY as string;
+
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("6months");
+
+  const handleFilterChange = (value: string) => {
+    setTimeFilter(value as TimeFilter);
+  };
+
+  const getFilterLabel = (value: string) => {
+    switch (value) {
+      case "1":
+        return "6months";
+      case "2":
+        return "3months";
+      case "3":
+        return "1year";
+      default:
+        return "6months";
+    }
+  };
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -240,26 +333,38 @@ export default function Page() {
     {
       icon: <CalenderIcon />,
       desc: "Upcoming Session",
-      title: "-",
-      desc2: "Yoga Flow",
+      title: tileLoading
+        ? "-"
+        : String(dashboardData?.data?.upcomingSessions || "-"),
+      desc2: getNextUpcomingSessionText(
+        dashboardData?.data?.upcomingSessions || 0
+      ),
     },
     {
       icon: <CreditsIcon />,
       desc: "Credits",
-      title: "-",
+      title: tileLoading
+        ? "-"
+        : String(dashboardData?.data?.totalCredits || "-"),
       desc2: "Keep it going!",
     },
     {
       icon: <GoalIcon />,
-      desc: "Monthly Goal",
-      title: "-",
-      desc2: "17 of 20 sessions",
+      desc: "Class Attend",
+      title: tileLoading
+        ? "-"
+        : String(dashboardData?.data?.classesAttended || "-"),
+      desc2: dashboardData?.data?.classesAttended
+        ? `${dashboardData?.data?.classesAttended} sessions completed`
+        : "Start attending classes",
     },
     {
       icon: <PlanIcon />,
       desc: "Current Plan",
-      title: "-",
-      desc2: "Expires Mar 15",
+      title: tileLoading
+        ? "-"
+        : dashboardData?.data?.currentPlan?.displayName || "No Plan",
+      desc2: getPlanExpiryText(dashboardData?.data?.currentPlan?.plan),
     },
   ];
 
@@ -290,15 +395,15 @@ export default function Page() {
   return (
     <>
       {/* <Join/> */}
-      <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-[260px_1fr] h-dvh">
-        <Sidebar />
-        <div className="flex flex-col gap-7.5 h-full overflow-y-auto">
+
           <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-between">
             <div className="relative">
               <Input2
-                placeholder="Search sessions, packages..."
+                placeholder="Search sessions..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 name="search"
-                className="bg-[#F2F0ED80]! border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-[610px] h-11 top-[25px] left-[30px] rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
+                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-[610px] h-11 top-[25px] left-[30px] rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
               />
               <svg
                 className="absolute left-4  top-6 transform -translate-y-1/2 "
@@ -350,7 +455,7 @@ export default function Page() {
                 badgeDate={today}
                 heading="Ready for your next session?"
                 description="You're doing great! Keep the momentum in your wellness journey."
-                buttonText="Unlock My Plan"
+                buttonText=""
                 src="/images/dashboard-banner.jpg"
               />
             </div>
@@ -400,7 +505,7 @@ export default function Page() {
                 <DashboardTitle
                   title="Upcoming Sessions"
                   description="Your scheduled wellness activities"
-                  buttonText="View All"
+                  // buttonText="View All"
                 />
                 <div className="max-h-[305px] overflow-y-auto w-full pb-7.5 h-full">
                   <div
@@ -410,17 +515,20 @@ export default function Page() {
                         : ""
                     }`}
                   >
+                    {(loadingMeetings || isFetching) && <SessionCardShimmer />}
                     {!loadingMeetings &&
+                      !isFetching &&
                       (upcomingData?.meetings?.length === 0 ||
                         !upcomingData) && (
                         <Typography
-                          cssClass="text-center text-[30px]!"
+                          cssClass="text-center text-[24px]!"
                           title="No upcoming meetings scheduled."
                           type="xl2"
                         />
                       )}
 
                     {!loadingMeetings &&
+                      !isFetching &&
                       upcomingData?.meetings?.map(
                         (meeting: any, index: number) => {
                           const regionInfo = meeting?.regions?.find(
@@ -435,13 +543,7 @@ export default function Page() {
                             meeting?.localTime,
                             userRegion?.timezone
                           );
-                          const trainer = meeting?.createdBy
-                            ? `${meeting.createdBy.firstName || ""} ${
-                                meeting.createdBy.lastName || ""
-                              }`.trim()
-                            : "";
-
-                          
+                          const trainer = meeting?.trainer?.name ?? "";
 
                           console.log("kpr", userRegion?.region);
 
@@ -452,7 +554,7 @@ export default function Page() {
                               userId={user?.id}
                               isLive={regionInfo?.mode === "live"}
                               trainer={trainer}
-                              region ={userRegion?.region as string}
+                              region={userRegion?.region as string}
                               joined={meeting?.joined ?? false}
                               participants={meeting?.participants ?? []}
                               participantsCount={
@@ -478,9 +580,13 @@ export default function Page() {
                   title="Attendance & Progress"
                   description="Your wellness journey statistics"
                   selectText="View All"
+                  onFilterChange={(value) => {
+                    const filter = getFilterLabel(value);
+                    setTimeFilter(filter as TimeFilter);
+                  }}
                 />
                 <div className="w-full h-[275px]">
-                  <ColumnGraph />
+                  <ColumnGraph timeFilter={timeFilter} />
                 </div>
               </div>
             </div>
@@ -496,11 +602,13 @@ export default function Page() {
                 />
                 <div className="max-h-80 overflow-y-auto w-full pb-7.5">
                   <div className="flex flex-col w-full">
-                    <DataTable
-                      columns={columns as ColumnDef<UserData, unknown>[]}
-                      data={users}
-                      isLoadingData={false}
-                    />
+                    {
+                      <DataTable
+                        columns={columns as ColumnDef<UserData, unknown>[]}
+                        data={(data?.data as UserData[]) ?? []}
+                        isLoadingData={isLoading}
+                      />
+                    }
                   </div>
                 </div>
               </div>
@@ -508,14 +616,14 @@ export default function Page() {
                 className={`bg-white rounded-[20px] p-7 flex flex-col items-start justify-start gap-7.5 w-full [&>*:first-child]:justify-start`}
               >
                 <DashboardTitle
-                  title="Monthly Goal Progress"
-                  description="Monitor your wellness targets this month."
+                  title="Your Credits Journey"
+                  description="Track your class credit usage and remaining balance."
                 />
                 <div className="w-full">
                   <div className="min-w-[330px] max-h-80 relative">
                     <ReactApexChart
-                      options={options}
-                      series={options.series}
+                      options={chartOptions}
+                      series={chartSeries}
                       type="donut"
                       height={330}
                     />
@@ -524,8 +632,44 @@ export default function Page() {
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        
     </>
   );
 }
+
+const shimmer = "animate-pulse bg-[#f2d6ce]";
+
+export const SessionCardShimmer = () => {
+  return (
+    <div className="bg-[#FFF4F0] p-[11px] rounded-[15px] flex items-start justify-between w-full animate-pulse">
+      {/* LEFT: IMAGE + TEXT */}
+      <div className="flex items-center gap-[15px]">
+        {/* Image placeholder */}
+        <div className={`rounded-[10px] bg-[#f2d6ce] h-[108px] w-[131px]`} />
+
+        {/* Text placeholders */}
+        <div className="flex flex-col gap-4 w-[160px]">
+          {/* Title line */}
+          <div className={`${shimmer} h-4 w-3/4 rounded-md`} />
+
+          {/* Time + Duration */}
+          <div className={`${shimmer} h-3 w-1/2 rounded-md`} />
+
+          {/* Join button */}
+          <div className={`${shimmer} h-8 w-[85px] rounded-md`} />
+        </div>
+      </div>
+
+      {/* RIGHT: DATE + PARTICIPANTS */}
+      <div className="flex flex-col items-end justify-between h-full gap-10">
+        {/* Date Badge */}
+        <div className="rounded-[10px] px-3 py-3 w-[70px] flex items-center gap-2 bg-[#f2d6ce]">
+          {/* <div className={`${shimmer} h-4 w-4 rounded`} /> */}
+          {/* <div className={`${shimmer} h-3 w-8 rounded-md`} /> */}
+        </div>
+
+        {/* Participants */}
+      </div>
+    </div>
+  );
+};

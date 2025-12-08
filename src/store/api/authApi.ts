@@ -63,12 +63,18 @@ export const authApi = createApi({
       query: (body) => ({
         url: "/social-login",
         method: "POST",
-        data:body,
+        data: body,
       }),
     }),
-        getMe: builder.query({
+    getMe: builder.query({
       query: () => ({
         url: "/me",
+        method: "GET",
+      }),
+    }),
+    getDashboardStats: builder.query({
+      query: () => ({
+        url: "/dashboardStats",
         method: "GET",
       }),
     }),
@@ -78,6 +84,7 @@ export const authApi = createApi({
 export const {
   useRegisterMutation,
   useLazyGetMeQuery,
+  useGetDashboardStatsQuery,
   usePasswordResetRequestMutation,
   useResetPasswordMutation,
   useSocialLoginMutation,

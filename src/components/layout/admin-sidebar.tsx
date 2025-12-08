@@ -1,3 +1,4 @@
+"use client"
 import { AdminNav, SidebarNav } from "@/constants/dashboard.constant";
 import { InfoIcon } from "@/icons/dashboardIcon";
 import Image from "next/image";
@@ -118,7 +119,8 @@ const AdminSidebar = () => {
                 type="regular"
                 cssClass="text-[#717182]! text-[15px]!"
               />
-              <Button variant={"themeRegular"} className="mt-6">
+              <Button variant={"themeRegular"} className="mt-6" 
+              onClick={()=>router.push("/contact-us")}>
                 Get Help
               </Button>
             </div>

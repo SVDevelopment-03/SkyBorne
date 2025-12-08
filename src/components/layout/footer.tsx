@@ -17,6 +17,7 @@ export const newsletterSchema = Yup.object().shape({
 import Link from "next/link";
 import { useFormik } from "formik";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 
 const ArrowRightIcon = () => (
@@ -38,6 +39,7 @@ const ArrowRightIcon = () => (
 );
 
 export default function Footer() {
+  const router = useRouter();
    const [newsLetter] = useNewsLetterMutation();
 
   // Formik Setup
@@ -90,8 +92,8 @@ export default function Footer() {
           </div>
 
           {/* Subscribe Section */}
-          <div className="flex flex-col md:items-end justify-between gap-3 max-md:order-3">
-            <h3 className="font-semibold text-lg md:text-[28px] leading-normal uppercase md:text-right">
+          <div className="flex flex-col md:items-end justify-between gap-2 max-md:order-3">
+            <h3 className="font-semibold text-lg md:text-[24px] leading-normal uppercase md:text-right">
               SUBSCRIBE TO RECEIVE MORE UPDATES
             </h3>
  <form onSubmit={formik.handleSubmit}>
@@ -142,8 +144,23 @@ export default function Footer() {
 
           <div className="text-left md:text-right md:max-w-[328px] max-md:order-4 ml-auto">
             <p className="text-sm md:text-lg font-montserrat">
-              Copyright 2025. Skyborne Drop | Privacy Policy | Terms Conditions
-            </p>
+              Copyright 2025. Skyborne Drop </p>
+              <p className="mt-1">
+<span
+  onClick={() => router.push("/privacy-policy")}
+  className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
+>
+  Privacy Policy
+</span>
+
+{" | "}
+
+<span
+  onClick={() => router.push("/terms")}
+  className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
+>
+  Terms Conditions
+</span>            </p>
           </div>
         </div>
 

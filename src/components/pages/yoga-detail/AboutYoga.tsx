@@ -1,3 +1,4 @@
+"use client"
 import { Button } from "@/components/ui/button";
 import { WhiteHeading } from "@/components/ui/heading";
 import HeadingDiv from "@/components/ui/HeadingDiv";
@@ -5,8 +6,16 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import React from "react";
 import MotionDiv from "@/components/ui/MotionDiv";
+import { useRouter } from "next/navigation";
+import useGetUser from "@/hooks/useGetUser";
+import useRedirectUser from "@/hooks/useRedirectUser";
 
 const AboutYoga = () => {
+  const router = useRouter();
+  const {user} = useGetUser();
+    const {redirectUser} = useRedirectUser()
+  
+
   return (
     <div className="max-w-[1390px] mx-auto">
       <div className="bg-[#FFE8E8] gap-12 md:gap-15 rounded-2xl md:rounded-[30px] max-md:pb-4 max-md:px-2.5 max-lg:px-7.5 py-14 text-[#494949]">
@@ -21,9 +30,11 @@ const AboutYoga = () => {
                 title="What is Yoga, Really?"
                 description="Yoga goes beyond movement it’s a practice that centers the mind, builds resilience, and restores calm. At Skyborne Drop, everyone is welcome to join our classes, reconnect with breath, and cultivate a balanced, healthy life"
               />
-              <Button variant={"theme"} className="mt-2.5">
+             { !user &&  <Button variant={"theme"} className="mt-2.5"
+             onClick={()=>redirectUser('/signup')}
+             >
                 Sign up for a class
-              </Button>
+              </Button>}
             </div>
           </MotionDiv>
           <MotionDiv>
@@ -72,7 +83,8 @@ const AboutYoga = () => {
                   paragraph: "max-md:text-[13px] max-w-[487px]",
                 }}
               />
-              <Button variant={"yellow"} className="mt-auto">
+              <Button variant={"yellow"} className="mt-auto"
+              onClick={()=>router.push("/signup")}>
                 Book classes
               </Button>
             </div>

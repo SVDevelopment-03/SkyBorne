@@ -13,13 +13,18 @@ import {
 import { cn } from "@/lib/utils";
 import { DateFilter } from "@/components/ui/DateFilter";
 
+interface DashboardTitleProps extends DashboardHeadingProps {
+  onFilterChange?: (value: string) => void;
+}
+
 const DashboardTitle = ({
   title,
   description,
   buttonText,
   selectText,
-  dateFilter
-}: DashboardHeadingProps) => {
+  dateFilter,
+  onFilterChange,
+}: DashboardTitleProps) => {
   return (
     <div className="flex items-center justify-between w-full">
       <div className="flex flex-col gap-1.5">
@@ -40,26 +45,24 @@ const DashboardTitle = ({
       )}
 
       {selectText && (
-        <Select defaultValue="1">
+        <Select defaultValue="1" onValueChange={onFilterChange}>
           <SelectTrigger
             className={cn(
               "font-satoshi-700 font-bold text-[15px]! text-[#212C26]! bg-[#FFFFFF01]! border border-[#E8EEEA] rounded-[10px] shadow-[0px_1px_2px_0px_#0000000D]"
             )}
           >
-            <SelectValue placeholder="Select service"  />
+            <SelectValue placeholder="Select service" />
           </SelectTrigger>
           <SelectContent>
             <SelectGroup>
-              <SelectItem value="1" >Last 6 months</SelectItem>
+              <SelectItem value="1">Last 6 months</SelectItem>
               <SelectItem value="2">Last 3 months</SelectItem>
               <SelectItem value="3">Last Year</SelectItem>
             </SelectGroup>
           </SelectContent>
         </Select>
       )}
-      {
-        dateFilter && <DateFilter/>
-      }
+      {dateFilter && <DateFilter />}
     </div>
   );
 };

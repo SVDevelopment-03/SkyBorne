@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 
 interface DashboardBannerProps {
   src: string;
-  buttonText: string;
+  buttonText?: string;
   heading: string;
   cssClass?: string;
   description: string;
@@ -52,12 +52,12 @@ const DashboardBanner = ({
             title={description}
             cssClass="max-w-[702px]  text-white !text-[13px] md:!text-lg font-satoshi-400"
           />
-          <Button
+        {buttonText &&   <Button
             variant={"outline"}
             className="bg-[#FFF7DD] text-[#494949] text-xs! md:text-[15px]! hover:text-white hover:border-[#B95E82] hover:bg-[#B95E82]"
           >
             {buttonText}
-          </Button>
+          </Button>}
         </div>
       </div>
     </div>

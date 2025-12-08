@@ -1,7 +1,19 @@
 // /store/api/meetingApi.ts
 
+export interface MonthlyAttendanceData {
+  month: string;
+  count: number;
+}
+
+export interface MonthlyAttendanceResponse {
+  success: boolean;
+  data: MonthlyAttendanceData[];
+}
+
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
+
+
 
 export const meetingApi = createApi({
   reducerPath: "meetingApi",
@@ -9,7 +21,6 @@ export const meetingApi = createApi({
   tagTypes: ["Meetings"],
 
   endpoints: (builder) => ({
-    
     // ---------------------------------------
     // CREATE MEETING (Admin)
     // ---------------------------------------
@@ -25,16 +36,25 @@ export const meetingApi = createApi({
     // ---------------------------------------
     // UPCOMING MEETINGS
     // ---------------------------------------
-  getUpcomingMeetings: builder.query({
-  query: () => ({
-    url: "/meetings/upcoming",
-    method: "GET",
-  }),
-  providesTags: ["Meetings"],
-}),
-
-
-
+    getUpcomingMeetings: builder.query({
+      query: ({ region, search }) => ({
+        url: "/meetings/upcoming",
+        method: "GET",
+        params: {
+          region,
+          search,
+        },
+      }),
+      providesTags: ["Meetings"],
+    }),
+    getAllMeetings: builder.query({
+      query: (data) => ({
+        url: "/meetings/getAll",
+        method: "GET",
+        params: data,
+      }),
+      providesTags: ["Meetings"],
+    }),
 
     // ---------------------------------------
     // JOIN MEETING
@@ -56,13 +76,29 @@ export const meetingApi = createApi({
         data: body,
       }),
     }),
+    getMonthlyAttendance: builder.query<
+  MonthlyAttendanceResponse,
+  { period: "3months" | "6months" | "1year" }
+>({
+  query: (params) => ({
+    url: "/meetings/attendance/monthly",
+    method: "GET",
+    params: {
+      period: params.period,
+    },
+  }),
+  // Optional: cache for 1 hour
+  keepUnusedDataFor: 3600,
+}),
 
   }),
 });
 
 export const {
   useCreateMeetingMutation,
-    useGetUpcomingMeetingsQuery,
+  useGetAllMeetingsQuery,
+  useGetMonthlyAttendanceQuery,
+  useGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
 } = meetingApi;
