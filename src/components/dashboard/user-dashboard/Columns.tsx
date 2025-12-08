@@ -1,6 +1,7 @@
 import { BadgeIcon } from "@/icons/helpIcon";
 import { toTitleCase } from "@/utils/Titlecase";
 import { ColumnDef } from "@tanstack/react-table";
+import { format } from "date-fns";
 export type UserData = {
   id: string;
   sessionName: string;
@@ -27,34 +28,35 @@ export const columns: ColumnDef<UserData>[] = [
     )},
   },
 
-  {
-    accessorKey: "joinedAt",
-    header: "Date",
-    cell: ({ row }) => (
-      <div className="text-[16px] font-satoshi-500">
-        {row.getValue("joinedAt")}
-      </div>
-    ),
+{
+  accessorKey: "joinedAt",
+  header: "Joined At",
+  cell: ({ row }) => {
+    const date = new Date(row.getValue("joinedAt"));
+    return format(date, "d LLL, yyyy"); // → "8 Dec, 2025"
   },
+},
 
-  {
-    accessorKey: "totalDuration",
-    header: "Duration",
-    cell: ({ row }) => (
-      <div className="text-[16px] font-satoshi-500">
-        {row.getValue("joinedAt")}
-      </div>
-    ),
-  },
+  // {
+  //   accessorKey: "totalDuration",
+  //   header: "Duration",
+  //   cell: ({ row }) => (
+  //     <div className="text-[16px] font-satoshi-500">
+  //       {row.getValue("totalDuration")}
+  //     </div>
+  //   ),
+  // },
 
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
+    cell: ({ row }) => {
+      const status= row.getValue("status") as string;
+      return (
       <div className="text-[16px] font-satoshi-500">
-        {toTitleCase(row.getValue("status") as string) }
+        {toTitleCase(status=="joined"? "completed":status) }
       </div>
-    ),
+    )},
   },
 
   // {

@@ -598,7 +598,7 @@ export default function Page() {
                 <DashboardTitle
                   title="Completed Sessions"
                   description="Your accomplishments maintain momentum!"
-                  dateFilter
+                  // dateFilter
                 />
                 <div className="max-h-80 overflow-y-auto w-full pb-7.5">
                   <div className="flex flex-col w-full">
