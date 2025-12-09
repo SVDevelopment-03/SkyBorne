@@ -197,7 +197,7 @@ export const footerSections = [
     title: "QUICK LINKS",
     links: [
       { title: "About Us", link: "/about-us" },
-      { title: "Classes", link: '/coming-soon' },
+      { title: "Classes", link: "/coming-soon" },
       { title: "How it works", link: "/how-works" },
       { title: "Pricing plans", link: "/packages" },
       { title: "Contact Us", link: "/contact-us" },
@@ -206,20 +206,31 @@ export const footerSections = [
   {
     title: "RESOURCES",
     links: [
-      { title: "Schedule", link: '/coming-soon' },
-      { title: "Pricing", link: '/coming-soon' },
+      { title: "Schedule", link: "/coming-soon" },
+      { title: "Pricing", link: "/coming-soon" },
       { title: "FAQ", link: "/faq" },
-      { title: "Memberships", link: '/coming-soon' },
-      { title: "Guides", link: '/coming-soon' },
+      { title: "Memberships", link: "/coming-soon" },
+      { title: "Guides", link: "/coming-soon" },
     ],
   },
   {
     title: "SUPPORT",
     links: [
-      { title: "Help Center", link: '/coming-soon' },
-      { title: "Accessibility", link: '/coming-soon' },
+      { title: "Help Center", link: "/coming-soon" },
+      { title: "Accessibility", link: "/coming-soon" },
     ],
   },
 ];
 
-export const socialLinks = ["Instagram", "Facebook", "YouTube"];
+export const socialLinks = [
+  {
+    label: "Instagram",
+    url: "https://instagram.com/skybornedrop",
+  },
+  {
+    label: "Facebook",
+  },
+  {
+    label: "YouTube",
+  },
+];
