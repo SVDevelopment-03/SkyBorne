@@ -44,7 +44,7 @@ export default function Step7Packages() {
     try {
       const res = await createPaymentOrder({
         amount: price,
-        currency: "AED",
+        currency: "USD",
         userId: user?.id,
         plan: state.selectedPackage,
       }).unwrap();

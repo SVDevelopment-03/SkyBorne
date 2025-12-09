@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-"use client"
+"use client";
 import React from "react";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
@@ -18,7 +18,6 @@ import Link from "next/link";
 import { useFormik } from "formik";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-
 
 const ArrowRightIcon = () => (
   <svg
@@ -40,7 +39,7 @@ const ArrowRightIcon = () => (
 
 export default function Footer() {
   const router = useRouter();
-   const [newsLetter] = useNewsLetterMutation();
+  const [newsLetter] = useNewsLetterMutation();
 
   // Formik Setup
   const formik = useFormik({
@@ -96,7 +95,7 @@ export default function Footer() {
             <h3 className="font-semibold text-lg md:text-[24px] leading-normal uppercase md:text-right">
               SUBSCRIBE TO RECEIVE MORE UPDATES
             </h3>
- <form onSubmit={formik.handleSubmit}>
+            <form onSubmit={formik.handleSubmit}>
               <div className="relative flex items-center w-fit justify-start">
                 <input
                   type="email"
@@ -124,43 +123,49 @@ export default function Footer() {
                 </p>
               )}
             </form>
-
           </div>
 
           {/* Social Links + Copyright */}
           {/* <div className="pt-[72px] flex flex-col md:flex-row justify-between items-center text-sm"> */}
           <div className="md:col-span-2 flex items-center gap-4 mb-4 md:mb-0 max-md:order-2">
-            {socialLinks?.map((name, idx) => (
-              <Button
+            {socialLinks?.map((item, idx) => (
+              <Link
                 key={idx}
-                variant="outline"
-                className="rounded-full border border-gray-400 py-2.5 text-[11px] md:text-sm font-normal text-[#FFF7DD] flex items-center gap-2"
+                href={item?.url ? item?.url : "#"}
+                {...(item?.url
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
               >
-                {name}
-                <ArrowRightIcon />
-              </Button>
+                <Button
+                  variant="outline"
+                  className="rounded-full border border-gray-400 py-2.5 text-[11px] md:text-sm font-normal text-[#FFF7DD] flex items-center gap-2"
+                >
+                  {item?.label}
+                  <ArrowRightIcon />
+                </Button>
+              </Link>
             ))}
           </div>
 
           <div className="text-left md:text-right md:max-w-[328px] max-md:order-4 ml-auto">
             <p className="text-sm md:text-lg font-montserrat">
-              Copyright 2025. Skyborne Drop </p>
-              <p className="mt-1">
-<span
-  onClick={() => router.push("/privacy-policy")}
-  className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
->
-  Privacy Policy
-</span>
-
-{" | "}
-
-<span
-  onClick={() => router.push("/terms")}
-  className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
->
-  Terms Conditions
-</span>            </p>
+              Copyright 2025. Skyborne Drop{" "}
+            </p>
+            <p className="mt-1">
+              <span
+                onClick={() => router.push("/privacy-policy")}
+                className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
+              >
+                Privacy Policy
+              </span>
+              {" | "}
+              <span
+                onClick={() => router.push("/terms")}
+                className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
+              >
+                Terms Conditions
+              </span>{" "}
+            </p>
           </div>
         </div>
 

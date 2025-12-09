@@ -28,25 +28,22 @@ const Step5 = () => {
   };
 
   const ageGroupOptions = [
+    
     {
-      label: "Under 18",
+      label: "18-24",
       value: "1",
     },
     {
-      label: "18-24",
+      label: "25-34",
       value: "2",
     },
     {
-      label: "25-34",
+      label: "35-44",
       value: "3",
     },
     {
-      label: "35-44",
-      value: "4",
-    },
-    {
       label: "45+",
-      value: "5",
+      value: "4",
     },
   ];
 

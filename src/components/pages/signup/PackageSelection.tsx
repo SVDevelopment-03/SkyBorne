@@ -116,61 +116,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
                 Original Value: <span className="line-through">$120</span> → You
                 Pay <span className="text-[#b97d9f]">$100</span>
               </p>
-            </div>
-
-            {/* Accordion for breakdown */}
-            {/* <div className="border-t border-[#f0e5d8] pt-4 mb-6">
-              <button
-                onClick={() => setGoldAccordionOpen(!goldAccordionOpen)}
-                className="flex items-center justify-between w-full text-sm text-gray-700 hover:text-[#b97d9f] transition-colors"
-              >
-                <span>📄 View Cost Calculation</span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    goldAccordionOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  goldAccordionOpen
-                    ? "max-h-48 opacity-100 mt-4"
-                    : "max-h-0 opacity-0"
-                }`}
-              >
-                <table className="w-full text-sm">
-                  <thead className="border-b border-[#f0e5d8]">
-                    <tr className="text-left text-gray-600">
-                      <th className="pb-2">Item</th>
-                      <th className="pb-2 text-center">Qty</th>
-                      <th className="pb-2 text-right">Rate</th>
-                      <th className="pb-2 text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-gray-700">
-                    <tr className="border-b border-[#f5ebe0]">
-                      <td className="py-2">Classes</td>
-                      <td className="py-2 text-center">2</td>
-                      <td className="py-2 text-right">$60</td>
-                      <td className="py-2 text-right">$120</td>
-                    </tr>
-                    <tr className="border-b border-[#f5ebe0]">
-                      <td className="py-2">Discount</td>
-                      <td className="py-2 text-center">—</td>
-                      <td className="py-2 text-right">17%</td>
-                      <td className="py-2 text-right text-[#8b6f47]">-$20</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Total</td>
-                      <td className="py-2 text-center">—</td>
-                      <td className="py-2 text-right">—</td>
-                      <td className="py-2 text-right text-[#b97d9f]">$100</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div> */}
+            </div>     
           </div>
           <button
             onClick={handleGoldSelect}
@@ -216,65 +162,7 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
               </p>
             </div>
 
-            {/* Accordion for breakdown */}
-            {/* <div className="border-t border-[#f0e5d8] pt-4 mb-6">
-              <button
-                onClick={() => setDiamondAccordionOpen(!diamondAccordionOpen)}
-                className="flex items-center justify-between w-full text-sm text-gray-700 hover:text-[#b97d9f] transition-colors"
-              >
-                <span>📄 View Cost Calculation</span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    diamondAccordionOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  diamondAccordionOpen
-                    ? "max-h-64 opacity-100 mt-4"
-                    : "max-h-0 opacity-0"
-                }`}
-              >
-                <table className="w-full text-sm">
-                  <thead className="border-b border-[#f0e5d8]">
-                    <tr className="text-left text-gray-600">
-                      <th className="pb-2">Item</th>
-                      <th className="pb-2 text-center">Qty</th>
-                      <th className="pb-2 text-right">Rate</th>
-                      <th className="pb-2 text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-gray-700">
-                    <tr className="border-b border-[#f5ebe0]">
-                      <td className="py-2">Yoga</td>
-                      <td className="py-2 text-center">2</td>
-                      <td className="py-2 text-right">$60</td>
-                      <td className="py-2 text-right">$120</td>
-                    </tr>
-                    <tr className="border-b border-[#f5ebe0]">
-                      <td className="py-2">Zumba</td>
-                      <td className="py-2 text-center">2</td>
-                      <td className="py-2 text-right">$60</td>
-                      <td className="py-2 text-right">$120</td>
-                    </tr>
-                    <tr className="border-b border-[#f5ebe0]">
-                      <td className="py-2">Discount</td>
-                      <td className="py-2 text-center">—</td>
-                      <td className="py-2 text-right">17%</td>
-                      <td className="py-2 text-right text-[#8b6f47]">-$40</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2">Total</td>
-                      <td className="py-2 text-center">—</td>
-                      <td className="py-2 text-right">—</td>
-                      <td className="py-2 text-right text-[#b97d9f]">$200</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div> */}
+        
           </div>
           <button
             onClick={() => onSelect("diamond")}
