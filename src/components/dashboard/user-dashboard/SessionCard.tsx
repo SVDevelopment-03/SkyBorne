@@ -230,10 +230,10 @@ const handleJoin = async () => {
                   <Clock className="w-4 h-4" />
                   {selectedClass?.duration}
                 </div>
-                {selectedClass?.participants && <div className="flex items-center gap-2 text-[#717182]">
+                {/* {selectedClass?.participants && <div className="flex items-center gap-2 text-[#717182]">
                   <Users className="w-4 h-4" />
                   {selectedClass?.participants}
-                </div>}
+                </div>} */}
               </div>
             </div>
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
