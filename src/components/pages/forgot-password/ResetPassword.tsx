@@ -148,14 +148,14 @@ const ResetPassword = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
                   </span>
                 </Button>
 
-                <Button
+                {/* <Button
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                   onClick={() => router.push("/login")}
                   type="button"
                 >
                   Login
-                </Button>
+                </Button> */}
               </div>
             </Form>
           )}
