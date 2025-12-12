@@ -44,10 +44,10 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
       title: "Packages",
       link: "/packages",
     },
-    {
-      title: "Blogs",
-      link: "/blogs",
-    },
+    // {
+    //   title: "Blogs",
+    //   link: "/blogs",
+    // },
     {
       title: "Contact us ",
       link: "/contact-us",
