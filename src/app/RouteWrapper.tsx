@@ -25,6 +25,9 @@ export default function RouteWrapper({
     "/packages",
     "/testimonials",
     "/yoga-detail",
+     "/zumba-detail",
+     "/diet-detail",
+     "/fitness-detail"
   ];
 
   const detailPrefixes = [
