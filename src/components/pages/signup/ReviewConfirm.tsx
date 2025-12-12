@@ -96,6 +96,45 @@ export function ReviewConfirm({
               <span className="text-lg">Total:</span>
               <span className="text-2xl">${packageInfo.price}</span>
             </div>
+
+            {/* Auto-Renew Checkbox */}
+            <div className="border-t border-[#f0e5d8] pt-6 mb-6">
+              <label className="flex items-start gap-3 group">
+                <div className="relative flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={true}
+                    disabled
+                    className="sr-only"
+                  />
+                  <div
+                    className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all bg-[#B95E82] border-[#B95E82]`}
+                  >
+                    {
+                      <svg
+                        className="w-4 h-4 text-white"
+                        viewBox="0 0 12 10"
+                        fill="none"
+                      >
+                        <path
+                          d="M1 5L4.5 8.5L11 1.5"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    }
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <p className="font-satoshi-500 text-[#494949] text-base">
+                    Your subscription will automatically renew each month.
+                    Cancel anytime.
+                  </p>
+                </div>
+              </label>
+            </div>
           </div>
 
           {/* <div className="bg-[#fcf6ef] rounded-xl p-4 border border-[#e8d4c0]">

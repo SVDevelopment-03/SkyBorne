@@ -18,7 +18,7 @@ const page = () => {
             SkyborneDrop Cookie Policy
           </h2>
           <p className="text-sm text-gray-500 italic mb-6">
-            Last Updated: November 28, 2025
+            Last Updated: December 12, 2025
           </p>
 
           <p className="text-gray-700 mb-4 leading-relaxed">

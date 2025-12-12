@@ -26,7 +26,9 @@ const HelpDetail = ({
             cssClass={`max-w-full text-start max-md:!text-[13px] leading-normal font-satoshi-500`}
           />
         </div>
-        <HelpIcon icon={icon} />
+        <a href="mailto:info@skybornedrop.com" className="pointer-events-auto">
+          <HelpIcon icon={icon} />
+        </a>
       </div>
       <div className="h-72 md:h-[312px] w-full rounded-xl bg-[#B95E82]/50">
         <Image
@@ -43,14 +45,13 @@ const HelpDetail = ({
 
 const Help = () => {
   const helpDetails = [
-   
     {
       id: 2,
       image: "/images/help-2.jpg",
       title: "Email Support",
-      description: "support@skyborne.com",
+      description: "info@skybornedrop.com",
       icon: "email",
-    }
+    },
   ];
 
   return (

@@ -1,34 +1,43 @@
 "use client";
 import AdminSidebar from "@/components/layout/admin-sidebar";
 import AdminSidebarDrawer from "@/components/layout/admin-sidebar-drawer";
+import { Typography } from "@/components/ui/heading";
+import UserAvatar from "@/hooks/useAvatar";
 import useFetchUser from "@/hooks/useFetchUser";
 import useGetUser from "@/hooks/useGetUser";
 import { getAccessToken } from "@/lib/token";
+import { toTitleCase } from "@/utils/Titlecase";
+import { format } from "date-fns/format";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 
 const Adminlayout = ({ children }: { children: React.ReactNode }) => {
-     useFetchUser(); 
+  useFetchUser();
   const router = useRouter();
-  const {user} = useGetUser();
+  const { user } = useGetUser();
   const [checking, setChecking] = useState(true);
+
+  const today = format(new Date(), "dd/MM/yyyy");
+
+  const avatarName =
+    user?.firstName[0] + (user?.lastName ? user?.lastName[0] : "");
+  const fullName = toTitleCase(
+    user?.firstName + " " + (user?.lastName ? user?.lastName : "")
+  );
 
   useEffect(() => {
     const token = getAccessToken();
 
     // if (!user?.onboardingCompleted) {
-    if(!token){
+    if (!token) {
       setTimeout(() => {
         router.replace("/login");
       }, 0);
-    }
-    else if (token && user?.role != "admin"){
-       setTimeout(() => {
+    } else if (token && user?.role != "admin") {
+      setTimeout(() => {
         router.replace("/dashboard");
       }, 0);
-
-    }
-     else {
+    } else {
       setTimeout(() => {
         setChecking(false);
       }, 0);
@@ -38,16 +47,39 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
   if (checking) return null;
 
   return (
-      <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 md:grid-cols-[260px_1fr] min-h-dvh">
-        <div className="md:hidden">
-          <AdminSidebarDrawer />
-        </div>
-
-        <div className="hidden md:flex">
-          <AdminSidebar /> {/* Your original sidebar */}
-        </div>
-        <div className="h-dvh overflow-y-auto p-10">{children}</div>
+    <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 md:grid-cols-[280px_1fr] min-h-dvh">
+      <div className="md:hidden">
+        <AdminSidebarDrawer />
       </div>
+
+      <div className="hidden md:flex">
+        <AdminSidebar /> {/* Your original sidebar */}
+      </div>
+      <div>
+              <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-end">
+
+        <div className="flex items-center justify-end gap-10 text-[#212C26]">
+          <div className="relative">
+            {/* <Bell className="h-8 w-8" /> */}
+            {/* <div className="bg-[#E05252] absolute -top-1.5 -right-1 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] rounded-full h-5 w-5 px-1.5 py-0.5">
+                        <h2 className="text-white  text-[12px] font-semibold font-inter!"  style={{ fontFamily: "Inter, sans-serif" }}>3</h2>
+                      </div> */}
+          </div>
+          <div className="flex items-center gap-2">
+            <UserAvatar name={avatarName} />
+            <div>
+              <Typography title={fullName} cssClass="text-[#212C26]!" />
+              <Typography
+                title="Admin"
+                cssClass="text-[#878787]! text-[16px]!"
+              />
+            </div>
+          </div>
+        </div>
+</div>
+        <div className="h-dvh overflow-y-auto [scrollbar-width:none] p-10">{children}</div>
+      </div>
+    </div>
   );
 };
 

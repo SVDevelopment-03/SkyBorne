@@ -32,6 +32,7 @@ import UserAvatar from "@/hooks/useAvatar";
 import { Bell } from "lucide-react";
 import { getUserRegion } from "@/utils/timezone";
 import { useGetDashboardStatsQuery } from "@/store/api/authApi";
+import { SearchIcon } from "@/icons/helpIcon";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -88,6 +89,11 @@ const getCreditsChartOptions = (
                 const remaining = w.globals.series[1]; // 25
 
                 const percent = (completed / (completed + remaining)) * 100;
+                if(isNaN(percent)){
+                  return "No Record"
+
+
+                } 
 
                 return percent.toFixed(0) + "% Completed";
               },
@@ -327,6 +333,7 @@ export default function Page() {
 
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STEP_KEY);
+    localStorage.removeItem("orderRef");
   }, [STORAGE_KEY, STEP_KEY]);
 
   const goalDetail = [
@@ -396,242 +403,215 @@ export default function Page() {
     <>
       {/* <Join/> */}
 
-          <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-between">
-            <div className="relative">
-              <Input2
-                placeholder="Search sessions..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                name="search"
-                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-[610px] h-11 top-[25px] left-[30px] rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
-              />
-              <svg
-                className="absolute left-4  top-6 transform -translate-y-1/2 "
-                width="18"
-                height="18"
-                viewBox="0 0 18 18"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M15.7511 15.7501L12.4961 12.4951"
-                  stroke="#494949"
-                  strokeWidth="1.33333"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path
-                  d="M8.25 14.25C11.5637 14.25 14.25 11.5637 14.25 8.25C14.25 4.93629 11.5637 2.25 8.25 2.25C4.93629 2.25 2.25 4.93629 2.25 8.25C2.25 11.5637 4.93629 14.25 8.25 14.25Z"
-                  stroke="#494949"
-                  strokeWidth="1.33333"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </div>
-            <div className="flex items-center gap-10 text-[#212C26]">
-              <div className="relative">
-                {/* <Bell className="h-8 w-8" /> */}
-                {/* <div className="bg-[#E05252] absolute -top-1.5 -right-1 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] rounded-full h-5 w-5 px-1.5 py-0.5">
+      <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-between">
+        <div className="relative">
+          <Input2
+            placeholder="Search sessions..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            name="search"
+            className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-[610px] h-11 top-[25px] left-[30px] rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
+          />
+          <SearchIcon />
+        </div>
+        <div className="flex items-center gap-10 text-[#212C26]">
+          <div className="relative">
+            {/* <Bell className="h-8 w-8" /> */}
+            {/* <div className="bg-[#E05252] absolute -top-1.5 -right-1 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] rounded-full h-5 w-5 px-1.5 py-0.5">
                 <h2 className="text-white  text-[12px] font-semibold font-inter!"  style={{ fontFamily: "Inter, sans-serif" }}>3</h2>
               </div> */}
-              </div>
-              <div className="flex items-center gap-2">
-                <UserAvatar name={avatarName} />
-                <div>
-                  <Typography title={fullName} cssClass="text-[#212C26]!" />
-                  <Typography
-                    title="Premium Member"
-                    cssClass="text-[#878787]! text-[16px]!"
-                  />
-                </div>
-              </div>
-            </div>
           </div>
-          <div className="flex flex-col gap-7.5 p-7.5 pt-0">
-            <div className="relative">
-              <DashboardBanner
-                badgeTitle={`Good Morning, ${user?.firstName}`}
-                badgeDate={today}
-                heading="Ready for your next session?"
-                description="You're doing great! Keep the momentum in your wellness journey."
-                buttonText=""
-                src="/images/dashboard-banner.jpg"
+          <div className="flex items-center gap-2">
+            <UserAvatar name={avatarName} />
+            <div>
+              <Typography title={fullName} cssClass="text-[#212C26]!" />
+              <Typography
+                title="Premium Member"
+                cssClass="text-[#878787]! text-[16px]!"
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-7">
-              {goalDetail?.map((goal, i) => (
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-7.5 p-7.5 pt-0">
+        <div className="relative">
+          <DashboardBanner
+            badgeTitle={`Good Morning, ${user?.firstName}`}
+            badgeDate={today}
+            heading="Ready for your next session?"
+            description="You're doing great! Keep the momentum in your wellness journey."
+            buttonText=""
+            src="/images/dashboard-banner.jpg"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-7">
+          {goalDetail?.map((goal, i) => (
+            <div
+              key={i}
+              className={`${
+                i % 2 == 0 ? "bg-white" : "bg-[#FBEFD8]"
+              } rounded-[20px] p-6 flex flex-col items-start gap-9`}
+            >
+              <div className="flex flex-col gap-3">
                 <div
-                  key={i}
                   className={`${
-                    i % 2 == 0 ? "bg-white" : "bg-[#FBEFD8]"
-                  } rounded-[20px] p-6 flex flex-col items-start gap-9`}
+                    i % 2 == 0 ? "bg-[#B95E82]/10" : "bg-black/10"
+                  } p-2.5 rounded-[12px] size-11`}
                 >
-                  <div className="flex flex-col gap-3">
-                    <div
-                      className={`${
-                        i % 2 == 0 ? "bg-[#B95E82]/10" : "bg-black/10"
-                      } p-2.5 rounded-[12px] size-11`}
-                    >
-                      {goal?.icon}
-                    </div>
-                    <Typography
-                      title={goal?.desc}
-                      type="theme"
-                      cssClass="text-base!"
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Typography
-                      title={goal?.title}
-                      type="xxl"
-                      cssClass="text-xl! md:text-[24px]! text-[#212C26]!"
-                    />
-
-                    <Typography
-                      title={goal?.desc}
-                      type="theme"
-                      cssClass="text-sm! md:text-base!"
-                    />
-                  </div>
+                  {goal?.icon}
                 </div>
-              ))}
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-7.5 ">
-              <div
-                className={`bg-white rounded-[20px] p-7 pb-0 flex flex-col items-start gap-7.5 h-hull`}
-              >
-                <DashboardTitle
-                  title="Upcoming Sessions"
-                  description="Your scheduled wellness activities"
-                  // buttonText="View All"
+                <Typography
+                  title={goal?.desc}
+                  type="theme"
+                  cssClass="text-base!"
                 />
-                <div className="max-h-[305px] overflow-y-auto w-full pb-7.5 h-full">
-                  <div
-                    className={`flex flex-col gap-3 w-full h-full items-stretch ${
-                      upcomingData?.meetings?.length === 0 || !upcomingData
-                        ? "justify-center"
-                        : ""
-                    }`}
-                  >
-                    {(loadingMeetings || isFetching) && <SessionCardShimmer />}
-                    {!loadingMeetings &&
-                      !isFetching &&
-                      (upcomingData?.meetings?.length === 0 ||
-                        !upcomingData) && (
-                        <Typography
-                          cssClass="text-center text-[24px]!"
-                          title="No upcoming meetings scheduled."
-                          type="xl2"
-                        />
-                      )}
-
-                    {!loadingMeetings &&
-                      !isFetching &&
-                      upcomingData?.meetings?.map(
-                        (meeting: any, index: number) => {
-                          const regionInfo = meeting?.regions?.find(
-                            (r: any) => r.region == userRegion?.region
-                          );
-
-                          const formattedTime = formatTimeWithTimezone(
-                            meeting?.localTime,
-                            userRegion?.timezone
-                          );
-                          const formattedDate = formatDateWithTimezone(
-                            meeting?.localTime,
-                            userRegion?.timezone
-                          );
-                          const trainer = meeting?.trainer?.name ?? "";
-
-                          console.log("kpr", userRegion?.region);
-
-                          return (
-                            <SessionCard
-                              key={index}
-                              meetingId={meeting?._id}
-                              userId={user?.id}
-                              isLive={regionInfo?.mode === "live"}
-                              trainer={trainer}
-                              region={userRegion?.region as string}
-                              joined={meeting?.joined ?? false}
-                              participants={meeting?.participants ?? []}
-                              participantsCount={
-                                meeting?.participantsCount ?? 0
-                              }
-                              image="/images/upcoming-ico.jpg"
-                              startTime={meeting?.localTime}
-                              time={regionInfo?.localTime} // Use formatted time
-                              date={formattedDate} // Use formatted date
-                              title={meeting?.title ?? "Untitled"}
-                              duration={`${meeting?.duration ?? 0} min`}
-                            />
-                          );
-                        }
-                      )}
-                  </div>
-                </div>
               </div>
-              <div
-                className={`bg-white rounded-[20px] p-7 flex flex-col items-start gap-7.5 w-full`}
-              >
-                <DashboardTitle
-                  title="Attendance & Progress"
-                  description="Your wellness journey statistics"
-                  selectText="View All"
-                  onFilterChange={(value) => {
-                    const filter = getFilterLabel(value);
-                    setTimeFilter(filter as TimeFilter);
-                  }}
+              <div className="flex flex-col gap-1">
+                <Typography
+                  title={goal?.title}
+                  type="xxl"
+                  cssClass="text-xl! md:text-[24px]! text-[#212C26]!"
                 />
-                <div className="w-full h-[275px]">
-                  <ColumnGraph timeFilter={timeFilter} />
-                </div>
+
+                <Typography
+                  title={goal?.desc}
+                  type="theme"
+                  cssClass="text-sm! md:text-base!"
+                />
               </div>
             </div>
+          ))}
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-[65%_35%] gap-7.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-7.5 ">
+          <div
+            className={`bg-white rounded-[20px] p-7 pb-0 flex flex-col items-start gap-7.5 h-hull`}
+          >
+            <DashboardTitle
+              title="Upcoming Sessions"
+              description="Your scheduled wellness activities"
+              // buttonText="View All"
+            />
+            <div className="max-h-[305px] overflow-y-auto w-full pb-7.5 h-full">
               <div
-                className={`bg-white rounded-[20px] p-7 flex flex-col items-start gap-7.5 w-full`}
+                className={`flex flex-col gap-3 w-full h-full items-stretch ${
+                  upcomingData?.meetings?.length === 0 || !upcomingData
+                    ? "justify-center"
+                    : ""
+                }`}
               >
-                <DashboardTitle
-                  title="Completed Sessions"
-                  description="Your accomplishments maintain momentum!"
-                  // dateFilter
-                />
-                <div className="max-h-80 overflow-y-auto w-full pb-7.5">
-                  <div className="flex flex-col w-full">
-                    {
-                      <DataTable
-                        columns={columns as ColumnDef<UserData, unknown>[]}
-                        data={(data?.data as UserData[]) ?? []}
-                        isLoadingData={isLoading}
+                {(loadingMeetings || isFetching) && <SessionCardShimmer />}
+                {!loadingMeetings &&
+                  !isFetching &&
+                  (upcomingData?.meetings?.length === 0 || !upcomingData) && (
+                    <Typography
+                      cssClass="text-center text-[24px]!"
+                      title="No upcoming meetings scheduled."
+                      type="xl2"
+                    />
+                  )}
+
+                {!loadingMeetings &&
+                  !isFetching &&
+                  upcomingData?.meetings?.map((meeting: any, index: number) => {
+                    const regionInfo = meeting?.regions?.find(
+                      (r: any) => r.region == userRegion?.region
+                    );
+
+                    const formattedTime = formatTimeWithTimezone(
+                      meeting?.localTime,
+                      userRegion?.timezone
+                    );
+                    const formattedDate = formatDateWithTimezone(
+                      meeting?.localTime,
+                      userRegion?.timezone
+                    );
+                    const trainer = meeting?.trainer?.name ?? "";
+
+                    console.log("kpr", userRegion?.region);
+
+                    return (
+                      <SessionCard
+                        key={index}
+                        meetingId={meeting?._id}
+                        userId={user?.id}
+                        isLive={regionInfo?.mode === "live"}
+                        trainer={trainer}
+                        region={userRegion?.region as string}
+                        joined={meeting?.joined ?? false}
+                        participants={meeting?.participants ?? []}
+                        participantsCount={meeting?.participantsCount ?? 0}
+                        image="/images/upcoming-ico.jpg"
+                        startTime={meeting?.localTime}
+                        time={regionInfo?.localTime} // Use formatted time
+                        date={formattedDate} // Use formatted date
+                        title={meeting?.title ?? "Untitled"}
+                        duration={`${meeting?.duration ?? 0} min`}
                       />
-                    }
-                  </div>
-                </div>
-              </div>
-              <div
-                className={`bg-white rounded-[20px] p-7 flex flex-col items-start justify-start gap-7.5 w-full [&>*:first-child]:justify-start`}
-              >
-                <DashboardTitle
-                  title="Your Credits Journey"
-                  description="Track your class credit usage and remaining balance."
-                />
-                <div className="w-full">
-                  <div className="min-w-[330px] max-h-80 relative">
-                    <ReactApexChart
-                      options={chartOptions}
-                      series={chartSeries}
-                      type="donut"
-                      height={330}
-                    />
-                  </div>
-                </div>
+                    );
+                  })}
               </div>
             </div>
           </div>
+          <div
+            className={`bg-white rounded-[20px] p-7 flex flex-col items-start gap-7.5 w-full`}
+          >
+            <DashboardTitle
+              title="Attendance & Progress"
+              description="Your wellness journey statistics"
+              selectText="View All"
+              onFilterChange={(value) => {
+                const filter = getFilterLabel(value);
+                setTimeFilter(filter as TimeFilter);
+              }}
+            />
+            <div className="w-full h-[275px]">
+              <ColumnGraph timeFilter={timeFilter} />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-[65%_35%] gap-7.5">
+          <div
+            className={`bg-white rounded-[20px] p-7 flex flex-col items-start gap-7.5 w-full`}
+          >
+            <DashboardTitle
+              title="Completed Sessions"
+              description="Your accomplishments maintain momentum!"
+              // dateFilter
+            />
+            <div className="max-h-80 overflow-y-auto w-full pb-7.5">
+              <div className="flex flex-col w-full">
+                {
+                  <DataTable
+                    columns={columns as ColumnDef<UserData, unknown>[]}
+                    data={(data?.data as UserData[]) ?? []}
+                    isLoadingData={isLoading}
+                  />
+                }
+              </div>
+            </div>
+          </div>
+          <div
+            className={`bg-white rounded-[20px] p-7 flex flex-col items-start justify-start gap-7.5 w-full [&>*:first-child]:justify-start`}
+          >
+            <DashboardTitle
+              title="Your Credits Journey"
+              description="Track your class credit usage and remaining balance."
+            />
+            <div className="w-full">
+              <div className="min-w-[330px] max-h-80 relative">
+                <ReactApexChart
+                  options={chartOptions}
+                  series={chartSeries}
+                  type="donut"
+                  height={330}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </>
   );
 }

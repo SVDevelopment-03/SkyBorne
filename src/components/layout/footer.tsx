@@ -154,14 +154,14 @@ export default function Footer() {
             <p className="mt-1">
               <span
                 onClick={() => router.push("/privacy-policy")}
-                className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
+                className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-white/70"
               >
                 Privacy Policy
               </span>
               {" | "}
               <span
                 onClick={() => router.push("/terms")}
-                className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-blue-500 hover:blur-[0.5px]"
+                className="text-sm md:text-lg font-montserrat cursor-pointer transition-all duration-200 hover:text-white/70"
               >
                 Terms Conditions
               </span>{" "}
