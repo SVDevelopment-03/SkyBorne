@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 import React from "react";
 import Heading from "../ui/heading";
@@ -16,9 +18,11 @@ import { cn } from "@/lib/utils";
 
 import { Formik, Form } from "formik";
 import * as Yup from "yup";
-import { useCreatConsultationMutation } from "@/store/api/publicApi";
+import { useCreatConsultationMutation, useGetServicesQuery } from "@/store/api/publicApi";
 import toast from "react-hot-toast";
 import { handleApiError } from "@/utils/handleApiError";
+
+
 
 const consultationSchema = Yup.object({
   name: Yup.string().required("Name is required"),
@@ -35,6 +39,9 @@ const consultationSchema = Yup.object({
 const ConsultationForm = () => {
   const [creatConsultation, { isLoading, isSuccess, error }] =
     useCreatConsultationMutation();
+
+      const { data: serviceData, isLoading: serviceLoading } = useGetServicesQuery(undefined);
+
 
   return (
     <div className="flex flex-col gap-7.5 md:gap-12 bg-[#FBEFD8] rounded-[30px] flex-1 h-full p-8 pt-9">
@@ -112,10 +119,11 @@ const ConsultationForm = () => {
               </div>
 
               {/* Select Service */}
-              <div>
+        <div>
                 <Select
                   onValueChange={(value) => setFieldValue("service", value)}
                   value={values.service}
+                  disabled={serviceLoading}
                 >
                   <SelectTrigger
                     className={cn(
@@ -128,8 +136,12 @@ const ConsultationForm = () => {
 
                   <SelectContent>
                     <SelectGroup>
-                      <SelectItem value="yoga">Yoga</SelectItem>
-                      <SelectItem value="dance">Dance</SelectItem>
+                      {!serviceLoading &&
+                        serviceData?.data?.map((item: any) => (
+                          <SelectItem key={item._id} value={item._id}>
+                            {item.title || item.name}
+                          </SelectItem>
+                        ))}
                     </SelectGroup>
                   </SelectContent>
                 </Select>
