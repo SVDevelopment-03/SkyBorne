@@ -20,14 +20,14 @@ const Page = () => {
           WWW.SKYBORNEDROP.COM
         </p>
         <p className="text-sm text-gray-500 italic mb-6">
-          Last Updated: [04/12/2025]
+            Last Updated: December 12, 2025
         </p>
 
-        <p className="font-semibold text-gray-800 mb-4">
+        <p className="text-gray-700 mb-4 leading-relaxed">
           PLEASE READ THIS AGREEMENT CAREFULLY. CLICKING ON THE "SUBSCRIBE" BUTTON, OR ACCESSING, VIEWING, OR USING THE WEBSITE WWW.SKYBORNEDROP.COM (THE "SITE"), CONSTITUTES ACCEPTANCE OF THESE SERVICES TERMS AND CONDITIONS BY THE CUSTOMER.
         </p>
 
-        <p className="font-semibold text-gray-800 mb-4">
+        <p className="text-gray-700 mb-4 leading-relaxed">
           YOUR USAGE OF THE SITE AND SERVICES, IN ANY MANNER, CONSTITUTES YOUR UNCONDITIONAL ACCEPTANCE OF ALL TERMS, CONDITIONS, AND OBLIGATIONS CONTAINED IN THIS AGREEMENT.
         </p>
 
@@ -71,7 +71,7 @@ const Page = () => {
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">2.1) Delivery and Third-Party Materials</h3>
         <p className="text-gray-700 mb-4 leading-relaxed">
-          Customer acknowledges and agrees that the <span className="bg-yellow-100 px-1 py-0.5 font-medium">Services (Yoga, Zumba classes or any other classes which may be added in the future)</span> are reliant upon and operate in conjunction with Third-Party Materials (e.g., Zoom, Payment Gateways).
+          Customer acknowledges and agrees that the <span className="px-1 py-0.5 font-medium">Services (Yoga, Zumba classes or any other classes which may be added in the future)</span> are reliant upon and operate in conjunction with Third-Party Materials (e.g., Zoom, Payment Gateways).
         </p>
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">2.2) API Usage and Data Migration</h3>
@@ -100,7 +100,7 @@ const Page = () => {
         </p>
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">3.2) Non-Refundable Fees (Core Agreement)</h3>
-        <p className="text-gray-700 mb-4 leading-relaxed font-semibold">
+        <p className="text-gray-700 mb-4 leading-relaxed">
           ALL FEES AND CHARGES RELATED TO THE SUBSCRIPTION, WHETHER RECURRING OR ONE-TIME, ARE STRICTLY NON-REFUNDABLE, WITHOUT EXCEPTION. CUSTOMER EXPRESSLY ACKNOWLEDGES AND AGREES THAT FEES ARE NON-REFUNDABLE WHETHER SERVICES ARE ACTIVELY USED, CLASSES ARE ATTENDED, OR NOT. No refunds, credits, or prorations will be issued for non-usage or cancellation.
         </p>
 
@@ -211,7 +211,7 @@ const Page = () => {
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">10.2) Customer Data and Accuracy Notice</h3>
         <p className="text-gray-700 mb-8 leading-relaxed">
-          Customer retains ownership of Customer Data. Customer grants SkyborneDrop a transferable, sublicensable, royalty-free, irrevocable license to use and Process the Customer Data for the provision and improvement of the Services. <span className="font-semibold">CUSTOMER WARRANTS THAT ALL CUSTOMER DATA... IS ACCURATE, COMPLETE, AND LAWFUL, AND CUSTOMER IS SOLELY RESPONSIBLE FOR THE ACCURACY THEREOF.</span>
+          Customer retains ownership of Customer Data. Customer grants SkyborneDrop a transferable, sublicensable, royalty-free, irrevocable license to use and Process the Customer Data for the provision and improvement of the Services. <span className="">CUSTOMER WARRANTS THAT ALL CUSTOMER DATA... IS ACCURATE, COMPLETE, AND LAWFUL, AND CUSTOMER IS SOLELY RESPONSIBLE FOR THE ACCURACY THEREOF.</span>
         </p>
 
         {/* Section 11 */}
@@ -220,7 +220,7 @@ const Page = () => {
         </h2>
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">11.1) DISCLAIMER OF WARRANTIES</h3>
-        <p className="text-gray-700 mb-8 leading-relaxed font-semibold">
+        <p className="text-gray-700 mb-8 leading-relaxed">
           ALL SERVICES ARE PROVIDED "AS IS" AND "AS AVAILABLE." SKYBORNEDROP SPECIFICALLY DISCLAIMS ALL IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
         </p>
 
@@ -240,13 +240,13 @@ const Page = () => {
         </h2>
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">13.1) EXCLUSION OF DAMAGES (Detailed List Restored)</h3>
-        <p className="text-gray-700 mb-4 leading-relaxed font-semibold">
+        <p className="text-gray-700 mb-4 leading-relaxed">
           IN NO EVENT WILL SKYBORNEDROP BE LIABLE UNDER OR IN CONNECTION WITH THIS AGREEMENT FOR ANY: (a) LOSS OF PRODUCTION, USE, REVENUE, OR PROFIT; (b) LOSS OF DATA OR SECURITY BREACHES; or (c) CONSEQUENTIAL, INCIDENTAL, INDIRECT, EXEMPLARY, SPECIAL, ENHANCED, OR PUNITIVE DAMAGES, REGARDLESS OF THE LEGAL THEORY.
         </p>
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">13.2) Cap on Monetary Liability</h3>
-        <p className="text-gray-700 mb-8 leading-relaxed font-semibold">
-          <span className="bg-yellow-100 px-1 py-0.5">IN NO EVENT WILL THE AGGREGATE LIABILITY OF SKYBORNEDROP ARISING OUT OF OR RELATED TO THIS AGREEMENT EXCEED THE LESSER OF: (A) ONE THOUSAND DOLLARS ($1,000.00 USD); OR (B) THE TOTAL AMOUNTS PAID TO SKYBORNEDROP BY CUSTOMER IN THE TWELVE (12) MONTH PERIOD IMMEDIATELY PRECEDING THE INCIDENT.</span>
+        <p className="text-gray-700 mb-8 leading-relaxed">
+          <span className=" px-1 py-0.5">IN NO EVENT WILL THE AGGREGATE LIABILITY OF SKYBORNEDROP ARISING OUT OF OR RELATED TO THIS AGREEMENT EXCEED THE LESSER OF: (A) ONE THOUSAND DOLLARS ($1,000.00 USD); OR (B) THE TOTAL AMOUNTS PAID TO SKYBORNEDROP BY CUSTOMER IN THE TWELVE (12) MONTH PERIOD IMMEDIATELY PRECEDING THE INCIDENT.</span>
         </p>
 
         {/* Section 14 */}

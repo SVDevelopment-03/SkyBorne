@@ -32,11 +32,11 @@ import { RootState } from "@/store";
 
 interface ZoomSessionFlowProps {
   isOpen: boolean;
-  joinMeeting:()=>void;
-  isLive:boolean;
+  joinMeeting: () => void;
+  isLive: boolean;
   onClose: () => void;
   session: {
-    localTime:string;
+    localTime: string;
     title: string;
     trainer: string;
     time: string;
@@ -107,6 +107,16 @@ export function ZoomSessionFlow({
     }
   }, [currentStep]);
 
+  const startTime = new Date(session?.startTime as string); // e.g., 2025-12-10T08:30:00.000Z
+  const now = new Date();
+
+  // calculate difference in minutes
+  const diffMs = startTime.getTime() - now.getTime();
+  const diffMinutes = diffMs / 1000 / 60;
+
+  // allow joining only when remaining time <= 5 minutes
+  const isJoinDisabled = diffMinutes > 5;
+
   // Join Ready Countdown
   useEffect(() => {
     if (currentStep === "join-ready" && session?.startTime) {
@@ -144,8 +154,8 @@ export function ZoomSessionFlow({
   };
 
   const handleJoinNow = () => {
-    handleClose()
-    joinMeeting()
+    handleClose();
+    joinMeeting();
   };
 
   const handleEndSession = () => {
@@ -199,7 +209,9 @@ export function ZoomSessionFlow({
         {currentStep === "upcoming" && (
           <div className="space-y-6 p-6">
             <div>
-              <h2 className="text-2xl text-[#494949] mb-2 font-semibold!">Upcoming Session</h2>
+              <h2 className="text-2xl text-[#494949] mb-2 font-semibold!">
+                Upcoming Session
+              </h2>
               <div className="h-1 w-20 bg-gradient-to-r from-[#b95e82] to-[#d97ba3] rounded-full" />
             </div>
 
@@ -219,15 +231,17 @@ export function ZoomSessionFlow({
                       <Calendar className="w-4 h-4" />
                       <span>{session.time}</span>
                     </div>
-                    {isLive ? <Badge className="bg-blue-500 text-white border-0 py-0.5! px-2! text-xs!">
-                      <Video className="w-3 h-3 mr-1" />
-                      Live Session
-                    </Badge>
-                    : <Badge className="bg-yellow-500 text-black border-0 py-0.5! px-2! text-xs!">
-                      <Video className="w-3 h-3 mr-1" />
-                      Record Session
-                    </Badge>
-                    }
+                    {isLive ? (
+                      <Badge className="bg-blue-500 text-white border-0 py-0.5! px-2! text-xs!">
+                        <Video className="w-3 h-3 mr-1" />
+                        Live Session
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-yellow-500 text-black border-0 py-0.5! px-2! text-xs!">
+                        <Video className="w-3 h-3 mr-1" />
+                        Record Session
+                      </Badge>
+                    )}
                   </div>
 
                   <p className="text-sm text-[#717182] mt-3">
@@ -353,6 +367,7 @@ export function ZoomSessionFlow({
               </Button>
               <Button
                 onClick={handleJoinNow}
+                disabled={isJoinDisabled}
                 className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 rounded-md px-6 has-[>svg]:px-4 flex-1 bg-gradient-to-r from-[#b95e82] to-[#d97ba3] hover:opacity-90 px-4! py-2!"
                 size="lg"
               >

@@ -1,79 +1,104 @@
-// /store/api/trainerApi.ts
-
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
+
+export interface TrainerData {
+  _id: string;
+  name: string;
+  specialization: string;
+  experience?: number;
+  image?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface PaginatedResponse {
+  success: boolean;
+  message: string;
+  data: TrainerData[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    total: number;
+    limit: number;
+  };
+}
+
+export interface GetTrainersParams {
+  page: number;
+  limit: number;
+  search?: string;
+}
 
 export const trainerApi = createApi({
   reducerPath: "trainerApi",
   baseQuery: axiosBaseQuery(),
-  tagTypes: ["Trainers"],
-
+  tagTypes: ["Trainer"],
   endpoints: (builder) => ({
-    
-    // ---------------------------------------
-    // CREATE TRAINER
-    // ---------------------------------------
-    createTrainer: builder.mutation({
-      query: (body) => ({
-        url: "/trainer/create",
+    // GET Trainers (Paginated + Search)
+    getTrainers: builder.query<PaginatedResponse, GetTrainersParams>({
+      query: ({ page, limit, search }) => {
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: String(limit),
+        });
+
+        if (search) params.append("search", search);
+
+        return {
+          url: `/trainers?${params.toString()}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["Trainer"],
+    }),
+
+    // GET Single Trainer by ID
+    getTrainerById: builder.query<{ data: TrainerData }, string>({
+      query: (id) => ({
+        url: `/trainers/${id}`,
+        method: "GET",
+      }),
+      providesTags: ["Trainer"],
+    }),
+
+    // CREATE Trainer
+    createTrainer: builder.mutation<{ data: TrainerData }, Partial<TrainerData>>({
+      query: (data) => ({
+        url: "/create-trainer",
         method: "POST",
-        data: body,
+        data,
       }),
-      invalidatesTags: ["Trainers"],
+      invalidatesTags: ["Trainer"],
     }),
 
-    // ---------------------------------------
-    // GET ALL TRAINERS
-    // ---------------------------------------
-    getTrainers: builder.query({
-      query: () => ({
-        url: "/trainers",
-        method: "GET",
-      }),
-      providesTags: ["Trainers"],
-    }),
-
-    // ---------------------------------------
-    // GET TRAINER BY ID
-    // ---------------------------------------
-    getTrainerById: builder.query({
-      query: (id: string) => ({
-        url: `/trainers/${id}`,
-        method: "GET",
-      }),
-      providesTags: ["Trainers"],
-    }),
-
-    // ---------------------------------------
-    // UPDATE TRAINER
-    // ---------------------------------------
-    updateTrainer: builder.mutation({
-      query: ({ id, ...body }) => ({
-        url: `/trainers/${id}`,
+    // UPDATE Trainer
+    updateTrainer: builder.mutation<
+      { data: TrainerData },
+      { id: string; data: Partial<TrainerData> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/update-trainer/${id}`,
         method: "PUT",
-        data: body,
+        data,
       }),
-      invalidatesTags: ["Trainers"],
+      invalidatesTags: ["Trainer"],
     }),
 
-    // ---------------------------------------
-    // DELETE TRAINER
-    // ---------------------------------------
-    deleteTrainer: builder.mutation({
-      query: (id: string) => ({
-        url: `/trainers/${id}`,
+    // DELETE Trainer
+    deleteTrainer: builder.mutation<{ data: null }, string>({
+      query: (id) => ({
+        url: `/delete-trainer/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: ["Trainers"],
+      invalidatesTags: ["Trainer"],
     }),
-
   }),
 });
 
 export const {
-  useCreateTrainerMutation,
   useGetTrainersQuery,
   useGetTrainerByIdQuery,
+  useCreateTrainerMutation,
   useUpdateTrainerMutation,
   useDeleteTrainerMutation,
 } = trainerApi;

@@ -16,7 +16,7 @@ const page = () => {
             SkyborneDrop Privacy Policy
           </h2>
           <p className="text-sm text-gray-500 italic mb-6">
-            Last Updated: November 28, 2025
+            Last Updated: December 12, 2025
           </p>
 
           <p className="text-gray-700 mb-4 leading-relaxed">
@@ -138,7 +138,7 @@ const page = () => {
           </h2>
 
           <p className="text-gray-700 mb-4 leading-relaxed">
-            SkyborneDrop is based in the UAE, but our Services are global. Your Personal Data will be processed and stored in the UAE and potentially in other jurisdictions where our third-party service providers are <span className="bg-yellow-100 px-1 py-0.5">located (e.g., USA for cloud hosting or Zoom).</span>
+            SkyborneDrop is based in the UAE, but our Services are global. Your Personal Data will be processed and stored in the UAE and potentially in other jurisdictions where our third-party service providers are <span className="px-1 py-0.5">located (e.g., USA for cloud hosting or Zoom).</span>
           </p>
 
           <p className="text-gray-700 mb-8 leading-relaxed">
@@ -215,8 +215,8 @@ const page = () => {
             <span className="font-semibold">Data Protection Officer</span><br/>
             Skyborne Drop and Tech Investments LLC<br/>
             Meydan Freezone, Dubai, UAE<br/>
-            <a href="mailto:compliance@skybornedrop.com" className="text-blue-600 hover:underline">
-              compliance@skybornedrop.com
+            <a href="mailto:info@skybornedrop.com" className="text-blue-600 hover:underline">
+              info@skybornedrop.com
             </a>
           </p>
         </div>

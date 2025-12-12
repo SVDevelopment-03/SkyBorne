@@ -35,7 +35,15 @@ const SignupSchema = Yup.object().shape({
   lastName: Yup.string()
     .notRequired()
     .min(2, "Last name atleast have 2 characters"),
-  email: Yup.string().email("Invalid email").required("Email is required"),
+email: Yup.string()
+  .trim()
+  .required("Email is required")
+  .email("Invalid email format")
+  .matches(
+    /^[^\s@]+@[^\s@]+\.(com|net|org|in|co|io|ai|edu|gov|ae)$/i,
+    "Enter a valid email"
+  )
+,
   password: Yup.string()
     .required("Password is required")
     .min(8, "Password must be at least 8 characters long")

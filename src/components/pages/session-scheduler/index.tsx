@@ -80,7 +80,7 @@ const validationSchema = Yup.object().shape({
 });
 
 export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
-  const { data, isLoading, isError } = useGetTrainersQuery(undefined);
+  const { data, isLoading, isError } = useGetTrainersQuery({page:1,limit:100,search:''});
   const [createMeeting] = useCreateMeetingMutation();
   const { user } = useGetUser();
   let timezoneConversions: any;

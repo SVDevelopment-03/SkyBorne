@@ -52,7 +52,7 @@ export default function Step7Packages() {
       localStorage.setItem("orderRef", res?.orderRef);
 
       setTimeout(() => {
-        window.open(res.paymentLink, "_blank");
+       window.location.href = res.paymentLink;
       }, 100);
     } catch (err) {
       toast.error("Ppaymnent order failed");
