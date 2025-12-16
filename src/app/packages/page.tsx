@@ -1,4 +1,4 @@
-import Packages from "@/components/pages/packages";
+import Packages from "@/components/pages/public/packages";
 
 const page = () => {
   return <Packages />;

@@ -1,5 +1,5 @@
 import Header from "@/components/layout/header";
-import { InnerBlogDetail } from "@/components/pages/inner-blog";
+import { InnerBlogDetail } from "@/components/pages/public/inner-blog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";

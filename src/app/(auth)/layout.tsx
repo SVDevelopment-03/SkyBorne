@@ -23,7 +23,12 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     // if (token && user?.onboardingCompleted) {
 
     if (token && user?.onboardingCompleted) {
-      router.replace("/dashboard");
+
+      if(user.role !== "admin"){
+        router.replace("/dashboard");
+      }else{
+        router.replace("/admin-dashboard");
+      }
     }
     // if(token && !user?.onboardingCompleted){
     //   router.replace("/signup?step=7");

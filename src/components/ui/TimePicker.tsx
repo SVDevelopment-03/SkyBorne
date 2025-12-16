@@ -1,59 +1,117 @@
+import { useEffect, useState } from "react";
+
 interface TimePickerProps {
   value: string;
   onChange: (value: string) => void;
 }
 
 export function TimePicker({ value, onChange }: TimePickerProps) {
-  // Parse the time string to get hour and minute
   const parseTime = (timeStr: string) => {
-    const parts = timeStr.split(":");
-    const hour = parts[0];
-    const minuteAndPeriod = parts[1]?.split(" ");
-    const minute = minuteAndPeriod?.[0] || "00";
-    const period = minuteAndPeriod?.[1] || "AM";
+    const [time = "10:00", period = "AM"] = timeStr.split(" ");
+    const [hour = "10", minute = "00"] = time.split(":");
     return { hour, minute, period };
   };
 
-  const { hour, minute, period } = parseTime(value);
+  const parsed = parseTime(value);
+
+  const [hour, setHour] = useState(parsed.hour);
+  const [minute, setMinute] = useState(parsed.minute);
+  const [period, setPeriod] = useState<"AM" | "PM">(parsed.period as "AM" | "PM");
+
+  // Sync only when value changes externally
+  useEffect(() => {
+    setTimeout(() => {
+      setHour(parsed.hour);
+      setMinute(parsed.minute);
+      setPeriod(parsed.period as "AM" | "PM");
+    }, 0);
+  }, [value]);
+
+  const commit = (h: string, m: string, p: "AM" | "PM") => {
+    onChange(`${h.padStart(2, "0")}:${m.padStart(2, "0")} ${p}`);
+  };
+
+  // ---------- Hour ----------
+const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const val = e.target.value.replace(/\D/g, "");
+
+  // allow empty (so user can edit)
+  if (val === "") {
+    setHour("");
+    return;
+  }
+
+  // prevent typing > 12
+  if (Number(val) > 12) return;
+
+  setHour(val);
+};
+
+const handleHourBlur = () => {
+  let num = Number(hour);
+  if (!num) num = 1;
+  num = Math.min(Math.max(num, 1), 12);
+  commit(String(num), minute || "00", period);
+};
+
+
+  // ---------- Minute ----------
+  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMinute(e.target.value.replace(/\D/g, ""));
+  };
+
+  const handleMinuteBlur = () => {
+    let num = Number(minute);
+    if (isNaN(num)) num = 0;
+    num = Math.min(Math.max(num, 0), 59);
+    commit(hour || "10", String(num), period);
+  };
+
+  // ---------- Period ----------
+  const handlePeriodChange = (p: "AM" | "PM") => {
+    setPeriod(p);
+    commit(hour || "10", minute || "00", p);
+  };
 
   return (
     <div className="flex items-center gap-2">
       <input
         type="text"
         value={hour}
-        disabled
+        onChange={handleHourChange}
+        onBlur={handleHourBlur}
         placeholder="HH"
         maxLength={2}
-        className="w-14 px-3 py-2 border border-[#d4d4d4] rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-[#b95e82] focus:border-transparent bg-[#f5f5f5] text-[#737373] cursor-not-allowed"
+        className="w-14 px-3 py-2 border rounded-lg text-center"
       />
+
       <span className="text-[#737373]">:</span>
+
       <input
         type="text"
         value={minute}
-        disabled
+        onChange={handleMinuteChange}
+        onBlur={handleMinuteBlur}
         placeholder="MM"
         maxLength={2}
-        className="w-14 px-3 py-2 border border-[#d4d4d4] rounded-lg text-center focus:outline-none focus:ring-2 focus:ring-[#b95e82] focus:border-transparent bg-[#f5f5f5] text-[#737373] cursor-not-allowed"
+        className="w-14 px-3 py-2 border rounded-lg text-center"
       />
-      <div className="flex border border-[#d4d4d4] rounded-lg overflow-hidden">
+
+      <div className="flex border rounded-lg overflow-hidden">
         <button
           type="button"
-          disabled
-          className={`px-3 py-2 transition-colors cursor-not-allowed ${
-            period === "AM"
-              ? "bg-[#b95e82] text-white"
-              : "bg-white text-[#737373] opacity-50"
+          onClick={() => handlePeriodChange("AM")}
+          className={`px-3 py-2 ${
+            period === "AM" ? "bg-[#b95e82] text-white" : "bg-white"
           }`}
         >
           AM
         </button>
         <button
           type="button"
-          disabled
-          className={`px-3 py-2 transition-colors cursor-not-allowed ${
-            period === "PM"
-              ? "bg-[#b95e82] text-white"
-              : "bg-white text-[#737373] opacity-50"
+          onClick={() => handlePeriodChange("PM")}
+          className={`px-3 py-2 ${
+            period === "PM" ? "bg-[#b95e82] text-white" : "bg-white"
           }`}
         >
           PM

@@ -1,4 +1,4 @@
-import FitnessDetail from '@/components/pages/fitness-detail'
+import FitnessDetail from '@/components/pages/public/fitness-detail'
 import React from 'react'
 
 const page = () => {

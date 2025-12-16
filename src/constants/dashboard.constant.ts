@@ -10,7 +10,7 @@ import {
   LogoutIcon,
   LogoutIconDark,
 } from "@/icons/dashboardIcon";
-import { UserCog } from "lucide-react";
+import { UserCog, Globe, Layers } from "lucide-react";
 
 export const SidebarNav = {
   navMain: [
@@ -86,10 +86,22 @@ export const AdminNav = {
       icon: SessionsIcon,
       items: [],
     },
-     {
+    {
       title: "Trainer Management",
       url: "/trainers",
       icon: UserCog,
+      items: [],
+    },
+    {
+      title: "Region Management",
+      url: "/regions",
+      icon: Globe,
+      items: [],
+    },
+    {
+      title: "Service Management",
+      url: "/services",
+      icon: Layers,
       items: [],
     },
     {

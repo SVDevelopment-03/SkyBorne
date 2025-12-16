@@ -1,15 +1,35 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
 
-export interface TrainerData {
+export type TrainerData = {
   _id: string;
   name: string;
-  specialization: string;
-  experience?: number;
+  email: string;
+  phoneNumber: string;
+  specialization?: {
+    _id: string;
+    title: string;
+  };
+  experience: number;
   image?: string;
+  charges: number;
   createdAt?: string;
   updatedAt?: string;
-}
+};
+
+
+export type TrainerApiData = {
+  _id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  specialization?: string;
+  experience: number;
+  image?: string;
+  charges: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
 
 export interface PaginatedResponse {
   success: boolean;
@@ -62,7 +82,7 @@ export const trainerApi = createApi({
     }),
 
     // CREATE Trainer
-    createTrainer: builder.mutation<{ data: TrainerData }, Partial<TrainerData>>({
+    createTrainer: builder.mutation<{ data: TrainerApiData }, Partial<TrainerApiData>>({
       query: (data) => ({
         url: "/create-trainer",
         method: "POST",
@@ -73,8 +93,8 @@ export const trainerApi = createApi({
 
     // UPDATE Trainer
     updateTrainer: builder.mutation<
-      { data: TrainerData },
-      { id: string; data: Partial<TrainerData> }
+      { data: TrainerApiData },
+      { id: string; data: Partial<TrainerApiData> }
     >({
       query: ({ id, data }) => ({
         url: `/update-trainer/${id}`,

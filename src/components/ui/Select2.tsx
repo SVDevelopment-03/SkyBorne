@@ -7,9 +7,10 @@ interface SelectProps {
   options: { value: string; label: string }[];
   placeholder?: string;
   helper?: string;
+  cssProp?:string
 }
 
-export function Select({ label, value, onChange, options, placeholder, helper }: SelectProps) {
+export function Select({ label, value, onChange, options, placeholder, helper, cssProp="" }: SelectProps) {
   return (
     <div className="space-y-2">
       {label && (
@@ -26,7 +27,7 @@ export function Select({ label, value, onChange, options, placeholder, helper }:
         <select
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full appearance-none bg-white border border-[#d4d4d4] rounded-lg px-4 py-3 pr-10 text-[#262626] cursor-pointer hover:border-[#b95e82] focus:outline-none focus:ring-2 focus:ring-[#b95e82] focus:border-transparent transition-all"
+          className={`w-full appearance-none bg-[#f3f3f5] border border-[#d4d4d4] rounded-lg px-4 py-3 pr-10 text-[#262626] cursor-pointer hover:border-[#b95e82] focus:outline-none focus:ring-2 focus:ring-[#b95e82] focus:border-transparent transition-all ${cssProp}`}
         >
           {placeholder && <option value="">{placeholder}</option>}
           {options.map((option) => (

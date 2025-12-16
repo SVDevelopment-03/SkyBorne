@@ -2,8 +2,8 @@
 import {
   PackageSelection,
   PackageType,
-} from "@/components/pages/signup/PackageSelection";
-import { CheckoutState } from "@/components/pages/signup/Step7Package";
+} from "@/components/pages/auth/signup/PackageSelection";
+import { CheckoutState } from "@/components/pages/auth/signup/Step7Package";
 import { useState } from "react";
 
 const Page = () => {

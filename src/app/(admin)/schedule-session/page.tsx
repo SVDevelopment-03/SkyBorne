@@ -1,4 +1,4 @@
-import { ClassScheduler } from '@/components/pages/session-scheduler'
+import { ClassScheduler } from '@/components/pages/admin/session-scheduler'
 import React from 'react'
 
 const page = () => {

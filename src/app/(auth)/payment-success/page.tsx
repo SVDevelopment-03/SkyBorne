@@ -242,7 +242,7 @@ export default function PaymentSuccess() {
                 <p className="text-sm text-gray-600">Your payment has been processed successfully</p>
                 {paymentData && (
                   <p className="text-xs text-gray-500 mt-2">
-                    Order: {paymentData.orderRef} | Amount: {paymentData.currency} {paymentData.amount}
+                    Order: {paymentData.orderRef} | Amount: {"USD"} {paymentData.amount}
                   </p>
                 )}
               </div>
