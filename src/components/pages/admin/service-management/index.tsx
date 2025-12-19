@@ -13,12 +13,14 @@ import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { ChevronLeft, ChevronRight, Trash2Icon, Edit } from "lucide-react";
+import { Trash2Icon, Edit } from "lucide-react";
 import toast from "react-hot-toast";
 import { Toggle2 } from "@/components/ui/Toggle2";
 import { handleDeleteTrainer } from "@/utils/handleDeleteAlert";
 import { ServiceModal } from "./ServiceModal";
 import { useDebounce } from "@/hooks/useDebounce";
+import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
+import MainListHeading from "@/components/ui/MainListHeading";
 
 
 interface ServiceRowData extends IService {
@@ -59,7 +61,7 @@ const ServiceManagement = () => {
   };
 
   const handleDelete = async (serviceId: string) => {
-    handleDeleteTrainer(serviceId, deleteService, refetch);
+    handleDeleteTrainer(serviceId, deleteService, refetch,"Service");
   };
 
   const handleEdit = (service: IService) => {
@@ -133,10 +135,16 @@ const ServiceManagement = () => {
   ];
 
   return (
+    <div className="flex flex-col gap-6">
+      {/* Breadcrumb */}
+     <div className="flex flex-col items-start gap-2 md:flex-row md:items-center justify-between px-4">
+        <MainListHeading title="Service Management"/>
+        <CommonBreadcrump title="Service Management" href="/services" />
+      </div>
     <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
       {/* Search and Create Button */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
+      <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
+        <div className="relative flex-1 w-full md:max-w-md">
           <Input2
             placeholder="Search by service name..."
             value={search}
@@ -148,7 +156,7 @@ const ServiceManagement = () => {
         </div>
         <Button
           variant="themeRegular"
-          className="rounded-[10px] py-3!"
+          className="rounded-[10px] py-3! w-full md:w-auto"
           onClick={() => {
             setIsModalOpen(true);
           }}
@@ -173,8 +181,8 @@ const ServiceManagement = () => {
         </VisuallyHidden>
         <DialogContent
           className="
-            !w-full
-            !max-w-[600px]
+            w-full!
+            max-w-[600px]!
             p-10
             data-[state=open]:animate-in
             data-[state=open]:fade-in-0
@@ -197,6 +205,7 @@ const ServiceManagement = () => {
           />
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   );
 };

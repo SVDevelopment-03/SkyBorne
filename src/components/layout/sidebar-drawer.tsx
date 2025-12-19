@@ -1,3 +1,4 @@
+"use client";
 import { SidebarNav } from "@/constants/dashboard.constant";
 import { InfoIcon } from "@/icons/dashboardIcon";
 import Image from "next/image";
@@ -9,9 +10,19 @@ import { usePathname, useRouter } from "next/navigation";
 import LogoutAlert from "@/utils/LogoutAlert";
 import { removeTokens } from "@/lib/token";
 
-const Sidebar = () => {
-  const [showAlert, setShowAlert] = useState(false);
+// ⭐ Shadcn Drawer
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTrigger,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
+export default function SidebarDrawer() {
+  const [selected, setSelected] = useState(0);
+  const [showAlert, setShowAlert] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -21,6 +32,22 @@ const Sidebar = () => {
   };
 
   return (
+    <div className="md:hidden">
+      {/* -------- Drawer Trigger Button -------- */}
+      <Drawer direction="left">
+        <DrawerTrigger asChild>
+          <button className="w-16 p-3 px-6 rounded-md text-[24px] font-bold text-[#494949]">
+            ☰
+          </button>
+        </DrawerTrigger>
+
+        {/* -------- Drawer Content -------- */}
+        <DrawerContent className="h-full p-0">
+          <DrawerHeader>
+            <VisuallyHidden>
+              <DrawerTitle>Admin Menu</DrawerTitle>
+            </VisuallyHidden>
+          </DrawerHeader>
     <div className="flex flex-col bg-white overflow-y-auto h-full [scrollbar-width:none] pb-3.5">
       <div className="flex flex-col gap-13.5 p-5 bg-white">
         <div
@@ -129,7 +156,8 @@ const Sidebar = () => {
         />
       )}
     </div>
+        </DrawerContent>
+      </Drawer>
+    </div>
   );
-};
-
-export default Sidebar;
+}

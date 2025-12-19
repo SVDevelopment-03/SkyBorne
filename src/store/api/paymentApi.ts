@@ -22,6 +22,30 @@ export const paymentApi = createApi({
       invalidatesTags: ["Payment"],
     }),
 
+
+    // =======================================
+    // GET PAYMENT HISTORY
+    // =======================================
+    getPaymentHistory: builder.query({
+      query: (userId) => ({
+        url: `/payment/history/${userId}`,
+        method: "GET",
+      }),
+      providesTags: ["Payment"],
+    }),
+
+    // =======================================
+    // GET PAYMENT STATS
+    // =======================================
+    getPaymentStats: builder.query({
+      query: (userId) => ({
+        url: `/payment/stats/${userId}`,
+        method: "GET",
+      }),
+      providesTags: ["Payment"],
+    }),
+
+
     // ---------------------------------------
     // GET PAYMENT STATUS
     // ---------------------------------------
@@ -45,6 +69,8 @@ export const paymentApi = createApi({
 
 export const {
   useCreatePaymentOrderMutation,
+  useGetPaymentHistoryQuery,
+  useGetPaymentStatsQuery,
   useCreatePaymentVerificationMutation,
   useGetPaymentStatusQuery,
 } = paymentApi;

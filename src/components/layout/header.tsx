@@ -16,7 +16,6 @@ import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
-import { Typography } from "../ui/heading";
 import useGetUser from "@/hooks/useGetUser";
 
 const Header = ({ isHero }: { isHero?: boolean }) => {

@@ -12,12 +12,15 @@ import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { ChevronLeft, ChevronRight, Trash2, Trash2Icon } from "lucide-react";
+import { Trash2Icon } from "lucide-react";
 import toast from "react-hot-toast";
 import { CountryModal } from "./CountryModal";
 import { ICountry } from "@/store/api/countryApi";
 import { Toggle2 } from "@/components/ui/Toggle2";
 import { handleDeleteTrainer } from "@/utils/handleDeleteAlert";
+import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
+import MainListHeading from "@/components/ui/MainListHeading";
+import CustomPagination from "@/components/ui/CustromPagination";
 
 interface CountryRowData extends ICountry {
   actions?: React.ReactNode;
@@ -26,8 +29,7 @@ interface CountryRowData extends ICountry {
 const CountryManagement = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [editingCountry, setEditingCountry] = useState<ICountry | null>(null);
+  const [limit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data, isLoading, refetch } = useGetCountriesQuery({
@@ -62,17 +64,12 @@ const CountryManagement = () => {
   };
 
   const handleDelete = async (countryId: string) => {
-    handleDeleteTrainer(countryId, deleteCountry, refetch);
+    handleDeleteTrainer(countryId, deleteCountry, refetch,"Country");
   };
 
-  const handleEdit = (country: ICountry) => {
-    setEditingCountry(country);
-    setIsModalOpen(true);
-  };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setEditingCountry(null);
   };
 
   const handleSearch = (value: string) => {
@@ -137,95 +134,67 @@ const CountryManagement = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
-      {/* Search and Create Button */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-md">
-          <Input2
-            placeholder="Search by country name..."
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            name="search"
-            className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 text-base! placeholder:text-[#929292]!"
+    <div className="flex flex-col gap-6">
+      {/* Breadcrumb */}
+     <div className="flex flex-col items-start gap-2 md:flex-row md:items-center justify-between px-4">
+        <MainListHeading title="Country Management" />
+        <CommonBreadcrump title="Country Management" href="/regions" />
+      </div>
+      <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
+        {/* Search and Create Button */}
+      <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
+          <div className="relative flex-1 max-w-md">
+            <Input2
+              placeholder="Search by country name..."
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              name="search"
+              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 text-base! placeholder:text-[#929292]!"
+            />
+            <SearchIcon />
+          </div>
+          <Button
+            variant="themeRegular"
+            className="rounded-[10px] py-3!"
+            onClick={() => {
+              setIsModalOpen(true);
+            }}
+          >
+            Add Country
+          </Button>
+        </div>
+
+        {/* Data Table */}
+        <div className="flex flex-col w-full">
+          <DataTable
+            columns={columns as ColumnDef<CountryRowData, unknown>[]}
+            data={countries as CountryRowData[]}
+            isLoadingData={isLoading}
           />
-          <SearchIcon />
         </div>
-        <Button
-          variant="themeRegular"
-          className="rounded-[10px] py-3!"
-          onClick={() => {
-            setIsModalOpen(true);
-          }}
-        >
-          Add Country
-        </Button>
-      </div>
 
-      {/* Data Table */}
-      <div className="flex flex-col w-full">
-        <DataTable
-          columns={columns as ColumnDef<CountryRowData, unknown>[]}
-          data={countries as CountryRowData[]}
-          isLoadingData={isLoading}
-        />
-      </div>
-
-      {/* Pagination Controls */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between pt-4 border-t border-[#E5E5E5]">
-          <div className="text-sm text-[#666666]">
-            Page {pagination?.currentPage} of {pagination?.totalPages} • Total:{" "}
-            {pagination?.totalCount} countries
+        {/* Pagination Controls */}
+   {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center pt-4">
+            <CustomPagination
+              totalPages={totalPages}
+              currentPage={page}
+              onPageChange={setPage}
+              visiblePages={3}
+            />
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={!pagination?.hasPrevPage}
-              className="p-2 rounded-lg border border-[#DCE5E0] hover:bg-[#F2F0ED] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Previous page"
-            >
-              <ChevronLeft size={20} />
-            </button>
+        )}
 
-            <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                (pageNum) => (
-                  <button
-                    key={pageNum}
-                    onClick={() => setPage(pageNum)}
-                    className={`w-8 h-8 rounded-lg transition-colors ${
-                      pageNum === page
-                        ? "bg-[#FF6B35] text-white font-medium"
-                        : "border border-[#DCE5E0] text-[#666666] hover:bg-[#F2F0ED]"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                )
-              )}
-            </div>
-
-            <button
-              onClick={() => setPage(Math.min(totalPages, page + 1))}
-              disabled={!pagination?.hasNextPage}
-              className="p-2 rounded-lg border border-[#DCE5E0] hover:bg-[#F2F0ED] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              title="Next page"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Country Modal */}
-      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
-        <VisuallyHidden>
-          <DialogTitle>Country Management</DialogTitle>
-        </VisuallyHidden>
-        <DialogContent
-          className="
-            !w-full
-            !max-w-[600px]
+        {/* Country Modal */}
+        <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
+          <VisuallyHidden>
+            <DialogTitle>Country Management</DialogTitle>
+          </VisuallyHidden>
+          <DialogContent
+            className="
+            w-full!
+            max-w-[600px]!
             p-10
               data-[state=open]:animate-in
     data-[state=open]:fade-in-0
@@ -237,16 +206,17 @@ const CountryManagement = () => {
     data-[state=closed]:slide-out-to-top-20
     duration-500
           "
-        >
-          <CountryModal
-            onCancel={handleCloseModal}
-            onSuccess={() => {
-              handleCloseModal();
-              refetch();
-            }}
-          />
-        </DialogContent>
-      </Dialog>
+          >
+            <CountryModal
+              onCancel={handleCloseModal}
+              onSuccess={() => {
+                handleCloseModal();
+                refetch();
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };

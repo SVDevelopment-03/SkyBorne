@@ -22,46 +22,46 @@ export const SidebarNav = {
     },
     {
       title: "Sessions",
-      url: "/upcoming",
+      url: "/user-session",
       icon: SessionsIcon,
       items: [],
     },
-    {
-      title: "Progress",
-      url: "/upcoming",
-      icon: ProgressIcon,
-      items: [],
-    },
+    // {
+    //   title: "Progress",
+    //   url: "/progress",
+    //   icon: ProgressIcon,
+    //   items: [],
+    // },
     {
       title: "Packages",
-      url: "/upcoming",
+      url: "/user-packages",
       icon: PackagesIcon,
       items: [],
     },
-    {
-      title: "Notifications",
-      url: "/upcoming",
-      icon: NotificationsIcon,
-      items: [],
-    },
+    // {
+    //   title: "Notifications",
+    //   url: "/upcoming",
+    //   icon: NotificationsIcon,
+    //   items: [],
+    // },
     {
       title: "Payments",
-      url: "/upcoming",
+      url: "/payments",
       icon: PaymentsIcon,
       items: [],
     },
     {
       title: "Profile",
-      url: "/upcoming",
+      url: "/profile",
       icon: ProfileIcon,
       items: [],
     },
-    {
-      title: "Feedback",
-      url: "/upcoming",
-      icon: FeedbackIcon,
-      items: [],
-    },
+    // {
+    //   title: "Feedback",
+    //   url: "/upcoming",
+    //   icon: FeedbackIcon,
+    //   items: [],
+    // },
     {
       title: "Logout",
       logout: true, // 👈 ADD THIS
@@ -81,7 +81,7 @@ export const AdminNav = {
       items: [],
     },
     {
-      title: "Class Schedular",
+      title: "Class Management",
       url: "/schedule-session",
       icon: SessionsIcon,
       items: [],
@@ -93,7 +93,7 @@ export const AdminNav = {
       items: [],
     },
     {
-      title: "Region Management",
+      title: "Country Management",
       url: "/regions",
       icon: Globe,
       items: [],

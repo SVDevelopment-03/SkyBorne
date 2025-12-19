@@ -140,7 +140,7 @@ const BlogList = () => {
           ))}
         </div>
         <div className="md:pt-14.5">
-          <CustomPagination />
+          {/* <CustomPagination /> */}
         </div>
       </div>
     </div>

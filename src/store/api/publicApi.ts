@@ -7,9 +7,10 @@ export const publicApi = createApi({
   endpoints: (builder) => ({
     getServices: builder.query({
       query: () => ({
-        url: "/services",
+        url: "/services/active",
         method: "GET",
       }),
+      keepUnusedDataFor: 0,
     }),
     getPlans: builder.query({
       query: () => ({

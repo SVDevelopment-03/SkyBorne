@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import "react-phone-number-input/style.css";
+  import "react-phone-number-input/style.css";
 import PhoneInput, {
   isValidPhoneNumber,
   parsePhoneNumber,
