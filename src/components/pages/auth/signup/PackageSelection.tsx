@@ -39,9 +39,6 @@ const goldOptions: GoldOption[] = [
 export function PackageSelection({ onSelect }: PackageSelectionProps) {
   const [selectedGoldOption, setSelectedGoldOption] =
     useState<PackageType | null>(null);
-  const [goldAccordionOpen, setGoldAccordionOpen] = useState(false);
-  const [diamondAccordionOpen, setDiamondAccordionOpen] = useState(false);
-  const [platinumAccordionOpen, setPlatinumAccordionOpen] = useState(false);
 
   const handleGoldSelect = () => {
     if (selectedGoldOption) {
@@ -212,72 +209,6 @@ export function PackageSelection({ onSelect }: PackageSelectionProps) {
                 <span className="font-medium">$300</span>
               </p>
             </div>
-
-            {/* Accordion for breakdown */}
-            {/* <div className="border-t border-white/20 pt-4 mb-6">
-              <button
-                onClick={() => setPlatinumAccordionOpen(!platinumAccordionOpen)}
-                className="flex items-center justify-between w-full text-sm text-white hover:text-white/80 transition-colors"
-              >
-                <span>📄 View Cost Calculation</span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform duration-300 ${
-                    platinumAccordionOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-
-              <div
-                className={`overflow-hidden transition-all duration-300 ${
-                  platinumAccordionOpen
-                    ? "max-h-80 opacity-100 mt-4"
-                    : "max-h-0 opacity-0"
-                }`}
-              >
-                <table className="w-full text-sm">
-                  <thead className="border-b border-white/20">
-                    <tr className="text-left text-white/90">
-                      <th className="pb-2">Item</th>
-                      <th className="pb-2 text-center">Qty</th>
-                      <th className="pb-2 text-right">Rate</th>
-                      <th className="pb-2 text-right">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-white/90">
-                    <tr className="border-b border-white/10">
-                      <td className="py-2">Yoga</td>
-                      <td className="py-2 text-center">2</td>
-                      <td className="py-2 text-right">$60</td>
-                      <td className="py-2 text-right">$120</td>
-                    </tr>
-                    <tr className="border-b border-white/10">
-                      <td className="py-2">Zumba</td>
-                      <td className="py-2 text-center">2</td>
-                      <td className="py-2 text-right">$60</td>
-                      <td className="py-2 text-right">$120</td>
-                    </tr>
-                    <tr className="border-b border-white/10">
-                      <td className="py-2">Specialized</td>
-                      <td className="py-2 text-center">1</td>
-                      <td className="py-2 text-right">$120</td>
-                      <td className="py-2 text-right">$120</td>
-                    </tr>
-                    <tr className="border-b border-white/10">
-                      <td className="py-2">Discount</td>
-                      <td className="py-2 text-center">—</td>
-                      <td className="py-2 text-right">17%</td>
-                      <td className="py-2 text-right">-$60</td>
-                    </tr>
-                    <tr>
-                      <td className="py-2 text-white">Total</td>
-                      <td className="py-2 text-center">—</td>
-                      <td className="py-2 text-right">—</td>
-                      <td className="py-2 text-right text-white">$300</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div> */}
           </div>
           <button
             onClick={() => onSelect("platinum")}

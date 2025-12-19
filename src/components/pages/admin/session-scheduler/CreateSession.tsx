@@ -34,15 +34,19 @@ import { useGetServicesQuery } from "@/store/api/publicApi";
 import { useCreateMeetingMutation } from "@/store/api/meetingApi";
 import useGetUser from "@/hooks/useGetUser";
 import dayjs from "dayjs";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { useRouter } from "next/navigation";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(isSameOrBefore);
 
 interface TimezoneConversion {
   region: string;
   localTime: string;
   timezone: string;
   mode: "live" | "replay";
+  date: string;
 }
 
 interface ClassSchedulerProps {
@@ -79,8 +83,13 @@ const validationSchema = Yup.object().shape({
   ),
 });
 
-export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
-  const { data, isLoading, isError } = useGetTrainersQuery({page:1,limit:100,search:''});
+export function CreateSession({ onSuccess }: ClassSchedulerProps) {
+    const router = useRouter();
+  const { data, isLoading, isError } = useGetTrainersQuery({
+    page: 1,
+    limit: 100,
+    search: "",
+  });
   const [createMeeting] = useCreateMeetingMutation();
   const { user } = useGetUser();
   let timezoneConversions: any;
@@ -143,37 +152,26 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
     "uk-europe": "Europe/London",
   };
 
-  const fixedRegionTimes: Record<string, string> = {
+  const regionLabels: Record<string, string> = {
+    gulf: "Gulf",
+    apac: "APAC",
+    "canada-usa": "Canada / USA",
+    "uk-europe": "UK / Europe",
+  };
+
+  // Fixed meeting times for REPLAY regions
+  const fixedReplayTimes: Record<string, string> = {
     gulf: "10:00 AM",
     apac: "2:00 PM",
     "canada-usa": "6:00 PM",
     "uk-europe": "9:00 PM",
   };
 
-  const getTimezoneConversions = (
-    liveRegion: string,
-    liveTime: string,
-    date: Date | undefined
-  ): TimezoneConversion[] => {
-    if (!liveRegion || !liveTime || !date) return [];
-
-    // Fixed meeting times for each region
-    const fixedTimes: Record<string, string> = {
-      gulf: "10:00 AM",
-      apac: "2:00 PM",
-      "canada-usa": "6:00 PM",
-      "uk-europe": "9:00 PM",
-    };
-
-    return Object.entries(regionTimezones).map(([regionKey, tz]) => {
-      return {
-        region:
-          regionOptions.find((r) => r.value === regionKey)?.label || regionKey,
-        localTime: fixedTimes[regionKey],
-        timezone: tz,
-        mode: regionKey === liveRegion ? "live" : "replay",
-      };
-    });
+  const fixedRegionTimes: Record<string, string> = {
+    gulf: "10:00 AM",
+    apac: "2:00 PM",
+    "canada-usa": "6:00 PM",
+    "uk-europe": "9:00 PM",
   };
 
   const convertTimeTo24Hour = (time12h: string): string => {
@@ -190,6 +188,99 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
     )}`;
   };
 
+  const getTimezoneConversions = (
+    liveRegion: string,
+    liveTime: string,
+    date: Date | undefined,
+    duration: number = 60 // Add duration parameter
+  ): TimezoneConversion[] => {
+    if (!liveRegion || !liveTime || !date) return [];
+
+    const time24hStr = convertTimeTo24Hour(liveTime);
+    const [liveHours, liveMinutes] = time24hStr.split(":").map(Number);
+
+    // Create the live class start time in the live region's timezone
+    const liveDateTime = dayjs.tz(
+      new Date(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        liveHours,
+        liveMinutes
+      ),
+      regionTimezones[liveRegion]
+    );
+
+    // Calculate when the class ends in the live region
+    const classEndTime = liveDateTime.add(duration, "minutes");
+
+    return Object.entries(regionTimezones).map(([regionKey, tz]) => {
+      if (regionKey === liveRegion) {
+        // Live region shows the live class at the specified time
+        return {
+          region: regionLabels[regionKey],
+          localTime: liveTime,
+          timezone: tz,
+          mode: "live",
+          date: dayjs(date).format("YYYY-MM-DD"),
+        };
+      }
+
+      // For replay regions, get when class ends in that region's timezone
+      const classEndTimeInRegion = classEndTime.tz(tz);
+
+      // Get the scheduled replay time for this region (e.g., 10:00 AM for APAC)
+      const replayTimeStr = fixedReplayTimes[regionKey];
+      const time24hReplay = convertTimeTo24Hour(replayTimeStr);
+      const [replayHours, replayMinutes] = time24hReplay.split(":").map(Number);
+
+      // Create the scheduled replay time on the original date in the region's timezone
+      const scheduledReplayTimeOnDate = dayjs.tz(
+        new Date(
+          date.getFullYear(),
+          date.getMonth(),
+          date.getDate(),
+          replayHours,
+          replayMinutes
+        ),
+        tz
+      );
+      console.log("aaaa", scheduledReplayTimeOnDate);
+
+      // Check if scheduled replay time is BEFORE or EQUAL to the class end time in that region
+      const isBeforeLiveEnds =
+        scheduledReplayTimeOnDate.isBefore(classEndTimeInRegion, "minute") ||
+        scheduledReplayTimeOnDate.isSame(classEndTimeInRegion, "minute");
+
+      let finalReplayDate = dayjs(date);
+
+      // If the scheduled replay time is before or at the time class ends, schedule for next day
+      if (isBeforeLiveEnds) {
+        console.log("kkkkkkkkkkkk");
+
+        finalReplayDate = finalReplayDate.add(1, "day");
+      }
+
+      // Debug logging
+      console.log(`${regionLabels[regionKey]} (${tz}):`, {
+        classEndTime: classEndTimeInRegion.format("YYYY-MM-DD HH:mm:ss Z"),
+        scheduledReplayTime: scheduledReplayTimeOnDate.format(
+          "YYYY-MM-DD HH:mm:ss Z"
+        ),
+        isBeforeLiveEnds,
+        finalDate: finalReplayDate.format("YYYY-MM-DD"),
+      });
+
+      return {
+        region: regionLabels[regionKey],
+        localTime: replayTimeStr,
+        timezone: tz,
+        mode: "replay",
+        date: finalReplayDate.format("YYYY-MM-DD"),
+      };
+    });
+  };
+
   const handleSubmit = async (
     values: FormValues,
     { setSubmitting, resetForm }: FormikHelpers<FormValues>
@@ -204,7 +295,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
       }
 
       const time24h = convertTimeTo24Hour(values.liveTime);
-      const [hours, minutes] = time24h.split(":").map(Number);
+      const [hours, minutes] = time24h?.split(":").map(Number);
 
       const localDateTime = new Date(
         values.date.getFullYear(),
@@ -239,6 +330,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
 
         setTimeout(() => {
           setShowModal(true);
+          router.push("/schedule-session")
           setTimeout(() => {
             setButtonState("default");
             resetForm();
@@ -280,7 +372,8 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
         timezoneConversions = getTimezoneConversions(
           values.liveRegion,
           values.liveTime,
-          values.date
+          values.date,
+          values.duration
         );
 
         console.log(
@@ -424,7 +517,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                           onChange={(val) => {
                             setFieldValue("liveRegion", val);
                             // Auto-update time based on selected region
-                            setFieldValue("liveTime", fixedRegionTimes[val]);
+                            // setFieldValue("liveTime", fixedRegionTimes[val]);
                           }}
                           options={regionOptions}
                           placeholder="Choose region..."
@@ -537,22 +630,39 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                                   {conversion.region}
                                 </td>
                                 <td className="px-4 py-3 text-[#525252]">
-                                  {conversion.localTime}
+                                  <div className="flex flex-col">
+                                    <span>{conversion.localTime}</span>
+                                    <span className="text-xs text-[#737373]">
+                                      {conversion.date}
+                                    </span>
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3 text-[#737373]">
                                   {conversion?.timezone}
                                 </td>
                                 <td className="px-4 py-3">
                                   {conversion.mode === "live" ? (
-                                    <Badge type="live">
-                                      <Star className="w-3.5 h-3.5" />
-                                      Live
-                                    </Badge>
+                                    <div className="flex flex-col gap-1 max-w-[100px]">
+                                      <Badge type="live">
+                                        <Star className="w-3.5 h-3.5" />
+                                        Live
+                                      </Badge>
+                                    </div>
                                   ) : (
-                                    <Badge type="replay">
-                                      <RotateCw className="w-3.5 h-3.5" />
-                                      Replay
-                                    </Badge>
+                                    <div className="flex flex-col gap-1 max-w-[100px]">
+                                      <Badge type="replay">
+                                        <RotateCw className="w-3.5 h-3.5" />
+                                        Replay
+                                      </Badge>
+                                      {conversion.date !==
+                                        dayjs(values.date).format(
+                                          "YYYY-MM-DD"
+                                        ) && (
+                                        <span className="text-xs text-[#737373]">
+                                          Next Day
+                                        </span>
+                                      )}
+                                    </div>
                                   )}
                                 </td>
                               </tr>
@@ -578,7 +688,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                 </section>
 
                 {/* Section 6: Weekly Rotation Rule */}
-                <section className="space-y-4">
+                {/* <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <h4 className="text-[#262626]">Live Region Rotation</h4>
                     <div className="group relative">
@@ -598,7 +708,7 @@ export function ClassScheduler({ onSuccess }: ClassSchedulerProps) {
                     onChange={(val) => setFieldValue("rotationEnabled", val)}
                     options={rotationOptions}
                   />
-                </section>
+                </section> */}
 
                 {/* CTA Area */}
                 <section className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-[#e5e5e5]">

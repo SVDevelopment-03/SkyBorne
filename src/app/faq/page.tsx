@@ -1,4 +1,4 @@
-import FAQComponent from '@/components/pages/faq'
+import FAQComponent from '@/components/pages/public/faq'
 
 const page = () => {
   return (

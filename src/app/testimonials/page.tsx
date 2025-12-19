@@ -1,4 +1,4 @@
-import TestimonialsComponent from '@/components/pages/testimonials'
+import TestimonialsComponent from '@/components/pages/public/testimonials'
 import React from 'react'
 
 const page = () => {

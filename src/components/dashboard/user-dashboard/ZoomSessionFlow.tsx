@@ -29,6 +29,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
+import useGetUser from "@/hooks/useGetUser";
 
 interface ZoomSessionFlowProps {
   isOpen: boolean;
@@ -82,10 +83,10 @@ export function ZoomSessionFlow({
 }: ZoomSessionFlowProps) {
   const [currentStep, setCurrentStep] = useState<FlowStep>("upcoming");
   const [progress, setProgress] = useState(0);
-  const [countdown, setCountdown] = useState(0); // 2 minutes in seconds
+  const [countdown, setCountdown] = useState(0);
   const [meetingDuration, setMeetingDuration] = useState(0);
 
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useGetUser();
 
   // Access Check Progress
   useEffect(() => {

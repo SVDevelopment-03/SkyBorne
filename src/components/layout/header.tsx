@@ -16,11 +16,11 @@ import { RootState } from "@/store";
 import { useSelector } from "react-redux";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
-import { Typography } from "../ui/heading";
+import useGetUser from "@/hooks/useGetUser";
 
 const Header = ({ isHero }: { isHero?: boolean }) => {
   const router = useRouter();
-    const {user} = useSelector((state:RootState)=>state.auth);
+    const {user} = useGetUser();
     const avatarName = user?.firstName[0] + (user?.lastName ? user?.lastName[0] :'' );
       const fullName =toTitleCase( user?.firstName +' ' + (user?.lastName ? user?.lastName :'' ));
   const menuDetail = [
@@ -57,6 +57,16 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
       link: "/testimonials",
     },
   ];
+
+  const handleClick = () =>{
+    if(user?.role == "admin"){
+      router.push("/admin-dashboard")
+    }
+    else{
+      router.push("/dashboard")
+    }
+  }
+
   return (
     <div className="flex items-center justify-between">
       <div
@@ -107,7 +117,7 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
         </Button>
         </>
       :   <>
-              <div className="flex items-center cursor-pointer" onClick={()=>router.push("/dashboard")}>
+              <div className="flex items-center cursor-pointer" onClick={handleClick}>
                 <UserAvatar name={avatarName}/>
               </div>
             </>}

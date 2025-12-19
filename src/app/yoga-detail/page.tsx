@@ -1,4 +1,4 @@
-  import YogaDetail from "@/components/pages/yoga-detail";
+  import YogaDetail from "@/components/pages/public/yoga-detail";
   import React from "react";
 
   const page = () => {

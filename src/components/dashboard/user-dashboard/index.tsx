@@ -528,8 +528,6 @@ export default function Page() {
                     );
                     const trainer = meeting?.trainer?.name ?? "";
 
-                    console.log("kpr", userRegion?.region);
-
                     return (
                       <SessionCard
                         key={index}

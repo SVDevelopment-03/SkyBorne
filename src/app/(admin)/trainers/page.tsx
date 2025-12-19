@@ -1,4 +1,4 @@
-import TrainerManagement from "@/components/pages/trainer-management";
+import TrainerManagement from "@/components/pages/admin/trainer-management";
 import React from "react";
 
 const Page = () => {
