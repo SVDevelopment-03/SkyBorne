@@ -164,10 +164,17 @@ const Login = () => {
         dispatch(
           setCredentials({ user: data?.user, accessToken, refreshToken })
         );
+
+        console.log("user", data?.user);
+        
         toast.success(res?.message || "Login successful!");
         if (data?.user?.role == "admin") {
           router.push("/admin-dashboard");
-        } else {
+        } 
+        else if (data?.user?.role == "trainer") {
+          router.push("/trainer-dashboard");
+        } 
+        else {
           router.push("/dashboard");
         }
       }

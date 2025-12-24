@@ -1,6 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import Footer from "@/components/layout/footer";
+import { useGetCountriesQuery } from "@/store/api/countryApi";
 import { usePathname } from "next/navigation";
 import React from "react";
 
@@ -10,6 +13,43 @@ export default function RouteWrapper({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+const [countryCode, setCountryCode] = React.useState<string | null>(null);
+
+  const { data, isLoading } = useGetCountriesQuery({
+    page: 1,
+    limit: 500,
+    search: "",
+  });
+
+  React.useEffect(() => {
+    fetch("https://ipwho.is/")
+      .then((res) => res.json())
+      .then((data) => {
+        setCountryCode(data?.country_code ?? null);
+      })
+      .catch(() => {
+        setCountryCode(null);
+      });
+  }, []);
+
+  const matchedCountry = React.useMemo(() => {
+    if (!data?.data?.countries || !countryCode) return null;
+
+    return data.data.countries.find(
+      (c: any) => c.code === countryCode
+    );
+  }, [countryCode, data]);
+
+  if (isLoading || countryCode === null) {
+    return null;
+  }
+
+  if (matchedCountry?.status === "inactive") {
+    return null;
+  }
+
+
+
   const footerRoutes = [
     "/",
     "/about-us",

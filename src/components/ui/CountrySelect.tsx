@@ -22,7 +22,9 @@ export interface SelectOptionItem {
 
 export interface CommonSelectProps {
   label: string;
+  cssProp?: string;
   value: string;
+  showLabel?:boolean;
   onChange: (value: string) => void;
   error?: string;
   touched?: boolean;
@@ -75,16 +77,18 @@ export const CommonSelect: React.FC<CommonSelectProps> = ({
   value,
   onChange,
   error,
+  showLabel=true,
+  cssProp,
   touched,
   options,
 }) => {
   return (
     <div className="flex flex-col gap-[18px]">
-      <Label>{label}</Label>
+      {showLabel && <Label>{label}</Label>}
 
       <Select value={value} onValueChange={onChange}>
-        <SelectTrigger className="w-full bg-[#F3F3F5] min-h-[55px] text-lg cursor-pointer">
-          <SelectValue placeholder={`Select your ${label.toLowerCase()}`} />
+        <SelectTrigger className={`w-full bg-[#F3F3F5] min-h-[55px] text-lg cursor-pointer ${cssProp}`}>
+          <SelectValue placeholder={`Select ${label.toLowerCase()}`} />
         </SelectTrigger>
 
         <SelectContent className="max-h-64 overflow-y-auto">

@@ -1,6 +1,8 @@
 "use client";
 import AdminSidebar from "@/components/layout/admin-sidebar";
 import AdminSidebarDrawer from "@/components/layout/admin-sidebar-drawer";
+import TrainerSidebar from "@/components/layout/trainer-sidebar";
+import TrainerSidebarDrawer from "@/components/layout/trainer-sidebar-drawer";
 import { Typography } from "@/components/ui/heading";
 import UserAvatar from "@/hooks/useAvatar";
 import useFetchUser from "@/hooks/useFetchUser";
@@ -33,7 +35,7 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
       setTimeout(() => {
         router.replace("/login");
       }, 0);
-    } else if (token && user?.role != "admin") {
+    } else if (token && user?.role != "trainer") {
       setTimeout(() => {
         router.replace("/dashboard");
       }, 0);
@@ -49,11 +51,11 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 md:grid-cols-[300px_1fr] min-h-dvh">
       <div className="md:hidden">
-        <AdminSidebarDrawer />
+        <TrainerSidebarDrawer />
       </div>
 
       <div className="hidden md:flex">
-        <AdminSidebar /> {/* Your original sidebar */}
+        <TrainerSidebar /> {/* Your original sidebar */}
       </div>
       <div>
         <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-end">

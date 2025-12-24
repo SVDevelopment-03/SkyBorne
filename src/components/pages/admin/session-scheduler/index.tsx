@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   useDeleteMeetingMutation,
   useGetMeetingsQuery,
@@ -19,6 +21,8 @@ import CustomPagination from "@/components/ui/CustromPagination";
 import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { handleDeleteTrainer } from "@/utils/handleDeleteAlert";
+import { useGetServicesQuery } from "@/store/api/publicApi";
+import { CommonSelect } from "@/components/ui/CountrySelect";
 
 type Status = "Upcoming" | "Live" | "Completed";
 
@@ -54,12 +58,37 @@ const ClassListManagement = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  const [serviceFilter, setServiceFilter] = useState("");
+  const [serviceOptions, setServiceOptions] = useState<
+    Array<{ label: string; value: string }>
+  >([]);
   const [deleteMeeting] = useDeleteMeetingMutation();
+
+  // Fetch services for dropdown
+  const { data: servicesData, isLoading: servicesLoading } =
+    useGetServicesQuery({
+      skip: 0,
+      limit: 100, // Get all services
+    });
+
+  // Update service options when services data changes
+  useEffect(() => {
+    if (servicesData?.data) {
+      const options = servicesData.data.map((service: any) => ({
+        label: service.title,
+        value: service._id,
+      }));
+      setTimeout(() => {
+        setServiceOptions(options);
+      }, 0);
+    }
+  }, [servicesData]);
 
   const { data, isLoading, refetch } = useGetMeetingsQuery({
     page,
     limit,
     search,
+    filter: serviceFilter,
   });
 
   const router = useRouter();
@@ -83,6 +112,17 @@ const ClassListManagement = () => {
 
   const handleDelete = async (meetingId: string) => {
     handleDeleteTrainer(meetingId, deleteMeeting, refetch, "Class");
+  };
+
+  const handleServiceFilterChange = (value: string) => {
+    setServiceFilter(value);
+    setPage(1);
+  };
+
+  const handleClearFilters = () => {
+    setSearch("");
+    setServiceFilter("");
+    setPage(1);
   };
 
   const columns: ColumnDef<ClassRowData>[] = [
@@ -134,67 +174,64 @@ const ClassListManagement = () => {
         <span className="text-[#666666]">{row.original.duration} mins</span>
       ),
     },
+    // {
+    //   accessorKey: "status",
+    //   header: "Status",
+    //   cell: ({ row }) => {
+    //     const status = getStatusFromLocalTime(
+    //       row.original.localTime,
+    //       row.original.duration
+    //     );
+
+    //     const statusStyles = {
+    //       Upcoming: "bg-yellow-50 text-yellow-700",
+    //       Live: "bg-green-50 text-green-700",
+    //       Completed: "bg-gray-100 text-gray-700",
+    //     };
+
+    //     return (
+    //       <Badge variant="outline" className={`py-1! ${statusStyles[status]}`}>
+    //         {status}
+    //       </Badge>
+    //     );
+    //   },
+    // },
     {
-      accessorKey: "status",
-      header: "Status",
+      id: "actions",
+      header: "Actions",
       cell: ({ row }) => {
         const status = getStatusFromLocalTime(
           row.original.localTime,
-          row.original.duration // optional
+          row.original.duration
         );
 
-        const statusStyles = {
-          Upcoming: "bg-yellow-50 text-yellow-700",
-          Live: "bg-green-50 text-green-700",
-          Completed: "bg-gray-100 text-gray-700",
-        };
+        // const canEdit = status === "Upcoming" || status === "Live";
 
         return (
-          <Badge variant="outline" className={`py-1! ${statusStyles[status]}`}>
-            {status}
-          </Badge>
+          <div className="flex gap-2">
+            <Button
+              variant="theme"
+              size="sm"
+              onClick={() => handleEdit(row.original._id)}
+              className="rounded-lg"
+              title="Edit"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+
+            <Button
+              variant="outlineCancel"
+              size="sm"
+              onClick={() => handleDelete(row.original._id)}
+              className="rounded-lg"
+              title="Delete"
+            >
+              <Trash2Icon className="w-4 h-4" />
+            </Button>
+          </div>
         );
       },
     },
-{
-  id: "actions",
-  header: "Actions",
-  cell: ({ row }) => {
-    const status = getStatusFromLocalTime(
-      row.original.localTime,
-      row.original.duration
-    );
-
-    const canEdit = status === "Upcoming" || status === "Live";
-
-    return (
-      <div className="flex gap-2">
-        {canEdit && (
-          <Button
-            variant="theme"
-            size="sm"
-            onClick={() => handleEdit(row.original._id)}
-            className="rounded-lg"
-            title="Edit"
-          >
-            <Edit className="w-4 h-4" />
-          </Button>
-        )}
-
-        <Button
-          variant="outlineCancel"
-          size="sm"
-          onClick={() => handleDelete(row.original._id)}
-          className="rounded-lg"
-          title="Delete"
-        >
-          <Trash2Icon className="w-4 h-4" />
-        </Button>
-      </div>
-    );
-  },
-}
-
   ];
 
   return (
@@ -208,15 +245,28 @@ const ClassListManagement = () => {
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
         {/* Search and Create Button */}
         <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Input2
-              placeholder="Search by class name or trainer..."
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              name="search"
-              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 text-base! placeholder:text-[#929292]!"
-            />
-            <SearchIcon />
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="relative flex-1 max-w-md">
+              <Input2
+                placeholder="Search by class name or trainer..."
+                value={search}
+                onChange={(e) => handleSearch(e.target.value)}
+                name="search"
+                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 text-base! placeholder:text-[#929292]! md:min-w-[400px]"
+              />
+              <SearchIcon />
+            </div>
+            {/* Service Filter Dropdown */}
+            <div className="w-full md:w-auto">
+              <CommonSelect
+                options={serviceOptions}
+                label="service"
+                showLabel={false}
+                cssProp="min-h-[45px]! min-w-[300px]!"
+                value={serviceFilter}
+                onChange={handleServiceFilterChange}
+              />
+            </div>
           </div>
           <Button
             variant="themeRegular"

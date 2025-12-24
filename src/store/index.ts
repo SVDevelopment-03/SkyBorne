@@ -9,6 +9,7 @@ import { trainerApi } from "./api/trainerApi";
 import { countryApi } from "./api/countryApi";
 import { serviceApi } from "./api/serviceApi";
 import { adminApi } from "./api/adminApi";
+import { regionApi } from "./api/regionApi";
 
 export const store = configureStore({
   reducer: {
@@ -19,8 +20,9 @@ export const store = configureStore({
     [paymentApi.reducerPath]: paymentApi.reducer,
     [trainerApi.reducerPath]: trainerApi.reducer,
     [countryApi.reducerPath]: countryApi.reducer,
-     [serviceApi.reducerPath]: serviceApi.reducer,
-      [adminApi.reducerPath]: adminApi.reducer,
+    [serviceApi.reducerPath]: serviceApi.reducer,
+    [adminApi.reducerPath]: adminApi.reducer,
+    [regionApi.reducerPath]: regionApi.reducer, 
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -31,7 +33,8 @@ export const store = configureStore({
       .concat(trainerApi.middleware)
       .concat(countryApi.middleware)
       .concat(serviceApi.middleware)
-      .concat(adminApi.middleware),
+      .concat(adminApi.middleware)
+      .concat(regionApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
