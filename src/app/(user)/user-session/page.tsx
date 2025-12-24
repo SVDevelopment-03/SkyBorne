@@ -228,8 +228,8 @@ export default function UserSessions() {
                   {upcomingCount}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#27AE60]/20 to-[#5eb9b4]/20 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-[#27AE60]" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+                <Clock className="w-6 h-6 text-[#b95e82]" />
               </div>
             </div>
           </CardContent>
@@ -246,8 +246,8 @@ export default function UserSessions() {
                   {completedCount}
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#5eb9b4]/20 to-[#8b7ba8]/20 flex items-center justify-center">
-                <Users className="w-6 h-6 text-[#5eb9b4]" />
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+                <Users className="w-6 h-6 text-[#b95e82]" />
               </div>
             </div>
           </CardContent>

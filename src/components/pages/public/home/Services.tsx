@@ -58,10 +58,36 @@ const Service = ({
 };
 
 const Services = () => {
-  const { data, isLoading } = useGetServicesQuery(undefined);
-  const services: ServiceType[] = data?.data || [];
+  // const { data, isLoading } = useGetServicesQuery(undefined);
+  // const services: ServiceType[] = data?.data || [];
 
-  console.log("aaa", data, isLoading);
+
+  const services = [
+  {
+    title: "Yoga",
+    description:
+      "Gentle movement and mindful stillness blend tradition and innovation for all levels.",
+    image: "/images/service1.jpg",
+    isActive: true,
+    order: 1,
+  },
+  {
+    title: "Zumba Dance",
+    description: "Group classes with music. Burn calories and enjoy dance.",
+    image: "/images/service2.jpg",
+    isActive: false,
+    order: 2,
+  },
+  {
+    title: "Diet & Nutrition",
+    description:
+      "Recharge focus, relieve stress, and nourish with guided meditations & nutrition support.",
+    image: "/images/service3.jpg",
+    isActive: true,
+    order: 3,
+  },
+];
+
 
   const [hovered, setHovered] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -100,7 +126,7 @@ const Services = () => {
       >
         <MotionDivVertical>
           <div className="flex items-center md:justify-center gap-3.5 md:gap-5">
-            {isLoading &&
+            {/* {isLoading &&
               Array.from({ length: 3 }).map((_, index) => (
                 <div
                   key={index}
@@ -108,13 +134,13 @@ const Services = () => {
                 >
                   <div className="absolute inset-0 bg-gray-200/20 rounded-lg" />
                 </div>
-              ))}
-            {!isLoading &&
+              ))} */}
+            {
               services?.map((service, index) => (
                 <div
                   className="flex relative rounded-lg md:rounded-[10px] h-[312px] md:h-[451px] w-[280px] md:w-[406px] max-md:min-w-[280px] shrink-0 md:overflow-hidden transition-all ease-in-out duration-600"
                   style={{ flex: hovered == index ? "1.6" : "1" }}
-                  key={service?.uuid}
+                  key={service?.order}
                   onMouseEnter={() => setHovered(index)}
                   onMouseLeave={() => setHovered(null)}
                 >

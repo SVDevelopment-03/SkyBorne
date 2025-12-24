@@ -72,7 +72,7 @@ export default function Footer() {
             {footerSections?.map((section, idx) => (
               <div key={idx} className="flex flex-col gap-10 md:gap-8">
                 <h3 className="font-medium text-base md:text-xl uppercase">
-                  {section.title}
+                  {section?.title}
                 </h3>
                 <ul className="space-y-5 md:space-y-2">
                   {section?.links.map((link, i) => (

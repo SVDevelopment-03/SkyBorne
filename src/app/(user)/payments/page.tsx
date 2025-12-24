@@ -23,7 +23,7 @@ import { useGetPaymentHistoryQuery, useGetPaymentStatsQuery } from '@/store/api/
 import { useSelector } from 'react-redux';
 import useGetUser from '@/hooks/useGetUser';
 
-interface Payment {
+export interface Payment {
   _id: string;
   orderRef: string;
   reference: string;
@@ -160,23 +160,23 @@ function UserPayments() {
         );
       },
     },
-    {
-      accessorKey: 'invoiceId',
-      header: 'Invoice',
-      cell: ({ row }) => (
-        <Button
-          size="sm"
-          variant="ghost"
-          className="text-[#b95e82] hover:bg-[#b95e82]/10"
-          onClick={() => {
-            console.log('Download invoice:', row.original.invoiceId);
-          }}
-        >
-          <Download className="w-4 h-4 mr-2" />
-          {row.original.invoiceId || 'N/A'}
-        </Button>
-      ),
-    },
+    // {
+    //   accessorKey: 'invoiceId',
+    //   header: 'Invoice',
+    //   cell: ({ row }) => (
+    //     <Button
+    //       size="sm"
+    //       variant="ghost"
+    //       className="text-[#b95e82] hover:bg-[#b95e82]/10"
+    //       onClick={() => {
+    //         console.log('Download invoice:', row.original.invoiceId);
+    //       }}
+    //     >
+    //       <Download className="w-4 h-4 mr-2" />
+    //       {row.original.invoiceId || 'N/A'}
+    //     </Button>
+    //   ),
+    // },
   ];
 
   const isLoading = isLoadingHistory || isLoadingStats;
