@@ -10,7 +10,7 @@ import {
   LogoutIcon,
   LogoutIconDark,
 } from "@/icons/dashboardIcon";
-import { UserCog, Globe, Layers } from "lucide-react";
+import { UserCog, Globe, Layers, BadgeDollarSign } from "lucide-react";
 
 export const SidebarNav = {
   navMain: [
@@ -84,7 +84,7 @@ export const AdminNav = {
       title: "Class Management",
       url: "/schedule-session",
       icon: SessionsIcon,
-      items: [],
+      items: ['/create-session','/edit-session'],
     },
     {
       title: "Trainer Management",
@@ -93,7 +93,7 @@ export const AdminNav = {
       items: [],
     },
     {
-      title: "Country Management",
+      title: "Region Management",
       url: "/regions",
       icon: Globe,
       items: [],
@@ -102,6 +102,32 @@ export const AdminNav = {
       title: "Service Management",
       url: "/services",
       icon: Layers,
+      items: [],
+    },
+    {
+      title: "Payment Management",
+      url: "/payment-management",
+      icon: BadgeDollarSign,
+      items: [],
+    },
+    {
+      title: "Logout",
+      logout: true,
+      url: "#",
+      icon: LogoutIconDark,
+      items: [],
+    },
+  ],
+};
+
+
+
+export const TrainerNav = {
+  navMain: [
+    {
+      title: "Dashboard",
+      url: "/trainer-dashboard",
+      icon: DashboardIcon,
       items: [],
     },
     {

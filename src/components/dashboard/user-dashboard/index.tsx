@@ -29,7 +29,6 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
-import { Bell } from "lucide-react";
 import { getUserRegion } from "@/utils/timezone";
 import { useGetDashboardStatsQuery } from "@/store/api/authApi";
 import { SearchIcon } from "@/icons/helpIcon";

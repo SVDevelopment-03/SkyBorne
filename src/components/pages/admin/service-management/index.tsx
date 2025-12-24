@@ -121,14 +121,14 @@ const ServiceManagement = () => {
           >
             <Edit className="w-4 h-4" />
           </Button>
-          <Button
+          {/* <Button
             variant="outlineCancel"
             size="sm"
             onClick={() => handleDelete(row.original._id)}
             className="rounded-lg"
           >
             <Trash2Icon className="w-4 h-4" />
-          </Button>
+          </Button> */}
         </div>
       ),
     },

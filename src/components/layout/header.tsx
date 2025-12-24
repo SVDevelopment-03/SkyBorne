@@ -62,6 +62,9 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
     if(user?.role == "admin"){
       router.push("/admin-dashboard")
     }
+      if(user?.role == "trainer"){
+      router.push("/trainer-dashboard")
+    }
     else{
       router.push("/dashboard")
     }

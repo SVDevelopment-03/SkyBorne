@@ -115,6 +115,18 @@ export const meetingApi = createApi({
       }),
       providesTags: ["Meetings"],
     }),
+      // For trainers - fetch their assigned sessions (NEW)
+    getTrainerUpcomingMeetings: builder.query({
+      query: ({ search = "", date } ) => ({
+        url: "/meetings/trainer/upcoming", // New endpoint
+        method: "GET",
+        params: {
+          search,
+          date,
+        },
+      }),
+      providesTags: ["Meetings"],
+    }),
     getAllMeetings: builder.query({
       query: (data) => ({
         url: "/meetings/getAll",
@@ -127,15 +139,16 @@ export const meetingApi = createApi({
     // Add this to your endpoints builder:
 getMeetings: builder.query<
   GetMeetingsResponse,
-  { page?: number; limit?: number; search?: string }
+  { page?: number; limit?: number; search?: string , filter?: string }
 >({
-  query: ({ page = 1, limit = 10, search = "" }) => ({
+  query: ({ page = 1, limit = 10, search = "" ,filter=""}) => ({
     url: "/meetings/getAll",
     method: "GET",
     params: {
       page,
       limit,
       search,
+      filter,
     },
   }),
   providesTags: ["Meetings"],
@@ -225,6 +238,7 @@ export const {
   useGetAllMeetingsQuery,
   useGetMeetingByIdQuery,
   useUpdateMeetingMutation,
+    useGetTrainerUpcomingMeetingsQuery, // New hook
   useDeleteMeetingMutation,
   useGetMeetingsQuery,
   useGetMonthlyAttendanceQuery,

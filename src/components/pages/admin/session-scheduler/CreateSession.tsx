@@ -8,7 +8,6 @@ import * as Yup from "yup";
 import { Select } from "@/components/ui/Select2";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { Toggle2 } from "@/components/ui/Toggle2";
-import { RadioGroup } from "@/components/ui/RadioGroup";
 import { Badge } from "@/components/ui/Badge2";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -29,9 +28,10 @@ import {
   Calendar as CalendarIcon,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useGetTrainersQuery } from "@/store/api/trainerApi";
+import { useGetActiveTrainersQuery, useGetTrainersQuery } from "@/store/api/trainerApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import { useCreateMeetingMutation } from "@/store/api/meetingApi";
+import { useGetAllActiveRegionsQuery } from "@/store/api/regionApi";
 import useGetUser from "@/hooks/useGetUser";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
@@ -62,7 +62,6 @@ interface FormValues {
   trainer: string;
   duration: number;
   autoRecording: boolean;
-  rotationEnabled: string;
 }
 
 const validationSchema = Yup.object().shape({
@@ -77,15 +76,11 @@ const validationSchema = Yup.object().shape({
     .min(30, "Duration must be at least 30 minutes")
     .max(480, "Duration cannot exceed 8 hours"),
   autoRecording: Yup.boolean(),
-  rotationEnabled: Yup.string().oneOf(
-    ["enabled", "disabled"],
-    "Invalid rotation option"
-  ),
 });
 
 export function CreateSession({ onSuccess }: ClassSchedulerProps) {
-    const router = useRouter();
-  const { data, isLoading, isError } = useGetTrainersQuery({
+  const router = useRouter();
+  const { data, isLoading, isError } = useGetActiveTrainersQuery({
     page: 1,
     limit: 100,
     search: "",
@@ -100,6 +95,12 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
     isError: serviceError,
   } = useGetServicesQuery(undefined);
 
+  // Fetch all active regions
+  const {
+    data: regionsData,
+    isLoading: regionsLoading,
+  } = useGetAllActiveRegionsQuery();
+
   const [serviceOptions, setServiceOption] = useState<
     { label: string; value: string }[] | null
   >(null);
@@ -107,6 +108,18 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
   const [trainerOptions, setTrainerOptions] = useState<
     { label: string; value: string }[] | null
   >(null);
+
+  const [regionOptions, setRegionOptions] = useState<
+    { label: string; value: string }[] | null
+  >(null);
+
+  const [regionTimezones, setRegionTimezones] = useState<
+    Record<string, string>
+  >({});
+
+  const [fixedReplayTimes, setFixedReplayTimes] = useState<
+    Record<string, string>
+  >({});
 
   const [showModal, setShowModal] = useState(false);
   const [buttonState, setButtonState] = useState<"default" | "success">(
@@ -133,46 +146,33 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
     }
   }, [data?.data, isLoading]);
 
-  const regionOptions = [
-    { value: "gulf", label: "Gulf" },
-    { value: "apac", label: "APAC" },
-    { value: "canada-usa", label: "Canada / USA" },
-    { value: "uk-europe", label: "UK / Europe" },
-  ];
+  // Build region options and mappings from API data
+  useEffect(() => {
+    if (!regionsLoading && Array.isArray(regionsData?.data)) {
+      const regions = regionsData.data;
 
-  const rotationOptions = [
-    { value: "enabled", label: "Enabled", description: "(Recommended)" },
-    { value: "disabled", label: "Disabled", description: "(Manual Selection)" },
-  ];
+      // Build region options for dropdown
+      const options = regions.map((region: any) => ({
+        label: region.displayLabel,
+        value: region._id,
+      }));
+      setRegionOptions(options);
 
-  const regionTimezones: Record<string, string> = {
-    gulf: "Asia/Dubai",
-    apac: "Asia/Singapore",
-    "canada-usa": "America/New_York",
-    "uk-europe": "Europe/London",
-  };
+      // Build timezone mapping
+      const timezones: Record<string, string> = {};
+      regions.forEach((region: any) => {
+        timezones[region._id] = region.timezone;
+      });
+      setRegionTimezones(timezones);
 
-  const regionLabels: Record<string, string> = {
-    gulf: "Gulf",
-    apac: "APAC",
-    "canada-usa": "Canada / USA",
-    "uk-europe": "UK / Europe",
-  };
-
-  // Fixed meeting times for REPLAY regions
-  const fixedReplayTimes: Record<string, string> = {
-    gulf: "10:00 AM",
-    apac: "2:00 PM",
-    "canada-usa": "6:00 PM",
-    "uk-europe": "9:00 PM",
-  };
-
-  const fixedRegionTimes: Record<string, string> = {
-    gulf: "10:00 AM",
-    apac: "2:00 PM",
-    "canada-usa": "6:00 PM",
-    "uk-europe": "9:00 PM",
-  };
+      // Build replay times mapping
+      const replayTimes: Record<string, string> = {};
+      regions.forEach((region: any) => {
+        replayTimes[region._id] = region.replayTime;
+      });
+      setFixedReplayTimes(replayTimes);
+    }
+  }, [regionsData?.data, regionsLoading]);
 
   const convertTimeTo24Hour = (time12h: string): string => {
     const [time, period] = time12h.split(" ");
@@ -189,17 +189,18 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
   };
 
   const getTimezoneConversions = (
-    liveRegion: string,
+    liveRegionId: string,
     liveTime: string,
     date: Date | undefined,
-    duration: number = 60 // Add duration parameter
+    duration: number = 60
   ): TimezoneConversion[] => {
-    if (!liveRegion || !liveTime || !date) return [];
+    if (!liveRegionId || !liveTime || !date || !regionsData?.data) return [];
 
     const time24hStr = convertTimeTo24Hour(liveTime);
     const [liveHours, liveMinutes] = time24hStr.split(":").map(Number);
 
     // Create the live class start time in the live region's timezone
+    const liveRegionTz = regionTimezones[liveRegionId];
     const liveDateTime = dayjs.tz(
       new Date(
         date.getFullYear(),
@@ -208,29 +209,29 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         liveHours,
         liveMinutes
       ),
-      regionTimezones[liveRegion]
+      liveRegionTz
     );
 
     // Calculate when the class ends in the live region
     const classEndTime = liveDateTime.add(duration, "minutes");
 
-    return Object.entries(regionTimezones).map(([regionKey, tz]) => {
-      if (regionKey === liveRegion) {
+    return regionsData.data.map((region: any) => {
+      if (region._id === liveRegionId) {
         // Live region shows the live class at the specified time
         return {
-          region: regionLabels[regionKey],
+          region: region.displayLabel,
           localTime: liveTime,
-          timezone: tz,
+          timezone: region.timezone,
           mode: "live",
           date: dayjs(date).format("YYYY-MM-DD"),
         };
       }
 
       // For replay regions, get when class ends in that region's timezone
-      const classEndTimeInRegion = classEndTime.tz(tz);
+      const classEndTimeInRegion = classEndTime.tz(region.timezone);
 
-      // Get the scheduled replay time for this region (e.g., 10:00 AM for APAC)
-      const replayTimeStr = fixedReplayTimes[regionKey];
+      // Get the scheduled replay time for this region
+      const replayTimeStr = region.replayTime;
       const time24hReplay = convertTimeTo24Hour(replayTimeStr);
       const [replayHours, replayMinutes] = time24hReplay.split(":").map(Number);
 
@@ -243,9 +244,8 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
           replayHours,
           replayMinutes
         ),
-        tz
+        region.timezone
       );
-      console.log("aaaa", scheduledReplayTimeOnDate);
 
       // Check if scheduled replay time is BEFORE or EQUAL to the class end time in that region
       const isBeforeLiveEnds =
@@ -256,13 +256,11 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
 
       // If the scheduled replay time is before or at the time class ends, schedule for next day
       if (isBeforeLiveEnds) {
-        console.log("kkkkkkkkkkkk");
-
         finalReplayDate = finalReplayDate.add(1, "day");
       }
 
       // Debug logging
-      console.log(`${regionLabels[regionKey]} (${tz}):`, {
+      console.log(`${region.displayLabel} (${region.timezone}):`, {
         classEndTime: classEndTimeInRegion.format("YYYY-MM-DD HH:mm:ss Z"),
         scheduledReplayTime: scheduledReplayTimeOnDate.format(
           "YYYY-MM-DD HH:mm:ss Z"
@@ -272,9 +270,9 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
       });
 
       return {
-        region: regionLabels[regionKey],
+        region: region.displayLabel,
         localTime: replayTimeStr,
-        timezone: tz,
+        timezone: region.timezone,
         mode: "replay",
         date: finalReplayDate.format("YYYY-MM-DD"),
       };
@@ -305,9 +303,14 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         minutes
       );
 
+          // Get the region name instead of using the ID
+    const liveRegionName = regionOptions?.find(
+      (r) => r.value === values.liveRegion
+    )?.label || values.liveRegion;
+
       const payload = {
         service: values.service,
-        liveRegion: values.liveRegion,
+        liveRegion: liveRegionName,
         liveTime: values.liveTime,
         trainer: values.trainer,
         title: values?.title,
@@ -315,7 +318,6 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         duration: values.duration,
         startDate: values?.date,
         autoRecording: values.autoRecording,
-        rotationEnabled: values.rotationEnabled === "enabled",
         localTime: localDateTime.toISOString(),
         adminId: user?.id,
       };
@@ -330,7 +332,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
 
         setTimeout(() => {
           setShowModal(true);
-          router.push("/schedule-session")
+          router.push("/schedule-session");
           setTimeout(() => {
             setButtonState("default");
             resetForm();
@@ -353,13 +355,12 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
   const initialValues: FormValues = {
     service: "",
     date: undefined,
-    liveRegion: "gulf",
+    liveRegion: "",
     title: "",
     liveTime: "10:00 AM",
     trainer: "",
     duration: 60,
     autoRecording: true,
-    rotationEnabled: "enabled",
   };
 
   return (
@@ -376,18 +377,10 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
           values.duration
         );
 
-        console.log(
-          timezoneConversions,
-          values.liveRegion,
-          values.liveTime,
-          values.date
-        );
-
         const currentService = serviceOptions?.find(
           (s) => s.value === values?.service
         );
         const serviceName = currentService?.label;
-        console.log("aaa", serviceName);
 
         const isFormValid =
           values.service &&
@@ -514,12 +507,8 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                         <Select
                           label="🌍 Select Region"
                           value={values.liveRegion}
-                          onChange={(val) => {
-                            setFieldValue("liveRegion", val);
-                            // Auto-update time based on selected region
-                            // setFieldValue("liveTime", fixedRegionTimes[val]);
-                          }}
-                          options={regionOptions}
+                          onChange={(val) => setFieldValue("liveRegion", val)}
+                          options={regionOptions || []}
                           placeholder="Choose region..."
                         />
                         {errors.liveRegion && touched.liveRegion && (
@@ -687,29 +676,6 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                   </div>
                 </section>
 
-                {/* Section 6: Weekly Rotation Rule */}
-                {/* <section className="space-y-4">
-                  <div className="flex items-center gap-2">
-                    <h4 className="text-[#262626]">Live Region Rotation</h4>
-                    <div className="group relative">
-                      <div className="w-4 h-4 rounded-full bg-[#d4d4d4] text-white flex items-center justify-center cursor-help text-xs">
-                        ?
-                      </div>
-                      <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block w-64 bg-[#262626] text-white p-3 rounded-lg shadow-lg z-10">
-                        <p className="text-xs">
-                          Each week, the live region will rotate so every
-                          timezone receives live instruction equally.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                  <RadioGroup
-                    value={values.rotationEnabled}
-                    onChange={(val) => setFieldValue("rotationEnabled", val)}
-                    options={rotationOptions}
-                  />
-                </section> */}
-
                 {/* CTA Area */}
                 <section className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-[#e5e5e5]">
                   <button
@@ -750,7 +716,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                       <p className="text-[#737373]">
                         Live Time: {values.liveTime} (
                         {
-                          regionOptions.find(
+                          regionOptions?.find(
                             (r) => r.value === values.liveRegion
                           )?.label
                         }
@@ -767,16 +733,6 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                           .join(" • ")}
                       </p>
                     </div>
-                    {/* <div className="flex items-center gap-2 text-[#b95e82]">
-                      <RotateCw className="w-4 h-4" />
-                      <span>Recording Needed After Session</span>
-                    </div>
-                    <button
-                      type="button"
-                      className="bg-[#b95e82] text-white px-6 py-2 rounded-lg hover:bg-[#9a4c6d] transition-colors"
-                    >
-                      Upload Recording
-                    </button> */}
                   </div>
                 </div>
               )}

@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Trash2Icon, EditIcon } from "lucide-react";
 import { parsePhoneNumber } from "react-phone-number-input";
 import { TrainerData } from "@/store/api/trainerApi";
+import { Toggle2 } from "@/components/ui/Toggle2";
 
 export const columns = (
   onEdit: (trainer: TrainerData) => void,
-  onDelete: (id: string) => void
+  onDelete: (id: string) => void,
+  handleStatusToggle: (trainerId: string, currentStatus: 'active' | 'inactive') => Promise<void>
 ): ColumnDef<TrainerData>[] => [
   {
     id: "serial",
@@ -72,6 +74,7 @@ export const columns = (
       </div>
     ),
   },
+  
   {
     accessorKey: "phoneNumber",
     header: "Phone",
@@ -108,6 +111,30 @@ export const columns = (
       </div>
     ),
   },
+   {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <Toggle2
+              checked={row.original.status === "active"}
+              onChange={() =>
+                handleStatusToggle(row.original._id, row.original.status)
+              }
+            />
+            <span
+              className={`text-sm font-medium ${
+                row.original.status === "active"
+                  ? "text-green-600"
+                  : "text-red-600"
+              }`}
+            >
+              {row.original.status === "active" ? "Active" : "Inactive"}
+            </span>
+          </div>
+        ),
+      },
+  
   {
     id: "actions",
     header: "Actions",
@@ -121,14 +148,14 @@ export const columns = (
         >
           <EditIcon className="w-4 h-4" />
         </Button>
-        <Button
+        {/* <Button
           variant="outlineCancel"
           size="sm"
           onClick={() => onDelete(row.original._id)}
           className="rounded-lg "
         >
           <Trash2Icon className="w-4 h-4" />
-        </Button>
+        </Button> */}
       </div>
     ),
   },

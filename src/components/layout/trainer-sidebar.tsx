@@ -1,5 +1,5 @@
 "use client";
-import { AdminNav, SidebarNav } from "@/constants/dashboard.constant";
+import { AdminNav, SidebarNav, TrainerNav } from "@/constants/dashboard.constant";
 import { InfoIcon } from "@/icons/dashboardIcon";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,7 +10,7 @@ import { usePathname, useRouter } from "next/navigation";
 import LogoutAlert from "@/utils/LogoutAlert";
 import { removeTokens } from "@/lib/token";
 
-const AdminSidebar = () => {
+const TrainerSidebar = () => {
   const [selected, setSelected] = useState(0);
   const [showAlert, setShowAlert] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -57,7 +57,7 @@ const AdminSidebar = () => {
           </Link>
         </div>
         <div className="flex flex-col justify-center gap-2.5 md:gap-4">
-          {AdminNav.navMain.map((item, i) => (
+          {TrainerNav.navMain.map((item, i) => (
             <div className="" key={item?.title} onClick={() => setSelected(i)}>
               {!item?.logout && (
                 <Link
@@ -145,4 +145,4 @@ const AdminSidebar = () => {
   );
 };
 
-export default AdminSidebar;
+export default TrainerSidebar;

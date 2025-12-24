@@ -15,12 +15,13 @@ import "react-phone-number-input/style.css";
 import { TrainerApiData, TrainerData } from "@/store/api/trainerApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import ModalHeading from "@/components/ui/ModalHeading";
+import { Eye, EyeOff } from "lucide-react";
 
 type Options = { value: string; label: string };
 
 interface TrainerModalProps {
   trainer?: TrainerData | null;
-  onSubmit: (data: Partial<TrainerApiData>) => Promise<void> | void;
+  onSubmit: (data: Partial<TrainerApiData & { password?: string }>) => Promise<void> | void;
   onCancel: () => void;
   services?: { _id: string; title: string }[];
   isLoading?: boolean;
@@ -50,6 +51,25 @@ const validationSchema = Yup.object().shape({
     .min(0, "Charges cannot be negative")
     .required("Charges per session is required"),
   specialization: Yup.string().required("Specialization is required"),
+  password: Yup.string().when("isEdit", {
+    is: false,
+    then: (schema) =>
+      schema
+        .min(8, "Password must be at least 8 characters")
+        .matches(/[A-Z]/, "Password must contain at least one uppercase letter")
+        .matches(/[a-z]/, "Password must contain at least one lowercase letter")
+        .matches(/[0-9]/, "Password must contain at least one number")
+        .required("Password is required for new trainers"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  confirmPassword: Yup.string().when("isEdit", {
+    is: false,
+    then: (schema) =>
+      schema
+        .oneOf([Yup.ref("password")], "Passwords must match")
+        .required("Please confirm your password"),
+    otherwise: (schema) => schema.notRequired(),
+  }),
 });
 
 export const TrainerModal = ({
@@ -59,6 +79,8 @@ export const TrainerModal = ({
   services = [],
   isLoading = false,
 }: TrainerModalProps) => {
+  const isEdit = !!trainer;
+
   const {
     data: serviceData,
     isLoading: serviceLoading,
@@ -68,6 +90,9 @@ export const TrainerModal = ({
   const [serviceOptions, setServiceOption] = useState<
     { label: string; value: string }[] | null
   >(null);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (!serviceLoading && Array.isArray(serviceData?.data)) {
@@ -86,18 +111,21 @@ export const TrainerModal = ({
       name: trainer?.name || "",
       email: trainer?.email || "",
       phoneNumber: trainer?.phoneNumber || "",
-      specialization: trainer?.specialization?._id|| "",
+      specialization: trainer?.specialization?._id || "",
       experience: trainer?.experience || 0,
       charges: trainer?.charges || 0,
+      password: "",
+      confirmPassword: "",
+      isEdit,
     },
     validationSchema,
-    onSubmit: (values) => {
-      const submitData: Partial<TrainerApiData> = {
+    onSubmit: (values, {setSubmitting}) => {
+      const submitData: Partial<TrainerApiData & { password?: string }> = {
         name: values.name,
         email: values.email,
         charges: values.charges,
         experience: values.experience,
-        specialization:values?.specialization
+        specialization: values?.specialization,
       };
 
       if (values.phoneNumber) {
@@ -105,8 +133,13 @@ export const TrainerModal = ({
         submitData.phoneNumber = parsed?.number || values.phoneNumber;
       }
 
+      // Include password only for new trainer creation
+      if (!isEdit && values.password) {
+        submitData.password = values.password;
+      }
+      setSubmitting(false);
 
-       onSubmit(submitData);
+      onSubmit(submitData);
     },
     enableReinitialize: true,
   });
@@ -120,8 +153,7 @@ export const TrainerModal = ({
 
   return (
     <div className="flex flex-col gap-4 max-h-[85vh] overflow-y-auto">
-
-      <ModalHeading title={trainer ? "Edit Trainer" : "Create Trainer"}/>
+      <ModalHeading title={isEdit ? "Edit Trainer" : "Create Trainer"} />
 
       <form onSubmit={formik.handleSubmit} className="flex flex-col gap-6 pt-4 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -182,7 +214,7 @@ export const TrainerModal = ({
           {/* Specialization */}
           {!serviceLoading && serviceData?.data?.length > 0 && (
             <div className="flex flex-col gap-2">
-              <Label>Specialization</Label>
+              <Label>Specialization*</Label>
               <Select
                 value={formik.values.specialization as string}
                 onChange={(val) => formik.setFieldValue("specialization", val)}
@@ -244,6 +276,75 @@ export const TrainerModal = ({
               </span>
             )}
           </div>
+
+          {/* Password - Only for New Trainers */}
+          {!isEdit && (
+            <div className="flex flex-col gap-2">
+              <Label>Password*</Label>
+              <div className="relative">
+                <Input2
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={formik.values.password}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="Enter password (min 8 characters)"
+                  className="bg-[#F3F3F5] min-h-[55px] text-[#494949] pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+        
+              {getFieldError("password") && (
+                <span className="text-sm text-red-500">
+                  {getFieldError("password")}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Confirm Password - Only for New Trainers */}
+          {!isEdit && (
+            <div className="flex flex-col gap-2">
+              <Label>Confirm Password*</Label>
+              <div className="relative">
+                <Input2
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={formik.values.confirmPassword}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="Confirm password"
+                  className="bg-[#F3F3F5] min-h-[55px] text-[#494949] pr-12"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+              {getFieldError("confirmPassword") && (
+                <span className="text-sm text-red-500">
+                  {getFieldError("confirmPassword")}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Action Buttons */}
@@ -261,11 +362,11 @@ export const TrainerModal = ({
             type="submit"
             variant="theme"
             className="rounded-lg"
-            disabled={formik.isSubmitting || isLoading}
+            disabled={formik.isSubmitting || isLoading || !formik.isValid}
           >
             {isLoading
               ? "Processing..."
-              : trainer
+              : isEdit
               ? "Update Trainer"
               : "Create Trainer"}
           </Button>
