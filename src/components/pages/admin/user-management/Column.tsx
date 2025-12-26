@@ -1,6 +1,24 @@
 
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { ColumnDef } from "@tanstack/react-table";
 import { Toggle2 } from "@/components/ui/Toggle2";
+import { ro } from "date-fns/locale";
+
+const formatDate = (isoDate?: string) => {
+  if (!isoDate) return "—";
+
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return "—";
+
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
 
 export interface UserRowData {
   _id: string;
@@ -9,7 +27,8 @@ export interface UserRowData {
   plan?: string;
   phone?: string;
   country?: string;
-  status: "active" | "inactive" | "blocked";
+  status: "active" | "inactive";
+  createdAt : string;
 }
 
 export const columns = (
@@ -50,6 +69,20 @@ export const columns = (
       </div>
     ),
   },
+   {
+      accessorKey: "createdAt",
+      header: "Created At",
+      cell: ({ row }:any) =>
+
+      {
+        console.log(row.original);
+
+        return (
+          <span className="text-[#666666]">
+            {formatDate(row.original.createdAt)}
+          </span>
+      )}
+    },
   {
     accessorKey: "country",
     header: "Country",
@@ -68,29 +101,29 @@ export const columns = (
       </span>
     ),
   },
-  // {
-  //   accessorKey: "status",
-  //   header: "Status",
-  //   cell: ({ row }) => (
-  //     <div className="flex items-center gap-2">
-  //       <Toggle2
-  //         checked={row.original.status === "active"}
-  //         onChange={() =>
-  //           handleStatusToggle(row.original._id, row.original.status)
-  //         }
-  //       />
-  //       <span
-  //         className={`text-sm font-medium ${
-  //           row.original.status === "active"
-  //             ? "text-green-600"
-  //             : "text-red-600"
-  //         }`}
-  //       >
-  //         {row.original.status === "active" ? "Active" : "Inactive"}
-  //       </span>
-  //     </div>
-  //   ),
-  // },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <div className="flex items-center gap-2">
+        <Toggle2
+          checked={row.original.status === "active"}
+          onChange={() =>
+            handleStatusToggle(row.original._id, row.original.status)
+          }
+        />
+        <span
+          className={`text-sm font-medium ${
+            row.original.status === "active"
+              ? "text-green-600"
+              : "text-red-600"
+          }`}
+        >
+          {row.original.status === "active" ? "Active" : "Inactive"}
+        </span>
+      </div>
+    ),
+  },
 ];
 
 

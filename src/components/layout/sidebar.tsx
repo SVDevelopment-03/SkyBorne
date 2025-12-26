@@ -64,7 +64,7 @@ const Sidebar = () => {
               `}
                 >
                   <div className="flex items-center gap-2.5">
-                    {item?.icon && <item.icon />}
+                    {item?.icon && <item.icon className="h-5 w-5" />}
 
                     <h2 className="font-satoshi-500 font-medium text-sm md:text-base lg:text-lg leading-tight">
                       {item?.title}

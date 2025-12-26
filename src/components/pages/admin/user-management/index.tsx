@@ -10,35 +10,37 @@ import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
 import MainListHeading from "@/components/ui/MainListHeading";
 import { columns, UserRowData } from "./Column";
 import { ColumnDef } from "@tanstack/react-table";
-import { useGetUsersQuery } from "@/store/api/userApi";
+import { useGetUsersQuery, useUpdateUserStatusMutation } from "@/store/api/userApi";
 import toast from "react-hot-toast";
 import { Loader } from "lucide-react";
+import { useUpdateCountryStatusMutation } from "@/store/api/countryApi";
 
 const UserManagement = () => {
   const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
+  const [updateStatus] = useUpdateUserStatusMutation();
+
   // Debounce search input
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearch(search);
-      setPage(1);
-    }, 300);
-    return () => clearTimeout(handler);
-  }, [search]);
+  // useEffect(() => {
+  //   const handler = setTimeout(() => {
+  //     setDebouncedSearch(search);
+  //     setPage(1);
+  //   }, 300);
+  //   return () => clearTimeout(handler);
+  // }, [search]);
 
   const { data, isLoading, refetch } = useGetUsersQuery({
     page,
     limit,
-    search: debouncedSearch, // backend search
+    search: search, // backend search
   });
 
   const users:any = data?.data || [];
 
   // Backend → UI mapping
-  let mappedUsers: UserRowData[] = users.map((u: any) => ({
+  const mappedUsers: UserRowData[] = users.map((u: any) => ({
     _id: u._id,
     name: `${u.firstName ?? ""} ${u.lastName ?? ""}`.trim() || "N/A",
     email: u.email || "N/A",
@@ -46,17 +48,18 @@ const UserManagement = () => {
     country: u.country || "N/A",
     plan: u.plan || "N/A",
     status: u.isActive ? "active" : "inactive",
+    createdAt:u.createdAt
   }));
 
   // ✅ Client-side search fallback for instant filtering
-  if (debouncedSearch) {
-    const searchLower = debouncedSearch.toLowerCase();
-    mappedUsers = mappedUsers.filter(
-      (u) =>
-        u.name.toLowerCase().includes(searchLower) ||
-        u.email.toLowerCase().includes(searchLower)
-    );
-  }
+  // if (debouncedSearch) {
+  //   const searchLower = debouncedSearch.toLowerCase();
+  //   mappedUsers = mappedUsers.filter(
+  //     (u) =>
+  //       u.name.toLowerCase().includes(searchLower) ||
+  //       u.email.toLowerCase().includes(searchLower)
+  //   );
+  // }
 
   const handleSearch = (value: string) => setSearch(value);
 
@@ -66,6 +69,10 @@ const UserManagement = () => {
   ) => {
     try {
       const newStatus = currentStatus === "active" ? "inactive" : "active";
+      await updateStatus({
+        userId,
+        status: newStatus,
+      }).unwrap();
       toast.success(`User status updated to ${newStatus}`);
       refetch();
     } catch (error) {
@@ -83,7 +90,7 @@ const UserManagement = () => {
 
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
         {/* Search */}
-        {/* <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="relative">
               <Input2
@@ -97,7 +104,7 @@ const UserManagement = () => {
           </div>
 
           <div />
-        </div> */}
+        </div>
 
         {/* Table */}
         <div className="flex flex-col w-full pt-4 relative">

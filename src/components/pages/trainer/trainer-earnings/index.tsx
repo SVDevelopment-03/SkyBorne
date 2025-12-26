@@ -141,7 +141,7 @@ function TrainerEarnings() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Monthly Earnings */}
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
           <CardContent className="p-6">
@@ -207,7 +207,7 @@ function TrainerEarnings() {
         </Card>
 
         {/* Active Students */}
-        <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
+        {/* <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -235,7 +235,7 @@ function TrainerEarnings() {
               </div>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
 
         {/* Completion Rate */}
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>

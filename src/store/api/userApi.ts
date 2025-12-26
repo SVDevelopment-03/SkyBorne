@@ -10,6 +10,7 @@ export interface User {
   country?: string;
   plan?: string;
   status: "active" | "inactive" | "blocked";
+  createdAt: string;
 }
 
 export interface GetUsersResponse {
@@ -41,7 +42,22 @@ export const userApi = createApi({
       }),
       providesTags: ["Users"],
     }),
+
+    updateUserStatus: builder.mutation<
+      { success: boolean; message: string },
+      { userId: string; status: "active" | "inactive" }
+    >({
+      query: ({ userId, status }) => ({
+        url: `/update-user/${userId}`,
+        method: "PUT",
+        data: { status },
+      }),
+      invalidatesTags: (result, error, { userId }) => [
+        { type: "Users", id: userId },
+        "Users",
+      ],
+    }),
   }),
 });
 
-export const { useGetUsersQuery } = userApi;
+export const { useGetUsersQuery, useUpdateUserStatusMutation } = userApi;

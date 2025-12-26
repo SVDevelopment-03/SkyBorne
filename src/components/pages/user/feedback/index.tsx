@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client"
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button'; 
 import { Badge } from '@/components/ui/badge'; 
+import { Select } from '@/components/ui/Select2';
 import { 
   MessageSquare,
   Star,
@@ -12,11 +15,37 @@ import {
   Clock,
   Calendar
 } from 'lucide-react';
+import { useGetActiveTrainersQuery } from '@/store/api/trainerApi';
 
 export default function UserFeedback() {
   const [rating, setRating] = useState(0);
   const [hoveredRating, setHoveredRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState('');
+  const [selectedTrainer, setSelectedTrainer] = useState('');
+  const [trainerOptions, setTrainerOptions] = useState<
+    { label: string; value: string }[] | null
+  >(null);
+
+  // Fetch active trainers
+  const { data, isLoading: trainersLoading } = useGetActiveTrainersQuery({
+    page: 1,
+    limit: 100,
+    search: "",
+  });
+
+  // Build trainer options from API data
+  useEffect(() => {
+    if (!trainersLoading && Array.isArray(data?.data)) {
+      const formatted = data?.data.map((item: any) => ({
+        label: item?.name,
+        value: item?._id,
+      }));
+
+      setTimeout(() => {
+        setTrainerOptions(formatted);
+      }, 0);
+    }
+  }, [data?.data, trainersLoading]);
 
   const pastFeedback = [
     {
@@ -70,9 +99,10 @@ export default function UserFeedback() {
 
   const handleSubmitFeedback = () => {
     // Handle feedback submission
-    console.log('Submitting feedback:', { rating, feedbackText });
+    console.log('Submitting feedback:', { rating, feedbackText, selectedTrainer });
     setRating(0);
     setFeedbackText('');
+    setSelectedTrainer('');
   };
 
   return (
@@ -140,6 +170,19 @@ export default function UserFeedback() {
           <p className="text-sm text-[#6B6B6B] mt-1">Your feedback helps us improve our services</p>
         </CardHeader>
         <CardContent className="space-y-6">
+          {/* Trainer Selection */}
+          {trainerOptions && (
+            <div>
+              <Select
+                label=" Select Trainer"
+                value={selectedTrainer}
+                onChange={(val) => setSelectedTrainer(val)}
+                options={trainerOptions}
+                placeholder="Choose a trainer..."
+              />
+            </div>
+          )}
+
           {/* Rating */}
           <div>
             <label className="text-sm text-[#6B6B6B] mb-3 block">How would you rate your experience?</label>
@@ -182,7 +225,7 @@ export default function UserFeedback() {
           {/* Submit Button */}
           <Button 
             onClick={handleSubmitFeedback}
-            disabled={rating === 0 || feedbackText.trim().length === 0}
+            disabled={rating === 0 || feedbackText.trim().length === 0 || !selectedTrainer}
             variant={"theme"}
             className="w-full disabled:bg-gray-300 disabled:cursor-not-allowed"
             style={{ borderRadius: '12px' }}
@@ -237,14 +280,10 @@ export default function UserFeedback() {
               <div className="mb-4">
                 <p className="text-[#1A1A1A] leading-relaxed">{feedback.comment}</p>
               </div>
-
-             
             </div>
           ))}
         </CardContent>
       </Card>
-
-
     </div>
   );
 }

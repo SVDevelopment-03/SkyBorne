@@ -121,7 +121,7 @@ const TrainerManagement = () => {
         id: countryId,
         data: { status: newStatus } as TrainerStatus,
       }).unwrap();
-      toast.success(`Country status updated to ${newStatus}`);
+      toast.success(`Trainer status updated to ${newStatus}`);
       refetch();
     } catch (error) {
       toast.error("Failed to update status");
