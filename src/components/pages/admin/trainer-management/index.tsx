@@ -33,7 +33,7 @@ import { CommonSelect } from "@/components/ui/CountrySelect";
 const TrainerManagement = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-    const [serviceFilter, setServiceFilter] = useState("");
+  const [serviceFilter, setServiceFilter] = useState("");
   const [limit, setLimit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTrainer, setEditingTrainer] = useState<TrainerData | null>(
@@ -44,7 +44,7 @@ const TrainerManagement = () => {
     page,
     limit,
     search,
-    filter:serviceFilter
+    filter: serviceFilter,
   });
 
   const [createTrainer, { isLoading: isCreating }] = useCreateTrainerMutation();

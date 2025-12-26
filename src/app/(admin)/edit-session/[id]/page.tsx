@@ -28,12 +28,13 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useGetTrainersQuery } from "@/store/api/trainerApi";
+import { useGetActiveTrainersQuery, useGetTrainersQuery } from "@/store/api/trainerApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import {
   useUpdateMeetingMutation,
   useGetMeetingByIdQuery,
 } from "@/store/api/meetingApi";
+import { useGetAllActiveRegionsQuery } from "@/store/api/regionApi";
 import useGetUser from "@/hooks/useGetUser";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -61,7 +62,6 @@ interface FormValues {
   trainer: string;
   duration: number;
   autoRecording: boolean;
-  rotationEnabled: string;
 }
 
 const validationSchema = Yup.object().shape({
@@ -76,10 +76,6 @@ const validationSchema = Yup.object().shape({
     .min(30, "Duration must be at least 30 minutes")
     .max(480, "Duration cannot exceed 8 hours"),
   autoRecording: Yup.boolean(),
-  rotationEnabled: Yup.string().oneOf(
-    ["enabled", "disabled"],
-    "Invalid rotation option"
-  ),
 });
 
 export default function EditMeeting() {
@@ -95,7 +91,7 @@ export default function EditMeeting() {
     });
 
   const { data: trainersData, isLoading: trainersLoading } =
-    useGetTrainersQuery({
+    useGetActiveTrainersQuery({
       page: 1,
       limit: 100,
       search: "",
@@ -104,6 +100,10 @@ export default function EditMeeting() {
   const { data: serviceData, isLoading: servicesLoading } =
     useGetServicesQuery(undefined);
 
+  const { data: regionsData, isLoading: regionsLoading } =
+    useGetAllActiveRegionsQuery();
+
+  // Mutations
   const [updateMeeting] = useUpdateMeetingMutation();
 
   // State
@@ -115,6 +115,18 @@ export default function EditMeeting() {
     { label: string; value: string }[] | null
   >(null);
 
+  const [regionOptions, setRegionOptions] = useState<
+    { label: string; value: string }[] | null
+  >(null);
+
+  const [regionTimezones, setRegionTimezones] = useState<
+    Record<string, string>
+  >({});
+
+  const [fixedReplayTimes, setFixedReplayTimes] = useState<
+    Record<string, string>
+  >({});
+
   const [showModal, setShowModal] = useState(false);
   const [buttonState, setButtonState] = useState<"default" | "success">(
     "default"
@@ -122,34 +134,7 @@ export default function EditMeeting() {
 
   let timezoneConversions: TimezoneConversion[] = [];
 
-  const regionOptions = [
-    { value: "gulf", label: "Gulf" },
-    { value: "apac", label: "APAC" },
-    { value: "canada-usa", label: "Canada / USA" },
-    { value: "uk-europe", label: "UK / Europe" },
-  ];
-
-  const regionTimezones: Record<string, string> = {
-    gulf: "Asia/Dubai",
-    apac: "Asia/Singapore",
-    "canada-usa": "America/New_York",
-    "uk-europe": "Europe/London",
-  };
-
-  const regionLabels: Record<string, string> = {
-    gulf: "Gulf",
-    apac: "APAC",
-    "canada-usa": "Canada / USA",
-    "uk-europe": "UK / Europe",
-  };
-
-  const fixedReplayTimes: Record<string, string> = {
-    gulf: "10:00 AM",
-    apac: "2:00 PM",
-    "canada-usa": "6:00 PM",
-    "uk-europe": "9:00 PM",
-  };
-
+  // Build service options from API
   useEffect(() => {
     if (!servicesLoading && Array.isArray(serviceData?.data)) {
       const formatted = serviceData?.data.map((item: any) => ({
@@ -160,6 +145,7 @@ export default function EditMeeting() {
     }
   }, [serviceData?.data, servicesLoading]);
 
+  // Build trainer options from API
   useEffect(() => {
     if (!trainersLoading && Array.isArray(trainersData?.data)) {
       const formatted = trainersData?.data.map((item: any) => ({
@@ -169,6 +155,34 @@ export default function EditMeeting() {
       setTrainerOptions(formatted);
     }
   }, [trainersData?.data, trainersLoading]);
+
+  // Build region options and mappings from API data
+  useEffect(() => {
+    if (!regionsLoading && Array.isArray(regionsData?.data)) {
+      const regions = regionsData.data;
+
+      // Build region options for dropdown
+      const options = regions.map((region: any) => ({
+        label: region.displayLabel,
+        value: region._id,
+      }));
+      setRegionOptions(options);
+
+      // Build timezone mapping
+      const timezones: Record<string, string> = {};
+      regions.forEach((region: any) => {
+        timezones[region._id] = region.timezone;
+      });
+      setRegionTimezones(timezones);
+
+      // Build replay times mapping
+      const replayTimes: Record<string, string> = {};
+      regions.forEach((region: any) => {
+        replayTimes[region._id] = region.replayTime;
+      });
+      setFixedReplayTimes(replayTimes);
+    }
+  }, [regionsData?.data, regionsLoading]);
 
   const convertTimeTo24Hour = (time12h: string): string => {
     const [time, period] = time12h.split(" ");
@@ -185,16 +199,18 @@ export default function EditMeeting() {
   };
 
   const getTimezoneConversions = (
-    liveRegion: string,
+    liveRegionId: string,
     liveTime: string,
     date: Date | undefined,
     duration: number = 60
   ): TimezoneConversion[] => {
-    if (!liveRegion || !liveTime || !date) return [];
+    if (!liveRegionId || !liveTime || !date || !regionsData?.data) return [];
 
     const time24hStr = convertTimeTo24Hour(liveTime);
     const [liveHours, liveMinutes] = time24hStr.split(":").map(Number);
 
+    // Create the live class start time in the live region's timezone
+    const liveRegionTz = regionTimezones[liveRegionId];
     const liveDateTime = dayjs.tz(
       new Date(
         date.getFullYear(),
@@ -203,29 +219,33 @@ export default function EditMeeting() {
         liveHours,
         liveMinutes
       ),
-      regionTimezones[liveRegion]
+      liveRegionTz
     );
 
+    // Calculate when the class ends in the live region
     const classEndTime = liveDateTime.add(duration, "minutes");
 
-    return Object.entries(regionTimezones).map(([regionKey, tz]) => {
-      if (regionKey === liveRegion) {
+    return regionsData.data.map((region: any) => {
+      if (region._id === liveRegionId) {
+        // Live region shows the live class at the specified time
         return {
-          region: regionLabels[regionKey],
+          region: region.displayLabel,
           localTime: liveTime,
-          timezone: tz,
+          timezone: region.timezone,
           mode: "live",
           date: dayjs(date).format("YYYY-MM-DD"),
         };
       }
 
-      const classEndTimeInRegion = classEndTime.tz(tz);
-      const replayTimeStr = fixedReplayTimes[regionKey];
-      const time24hReplay = convertTimeTo24Hour(replayTimeStr);
-      const [replayHours, replayMinutes] = time24hReplay
-        .split(":")
-        .map(Number);
+      // For replay regions, get when class ends in that region's timezone
+      const classEndTimeInRegion = classEndTime.tz(region.timezone);
 
+      // Get the scheduled replay time for this region
+      const replayTimeStr = region.replayTime;
+      const time24hReplay = convertTimeTo24Hour(replayTimeStr);
+      const [replayHours, replayMinutes] = time24hReplay.split(":").map(Number);
+
+      // Create the scheduled replay time on the original date in the region's timezone
       const scheduledReplayTimeOnDate = dayjs.tz(
         new Date(
           date.getFullYear(),
@@ -234,23 +254,25 @@ export default function EditMeeting() {
           replayHours,
           replayMinutes
         ),
-        tz
+        region.timezone
       );
 
+      // Check if scheduled replay time is BEFORE or EQUAL to the class end time in that region
       const isBeforeLiveEnds =
         scheduledReplayTimeOnDate.isBefore(classEndTimeInRegion, "minute") ||
         scheduledReplayTimeOnDate.isSame(classEndTimeInRegion, "minute");
 
       let finalReplayDate = dayjs(date);
 
+      // If the scheduled replay time is before or at the time class ends, schedule for next day
       if (isBeforeLiveEnds) {
         finalReplayDate = finalReplayDate.add(1, "day");
       }
 
       return {
-        region: regionLabels[regionKey],
+        region: region.displayLabel,
         localTime: replayTimeStr,
-        timezone: tz,
+        timezone: region.timezone,
         mode: "replay",
         date: finalReplayDate.format("YYYY-MM-DD"),
       };
@@ -262,8 +284,6 @@ export default function EditMeeting() {
     { setSubmitting }: FormikHelpers<FormValues>
   ) => {
     try {
-      setButtonState("default");
-
       if (!values.date) {
         toast.error("Please select a date");
         setSubmitting(false);
@@ -281,9 +301,15 @@ export default function EditMeeting() {
         minutes
       );
 
+         const liveRegionName = regionOptions?.find(
+      (r) => r.value === values.liveRegion
+    )?.label || values.liveRegion;
+
+    console.log("live region:", liveRegionName);
+
       const payload = {
         service: values.service,
-        liveRegion: values.liveRegion,
+        liveRegion: liveRegionName,
         liveTime: values.liveTime,
         trainer: values.trainer,
         title: values?.title,
@@ -291,9 +317,10 @@ export default function EditMeeting() {
         duration: values.duration,
         startDate: values?.date,
         autoRecording: values.autoRecording,
-        rotationEnabled: values.rotationEnabled === "enabled",
         localTime: localDateTime.toISOString(),
       };
+
+      console.log("Sending payload:", payload);
 
       const data: any = await updateMeeting({ id: meetingId, body: payload });
 
@@ -320,7 +347,7 @@ export default function EditMeeting() {
       setSubmitting(false);
     }
   };
-
+ // Show loading state while fetching meeting data
   if (meetingLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -346,19 +373,34 @@ export default function EditMeeting() {
     );
   }
 
+  // Show loading state while fetching form options
+  const allDataLoaded =
+    !regionsLoading && !trainersLoading && !servicesLoading;
+
+  if (!allDataLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader className="w-12 h-12 animate-spin mx-auto mb-4 text-[#b95e82]" />
+          <p className="text-[#737373]">Loading form data...</p>
+        </div>
+      </div>
+    );
+  }
+
   const meeting = meetingData.data;
 
   const initialValues: FormValues = {
     service: meeting.service?._id || "",
     date: new Date(meeting.startDate),
-    liveRegion: meeting.liveRegion || "gulf",
+    liveRegion: meeting.liveRegion || "",
     title: meeting.title || "",
     liveTime: meeting.liveTime || "10:00 AM",
     trainer: meeting.trainer?._id || "",
     duration: meeting.duration || 60,
     autoRecording: meeting.autoRecording || true,
-    rotationEnabled: meeting.rotationEnabled ? "enabled" : "disabled",
   };
+
 
   return (
     <Formik
@@ -510,7 +552,7 @@ export default function EditMeeting() {
                     </p>
 
                     <div className="grid md:grid-cols-2 gap-4">
-                      <div>
+                      {regionOptions && <div>
                         <Select
                           label="🌍 Select Region"
                           value={values.liveRegion}
@@ -523,7 +565,7 @@ export default function EditMeeting() {
                             {errors.liveRegion}
                           </p>
                         )}
-                      </div>
+                      </div>}
 
                       <div className="space-y-2">
                         <label className="block flex items-center gap-2">
@@ -616,7 +658,7 @@ export default function EditMeeting() {
                               <tr
                                 key={index}
                                 className={`border-b border-[#e5e5e5] last:border-b-0 transition-colors ${
-                                  conversion.mode === "live"
+                                 ( conversion.mode === "live" )
                                     ? "bg-[#e8f5e9]"
                                     : "bg-[#fff9e6]"
                                 }`}
@@ -718,7 +760,7 @@ export default function EditMeeting() {
                       </p>
                       <p className="text-[#737373]">
                         Live Time: {values.liveTime} (
-                        {
+                        {regionOptions && 
                           regionOptions.find(
                             (r) => r.value === values.liveRegion
                           )?.label

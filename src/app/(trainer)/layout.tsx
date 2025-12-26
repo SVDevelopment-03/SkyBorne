@@ -71,7 +71,7 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
               <div>
                 <Typography title={fullName} cssClass="text-[#212C26]!" />
                 <Typography
-                  title="Admin"
+                  title="Trainer"
                   cssClass="text-[#878787]! text-[16px]!"
                 />
               </div>
