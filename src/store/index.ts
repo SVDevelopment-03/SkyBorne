@@ -11,6 +11,7 @@ import { serviceApi } from "./api/serviceApi";
 import { adminApi } from "./api/adminApi";
 import { regionApi } from "./api/regionApi";
 import { userApi } from "./api/userApi";
+import { feedbackApi } from "./api/feedbackApi";
 
 export const store = configureStore({
   reducer: {
@@ -25,6 +26,7 @@ export const store = configureStore({
     [adminApi.reducerPath]: adminApi.reducer,
     [regionApi.reducerPath]: regionApi.reducer,
     [userApi.reducerPath]: userApi.reducer,
+    [feedbackApi.reducerPath]: feedbackApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware()
@@ -37,7 +39,8 @@ export const store = configureStore({
       .concat(serviceApi.middleware)
       .concat(adminApi.middleware)
       .concat(regionApi.middleware)
-      .concat(userApi.middleware),
+      .concat(userApi.middleware)
+      .concat(feedbackApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
