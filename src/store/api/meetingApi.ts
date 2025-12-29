@@ -1,5 +1,4 @@
-// /store/api/meetingApi.ts
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface UpdateMeetingPayload {
   service?: string; // service ID only
   trainer?: string; // trainer ID only
@@ -13,7 +12,6 @@ export interface UpdateMeetingPayload {
   autoRecording?: boolean;
   rotationEnabled?: boolean;
 }
-
 
 export interface IMeeting {
   _id: string;
@@ -67,7 +65,6 @@ export interface GetMeetingsResponse {
   };
 }
 
-
 export interface MonthlyAttendanceData {
   month: string;
   count: number;
@@ -80,8 +77,6 @@ export interface MonthlyAttendanceResponse {
 
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
-
-
 
 export const meetingApi = createApi({
   reducerPath: "meetingApi",
@@ -115,9 +110,9 @@ export const meetingApi = createApi({
       }),
       providesTags: ["Meetings"],
     }),
-      // For trainers - fetch their assigned sessions (NEW)
+    // For trainers - fetch their assigned sessions (NEW)
     getTrainerUpcomingMeetings: builder.query({
-      query: ({ search = "", date } ) => ({
+      query: ({ search = "", date }) => ({
         url: "/meetings/trainer/upcoming", // New endpoint
         method: "GET",
         params: {
@@ -137,22 +132,22 @@ export const meetingApi = createApi({
     }),
 
     // Add this to your endpoints builder:
-getMeetings: builder.query<
-  GetMeetingsResponse,
-  { page?: number; limit?: number; search?: string , filter?: string }
->({
-  query: ({ page = 1, limit = 10, search = "" ,filter=""}) => ({
-    url: "/meetings/getAll",
-    method: "GET",
-    params: {
-      page,
-      limit,
-      search,
-      filter,
-    },
-  }),
-  providesTags: ["Meetings"],
-}),
+    getMeetings: builder.query<
+      GetMeetingsResponse,
+      { page?: number; limit?: number; search?: string; filter?: string }
+    >({
+      query: ({ page = 1, limit = 10, search = "", filter = "" }) => ({
+        url: "/meetings/getAll",
+        method: "GET",
+        params: {
+          page,
+          limit,
+          search,
+          filter,
+        },
+      }),
+      providesTags: ["Meetings"],
+    }),
 
     // ---------------------------------------
     // JOIN MEETING
@@ -175,24 +170,24 @@ getMeetings: builder.query<
       }),
     }),
     getMonthlyAttendance: builder.query<
-  MonthlyAttendanceResponse,
-  { period: "3months" | "6months" | "1year" }
->({
-  query: (params) => ({
-    url: "/meetings/attendance/monthly",
-    method: "GET",
-    params: {
-      period: params.period,
-    },
-  }),
-  // Optional: cache for 1 hour
-  keepUnusedDataFor: 3600,
-}),
+      MonthlyAttendanceResponse,
+      { period: "3months" | "6months" | "1year" }
+    >({
+      query: (params) => ({
+        url: "/meetings/attendance/monthly",
+        method: "GET",
+        params: {
+          period: params.period,
+        },
+      }),
+      // Optional: cache for 1 hour
+      keepUnusedDataFor: 3600,
+    }),
 
-// NEW: Update Meeting
+    // NEW: Update Meeting
     updateMeeting: builder.mutation<
       { success: boolean; data: { meeting: IMeeting; message: string } },
-      { id: string; body: UpdateMeetingPayload}
+      { id: string; body: UpdateMeetingPayload }
     >({
       query: ({ id, body }) => ({
         url: `/meetings/${id}`,
@@ -217,18 +212,51 @@ getMeetings: builder.query<
       invalidatesTags: ["Meetings"],
     }),
     // NEW: Get Meeting by ID
-    getMeetingById: builder.query<
-      { success: boolean; data: IMeeting },
-      string
-    >({
-      query: (id) => ({
-        url: `/meetings/${id}`,
-        method: "GET",
-      }),
-      providesTags: (result, error, id) => [{ type: "Meetings", id }],
-    }),
+    getMeetingById: builder.query<{ success: boolean; data: IMeeting }, string>(
+      {
+        query: (id) => ({
+          url: `/meetings/${id}`,
+          method: "GET",
+        }),
+        providesTags: (result, error, id) => [{ type: "Meetings", id }],
+      }
+    ),
+  getAllTrainerMeetings: builder.query({
+  query: ({ 
+    search = "", 
+    page = 1,
+    limit = 10,
+    sortBy = "localTime",
+    sortOrder = "asc",
+    service,
+    isLive,
+    isRecurring,
+    startDate,
+    endDate,
+  }) => {
+    const params: any = {
+      search,
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+    };
 
+    // Only add optional params if they're provided
+    if (service) params.service = service;
+    if (isLive !== undefined) params.isLive = isLive;
+    if (isRecurring !== undefined) params.isRecurring = isRecurring;
+    if (startDate) params.startDate = startDate;
+    if (endDate) params.endDate = endDate;
 
+    return {
+      url: "/meetings/getAllTrainerMeetings",
+      method: "GET",
+      params,
+    };
+  },
+  providesTags: ["Meetings"],
+}),
 
   }),
 });
@@ -238,7 +266,8 @@ export const {
   useGetAllMeetingsQuery,
   useGetMeetingByIdQuery,
   useUpdateMeetingMutation,
-    useGetTrainerUpcomingMeetingsQuery, // New hook
+  useGetAllTrainerMeetingsQuery,
+  useGetTrainerUpcomingMeetingsQuery, // New hook
   useDeleteMeetingMutation,
   useGetMeetingsQuery,
   useGetMonthlyAttendanceQuery,

@@ -1,16 +1,23 @@
 import {
   DashboardIcon,
   PackagesIcon,
-  ProgressIcon,
   SessionsIcon,
-  NotificationsIcon,
   PaymentsIcon,
   ProfileIcon,
   FeedbackIcon,
   LogoutIcon,
   LogoutIconDark,
 } from "@/icons/dashboardIcon";
-import { UserCog, Globe, Layers, BadgeDollarSign } from "lucide-react";
+import {
+  UserCog,
+  Globe,
+  Layers,
+  BadgeDollarSign,
+  User,
+  Users,
+  MessageSquare,
+  CircleDollarSign,
+} from "lucide-react";
 
 export const SidebarNav = {
   navMain: [
@@ -56,6 +63,13 @@ export const SidebarNav = {
       icon: ProfileIcon,
       items: [],
     },
+    {
+      title: "Feedback",
+      url: "/feedback",
+      icon: MessageSquare,
+      items: [],
+    },
+    
     // {
     //   title: "Feedback",
     //   url: "/upcoming",
@@ -84,12 +98,18 @@ export const AdminNav = {
       title: "Class Management",
       url: "/schedule-session",
       icon: SessionsIcon,
-      items: ['/create-session','/edit-session'],
+      items: ["/create-session", "/edit-session"],
     },
     {
       title: "Trainer Management",
       url: "/trainers",
       icon: UserCog,
+      items: [],
+    },
+    {
+      title: "User Management",
+      url: "/user-management",
+      icon: Users,
       items: [],
     },
     {
@@ -111,6 +131,12 @@ export const AdminNav = {
       items: [],
     },
     {
+      title: "Feedback Management",
+      url: "/feedback-management",
+      icon: MessageSquare,
+      items: [],
+    },
+    {
       title: "Logout",
       logout: true,
       url: "#",
@@ -120,14 +146,30 @@ export const AdminNav = {
   ],
 };
 
-
-
 export const TrainerNav = {
   navMain: [
     {
       title: "Dashboard",
       url: "/trainer-dashboard",
       icon: DashboardIcon,
+      items: [],
+    },
+    {
+      title: "Session",
+      url: "/trainer-session",
+      icon: SessionsIcon,
+      items: [],
+    },
+     {
+      title: "Earnings",
+      url: "/trainer-earnings",
+      icon: CircleDollarSign,
+      items: [],
+    },
+     {
+      title: "Feedback",
+      url: "/trainer-feedback",
+      icon: MessageSquare,
       items: [],
     },
     {

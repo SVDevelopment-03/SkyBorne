@@ -30,14 +30,35 @@ interface TrainerStats {
 }
 
 const TrainerDashboard = () => {
-  const [attendancePeriod, setAttendancePeriod] = useState<"week" | "month">("week");
+  
 
   // Fetch all trainer-specific data from RTK Query
   const { data: statsData, isLoading: statsLoading, error: statsError } = useGetTrainerStatsQuery();
 
-  const { data: attendanceData, isLoading: attendanceLoading } = useGetSessionsAttendanceQuery({
-    period: "6months",
-  });
+  const [attendancePeriod, setAttendancePeriod] = useState("week");
+
+// Map frontend period to backend period parameter
+const attendancePeriodMap: any = {
+  week: "1week",    // or "7days" - depends on your backend
+  month: "1month",
+};
+
+// Update the query to use dynamic period
+const { data: attendanceData, isLoading: attendanceLoading } = useGetSessionsAttendanceQuery({
+  period: attendancePeriodMap[attendancePeriod],
+});
+
+// Now you can use all the data without slicing
+const weeklyAttendanceData = useMemo(() => {
+  if (!attendanceData?.data?.values) {
+    return attendancePeriod === "week" 
+      ? [90, 85, 88, 92, 90, 87, 89] 
+      : Array(30).fill(85);
+  }
+  // Use all returned data - no slicing needed
+  return attendanceData.data.values;
+}, [attendanceData, attendancePeriod]);
+
 
   // Build stats array from API data
   const stats = statsData?.data
@@ -73,6 +94,12 @@ const TrainerDashboard = () => {
       ]
     : [];
 
+    const MONTH_LABELS = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
+
+
   // Weekly Attendance Chart Options - Simplified Design
   const weeklyAttendanceChartOptions: ApexOptions = {
     chart: {
@@ -100,9 +127,11 @@ const TrainerDashboard = () => {
       padding: { left: 10, right: 10 },
     },
     xaxis: {
-      categories: attendancePeriod === "week" 
-        ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-        : Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`),
+  categories:
+    attendancePeriod === "week"
+      ? attendanceData?.data?.labels ?? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+      : attendanceData?.data?.labels ?? MONTH_LABELS,
+
       labels: {
         style: {
           fontSize: "12px",
@@ -136,17 +165,7 @@ const TrainerDashboard = () => {
     },
   };
 
-  // Get weekly data - first 7 values from attendance data
-  const weeklyAttendanceData = useMemo(() => {
-    if (!attendanceData?.data?.values) {
-      return [90, 85, 88, 92, 90, 87, 89]; // Default data
-    }
-    // If monthly view, take first 30 values, else first 7 for weekly
-    const dataCount = attendancePeriod === "month" ? 30 : 7;
-    return attendanceData.data.values.slice(0, dataCount);
-  }, [attendanceData, attendancePeriod]);
-
-  const weeklyAttendanceSeries = [
+ const weeklyAttendanceSeries = [
     {
       name: "Attendance Rate",
       data: weeklyAttendanceData,

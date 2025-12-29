@@ -1,7 +1,45 @@
-// /store/api/paymentApi.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
+
+interface AllPaymentsResponse {
+  success: boolean;
+  payments: any[];
+  total: number;
+  filteredCount?: number;
+  page?: number;
+  limit?: number;
+  totalPages?: number;
+  currentFilters?: {
+    status?: string;
+    search?: string;
+  };
+}
+
+interface PaymentStatsResponse {
+  success: boolean;
+  stats: {
+    totalSpent?: number;
+    thisMonth?: number;
+    lastPaymentAmount?: number;
+    totalCount?: number;
+    completedCount?: number;
+    failedCount?: number;
+    pendingCount?: number;
+    successRate?: number;
+    averageTransactionValue?: number;
+    activeSubscriptions?: number;
+    totalRevenue?: number;
+  };
+}
+
+interface AllPaymentsParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}
 
 export const paymentApi = createApi({
   reducerPath: "paymentApi",
@@ -45,6 +83,34 @@ export const paymentApi = createApi({
       providesTags: ["Payment"],
     }),
 
+     // =======================================
+    // ✅ NEW: GET ALL PAYMENTS (ADMIN)
+    // =======================================
+    getAllPayments: builder.query<AllPaymentsResponse, AllPaymentsParams>({
+      query: (params) => {
+        // Filter out undefined/null/empty values from params
+        const filteredParams = Object.fromEntries(
+          Object.entries(params || {}).filter(
+            ([_, v]) => v !== undefined && v !== null && v !== ''
+          )
+        );
+
+        return {
+          url: "/payment/admin/all",
+          method: "GET",
+          params: filteredParams,
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+
+     getAdminPaymentStats: builder.query<PaymentStatsResponse, void>({
+      query: () => ({
+        url: "/payment/admin/stats",
+        method: "GET",
+      }),
+      providesTags: ["Payment"],
+    }),
 
     // ---------------------------------------
     // GET PAYMENT STATUS
@@ -71,6 +137,8 @@ export const {
   useCreatePaymentOrderMutation,
   useGetPaymentHistoryQuery,
   useGetPaymentStatsQuery,
+  useGetAllPaymentsQuery,
+  useGetAdminPaymentStatsQuery,
   useCreatePaymentVerificationMutation,
   useGetPaymentStatusQuery,
 } = paymentApi;

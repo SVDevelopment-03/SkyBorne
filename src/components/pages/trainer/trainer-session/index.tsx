@@ -15,11 +15,13 @@ import {
   AlertCircle,
 } from "lucide-react";
 import {
+  useGetAllTrainerMeetingsQuery,
   useGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
 } from "@/store/api/meetingApi";
 import useGetUser from "@/hooks/useGetUser";
+import CustomPagination from "@/components/ui/CustromPagination"; // Adjust path as needed
 
 interface Session {
   id: string;
@@ -47,27 +49,28 @@ interface Session {
   _id: string;
 }
 
-export default function UserSessions() {
+export default function TrainerSessions() {
   const { user } = useGetUser();
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1);
 
-  // RTK Query hooks
   const {
-    data: meetingsData,
+    data: meetingsResponse,
     isLoading,
     error: fetchError,
     refetch,
-  } = useGetUpcomingMeetingsQuery({
-    region: "",
+  } = useGetAllTrainerMeetingsQuery({
     search: searchQuery,
+    page,
+    limit: 10,
+    sortBy: "localTime",
+    sortOrder: "asc",
   });
 
   const [joinMeeting] = useJoinMeetingMutation();
-  const [leaveMeeting] = useLeaveMeetingMutation();
 
-  // Transform and filter meetings
-  const sessions: Session[] = (meetingsData?.meetings || []).map(
+  const sessions: Session[] = (meetingsResponse?.data?.meetings || []).map(
     (meeting: any) => ({
       id: meeting._id,
       name: meeting.title,
@@ -85,8 +88,7 @@ export default function UserSessions() {
       duration: meeting.duration,
       localTime: meeting?.localTime,
       type: "Online",
-      status:
-        new Date(meeting.localTime) > new Date() ? "upcoming" : "completed",
+      status: new Date(meeting.localTime) > new Date() ? "upcoming" : "completed",
       participants: 0,
       maxParticipants: 20,
       level: "Intermediate",
@@ -109,9 +111,8 @@ export default function UserSessions() {
   });
 
   const upcomingCount = sessions.filter((s) => s.status === "upcoming").length;
-  const completedCount = sessions.filter(
-    (s) => s.status === "completed"
-  ).length;
+  const completedCount = sessions.filter((s) => s.status === "completed").length;
+  const pagination = meetingsResponse?.data?.pagination;
 
   const handleJoinSession = async (session: Session) => {
     try {
@@ -130,13 +131,13 @@ export default function UserSessions() {
     }
   };
 
-  const handleViewRecording = (session: Session) => {
-    if (session.recordingUrl) {
-      window.open(session.recordingUrl, "_blank");
-    } else {
-      alert("Recording not yet available");
-    }
-  };
+//   const handleViewRecording = (session: Session) => {
+//     if (session.recordingUrl) {
+//       window.open(session.recordingUrl, "_blank");
+//     } else {
+//       alert("Recording not yet available");
+//     }
+//   };
 
   if (isLoading) {
     return (
@@ -167,20 +168,14 @@ export default function UserSessions() {
           </p>
         </div>
         <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600" />
+          <CardContent className="p-6 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-red-800 font-medium">Error loading sessions</p>
-              <p className="text-red-600 text-sm">
-                Please try again later or contact support
+              <p className="text-red-600 text-sm mt-1">
+                Please try again later
               </p>
             </div>
-            <Button
-              onClick={() => refetch()}
-              className="ml-auto bg-red-600 hover:bg-red-700"
-            >
-              Retry
-            </Button>
           </CardContent>
         </Card>
       </div>
@@ -207,7 +202,7 @@ export default function UserSessions() {
                   Total Sessions
                 </p>
                 <p className="text-3xl text-[#494949] font-satoshi-500">
-                  {sessions.length}
+                  {pagination?.total || 0}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
@@ -261,7 +256,10 @@ export default function UserSessions() {
             <div className="flex gap-2 w-full md:w-auto">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
-                onClick={() => setFilter("all")}
+                onClick={() => {
+                  setFilter("all");
+                  setPage(1);
+                }}
                 className={
                   filter === "all" ? "bg-[#b95e82] hover:bg-[#a04d6f]" : ""
                 }
@@ -271,7 +269,10 @@ export default function UserSessions() {
               </Button>
               <Button
                 variant={filter === "upcoming" ? "default" : "outline"}
-                onClick={() => setFilter("upcoming")}
+                onClick={() => {
+                  setFilter("upcoming");
+                  setPage(1);
+                }}
                 className={
                   filter === "upcoming" ? "bg-[#b95e82] hover:bg-[#a04d6f]" : ""
                 }
@@ -281,7 +282,10 @@ export default function UserSessions() {
               </Button>
               <Button
                 variant={filter === "completed" ? "default" : "outline"}
-                onClick={() => setFilter("completed")}
+                onClick={() => {
+                  setFilter("completed");
+                  setPage(1);
+                }}
                 className={
                   filter === "completed"
                     ? "bg-[#b95e82] hover:bg-[#a04d6f]"
@@ -298,7 +302,10 @@ export default function UserSessions() {
                 type="text"
                 placeholder="Search sessions..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
                 className="w-full pl-10 pr-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20"
               />
             </div>
@@ -318,124 +325,114 @@ export default function UserSessions() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredSessions.map((session) => {
-            const startTime = new Date(session?.localTime as string); // e.g., 2025-12-10T08:30:00.000Z
-            const now = new Date();
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredSessions.map((session) => {
+              const startTime = new Date(session?.localTime as string);
+              const now = new Date();
+              const diffMs = startTime.getTime() - now.getTime();
+              const diffMinutes = diffMs / 1000 / 60;
+              const isJoinDisabled = diffMinutes > 5;
 
-            // calculate difference in minutes
-            const diffMs = startTime.getTime() - now.getTime();
-            const diffMinutes = diffMs / 1000 / 60;
-
-            // allow joining only when remaining time <= 5 minutes
-            const isJoinDisabled = diffMinutes > 5;
-            return (
-              <Card
-                key={session.id}
-                className="border-[#e5e5e5] hover:shadow-lg transition-shadow"
-                style={{ borderRadius: "24px" }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl text-[#1A1A1A]">
-                          {session.name}
-                        </h3>
-                        <Badge
-                          className={`py-1! ${
-                            session.status === "upcoming"
-                              ? "bg-[#27AE60]/10 text-[#27AE60]"
-                              : "bg-[#5eb9b4]/10 text-[#5eb9b4]"
-                          }`}
-                          style={{ borderRadius: "8px" }}
-                        >
-                          {session.status === "upcoming"
-                            ? "Upcoming"
-                            : "Completed"}
-                        </Badge>
+              return (
+                <Card
+                  key={session.id}
+                  className="border-[#e5e5e5] hover:shadow-lg transition-shadow"
+                  style={{ borderRadius: "24px" }}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-xl text-[#1A1A1A]">
+                            {session.name}
+                          </h3>
+                          <Badge
+                            className={`py-1! ${
+                              session.status === "upcoming"
+                                ? "bg-[#27AE60]/10 text-[#27AE60]"
+                                : "bg-[#5eb9b4]/10 text-[#5eb9b4]"
+                            }`}
+                            style={{ borderRadius: "8px" }}
+                          >
+                            {session.status === "upcoming"
+                              ? "Upcoming"
+                              : "Completed"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-[#6B6B6B]">
+                          with {session.trainer}
+                        </p>
                       </div>
-                      <p className="text-sm text-[#6B6B6B]">
-                        with {session.trainer}
-                      </p>
                     </div>
-                  </div>
 
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center gap-2 text-[#6B6B6B]">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm">{session.date}</span>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-2 text-[#6B6B6B]">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm">{session.date}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#6B6B6B]">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">
+                          {session.time} • {session.duration} min
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#6B6B6B]">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">{session.type}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[#6B6B6B]">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">
-                        {session.time} • {session.duration} min
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[#6B6B6B]">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{session.type}</span>
-                    </div>
-                    {/* <div className="flex items-center gap-2 text-[#6B6B6B]">
-                    <Users className="w-4 h-4" />
-                    <span className="text-sm">
-                      {session.regions?.length || 1} regions available
-                    </span>
-                  </div> */}
-                  </div>
 
-                  <div className="flex items-center gap-2 mb-4">
-                    <Badge
-                      className="bg-[#b95e82]/10 text-[#b95e82] py-1!"
-                      style={{ borderRadius: "8px" }}
-                    >
-                      {session.service}
-                    </Badge>
-                  </div>
+                    <div className="flex items-center gap-2 mb-4">
+                      <Badge
+                        className="bg-[#b95e82]/10 text-[#b95e82] py-1!"
+                        style={{ borderRadius: "8px" }}
+                      >
+                        {session.service}
+                      </Badge>
+                    </div>
 
-                  <div className="flex gap-2">
-                    {session.status === "upcoming" ? (
-                      <>
+                    <div className="flex gap-2">
+                      {session.status === "upcoming" ? (
                         <Button
-                          className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
+                          className="w-full bg-[#b95e82] hover:bg-[#a04d6f] text-white"
                           style={{ borderRadius: "12px" }}
                           disabled={isJoinDisabled}
                           onClick={() => handleJoinSession(session)}
                         >
-                          Join Session
+                          {isJoinDisabled
+                            ? `Join Now`
+                            : "Join Now"}
                         </Button>
-                        {/* <Button 
-                        variant="outline"
-                        className="flex-1 border-[#b95e82] text-[#b95e82] hover:bg-[#b95e82]/10"
-                        style={{ borderRadius: '12px' }}
-                      >
-                        View Details
-                      </Button> */}
-                      </>
-                    ) : (
-                      <>
+                      ) : (
                         <Button
-                          className="flex-1 bg-[#5eb9b4] hover:bg-[#4a9d98] text-white"
+                          className="w-full bg-[#b95e82] hover:bg-[#a04d6f] text-white"
                           style={{ borderRadius: "12px" }}
-                          onClick={() => handleViewRecording(session)}
+                          disabled
+                        //   onClick={() => handleViewRecording(session)}
                         >
-                          Watch Recording
+                          Completed 
                         </Button>
-                        <Button
-                          variant="outline"
-                          className="flex-1 border-[#5eb9b4] text-[#5eb9b4] hover:bg-[#5eb9b4]/10"
-                          style={{ borderRadius: "12px" }}
-                        >
-                          View Summary
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Pagination */}
+          {pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-center pt-4">
+              <CustomPagination
+                totalPages={pagination.totalPages}
+                currentPage={pagination.currentPage}
+                onPageChange={setPage}
+                visiblePages={3}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

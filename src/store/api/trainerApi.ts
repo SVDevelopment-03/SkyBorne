@@ -45,6 +45,34 @@ export interface PaginatedResponse {
   };
 }
 
+export interface TrainerEarningsEntry {
+  month: string;
+  year: number;
+  earnings: number;
+  sessions: number;
+  activeStudents: number;
+  completionRate: number;
+}
+
+export interface EarningsListResponse {
+  success: boolean;
+  message: string;
+  earnings: TrainerEarningsEntry[];
+  pagination: {
+    currentPage: number;
+    totalPages: number;
+    total: number;
+    limit: number;
+  };
+}
+
+export interface GetEarningsListParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  period?: "3months" | "6months" | "1year";
+}
+
 export interface GetTrainersParams {
   page: number;
   limit: number;
@@ -103,6 +131,7 @@ export const trainerApi = createApi({
     "StudentGrowth",
     "SessionsAttendance",
     "TopServices",
+    "EarningsList",
   ],
   endpoints: (builder) => ({
     // ============================================
@@ -127,7 +156,8 @@ export const trainerApi = createApi({
       },
       providesTags: ["Trainer"],
     }),
-     getActiveTrainers: builder.query<PaginatedResponse, GetTrainersParams>({
+
+    getActiveTrainers: builder.query<PaginatedResponse, GetTrainersParams>({
       query: ({ page, limit, search, filter }) => {
         const params = new URLSearchParams({
           page: String(page),
@@ -203,7 +233,7 @@ export const trainerApi = createApi({
       providesTags: ["TrainerStats"],
     }),
 
-    // GET Trainer Earnings Over Time
+    // GET Trainer Earnings Over Time (Chart Data)
     getTrainerEarnings: builder.query<ChartDataResponse, PeriodParams>({
       query: ({ period }) => ({
         url: `/trainer/earnings?period=${period}`,
@@ -240,6 +270,54 @@ export const trainerApi = createApi({
     }),
 
     // ============================================
+    // TRAINER EARNINGS LIST ENDPOINTS
+    // ============================================
+
+    // GET Earnings List with pagination and filters
+    getTrainerEarningsListQuery: builder.query<
+      EarningsListResponse,
+      GetEarningsListParams
+    >({
+      query: ({ page = 1, limit = 10, search, period = "6months" }) => {
+        const params = new URLSearchParams({
+          page: String(page),
+          limit: String(limit),
+          period: period,
+        });
+
+        if (search) params.append("search", search);
+
+        return {
+          url: `/trainer/earnings-list?${params.toString()}`,
+          method: "GET",
+        };
+      },
+      providesTags: ["EarningsList"],
+    }),
+
+    // GET Earnings Summary (Stats for tiles)
+    getTrainerEarningsSummary: builder.query<TrainerStatsResponse, void>({
+      query: () => ({
+        url: "/trainer/earnings-summary",
+        method: "GET",
+      }),
+      keepUnusedDataFor: 0,
+      providesTags: ["TrainerStats"],
+    }),
+
+    // EXPORT Earnings as CSV
+    exportTrainerEarnings: builder.mutation<
+      Blob,
+      { period: "3months" | "6months" | "1year" }
+    >({
+      query: ({ period }) => ({
+        url: `/trainer/earnings-export?period=${period}`,
+        method: "GET",
+        responseType: "blob",
+      }),
+    }),
+
+    // ============================================
     // UTILITY MUTATIONS
     // ============================================
 
@@ -252,6 +330,7 @@ export const trainerApi = createApi({
         "StudentGrowth",
         "SessionsAttendance",
         "TopServices",
+        "EarningsList",
       ],
     }),
   }),
@@ -272,5 +351,10 @@ export const {
   useGetStudentGrowthQuery,
   useGetSessionsAttendanceQuery,
   useGetTopServicesQuery,
+
+  // Earnings Hooks
+  useGetTrainerEarningsListQueryQuery,
+  useGetTrainerEarningsSummaryQuery,
+  useExportTrainerEarningsMutation,
   useInvalidateTrainerDashboardMutation,
 } = trainerApi;
