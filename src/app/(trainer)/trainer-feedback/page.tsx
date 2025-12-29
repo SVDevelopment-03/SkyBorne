@@ -1,4 +1,4 @@
-import TrainerFeedback from '@/components/pages/trainer/trainer-feedback/page'
+import TrainerFeedback from '@/components/pages/trainer/trainer-feedback'
 import React from 'react'
 
 const page = () => {

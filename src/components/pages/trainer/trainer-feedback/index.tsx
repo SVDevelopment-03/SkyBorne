@@ -7,16 +7,26 @@ import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Trash2Icon, Eye, Star, MessageSquare } from "lucide-react";
+import { Trash2, Eye, Star, MessageSquare } from "lucide-react";
 import toast from "react-hot-toast";
 import { Badge } from "@/components/ui/badge";
 import CustomPagination from "@/components/ui/CustromPagination";
+import MainListHeading from "@/components/ui/MainListHeading";
+import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
+import {
+  useGetAllFeedbackQuery,
+  useGetAllTrainerFeedbackQuery,
+} from "@/store/api/feedbackApi";
 
 interface FeedbackData {
   _id: string;
   session: string;
-  trainer: string;
+  trainer: {
+    name: string;
+    email: string;
+  };
   userName: string;
+  userEmail: string;
   date: string;
   rating: number;
   comment: string;
@@ -25,7 +35,7 @@ interface FeedbackData {
   createdAt: string;
 }
 
-const FeedbackManagement = () => {
+const AdminFeedbackManagement = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
@@ -34,85 +44,18 @@ const FeedbackManagement = () => {
   const [selectedFeedback, setSelectedFeedback] = useState<FeedbackData | null>(null);
   const [replyText, setReplyText] = useState("");
 
-  // Static data - Replace with API call
-  const staticFeedbackData = [
-    {
-      _id: "1",
-      session: "Vinyasa Flow Yoga",
-      trainer: "Priya Sharma",
-      userName: "Raj Kumar",
-      date: "Dec 10, 2025",
-      rating: 5,
-      comment: "Absolutely loved this session! The flow was perfect and Priya's guidance was excellent.",
-      status: "submitted" as const,
-      trainerResponse: "Thank you so much for your kind words! Looking forward to seeing you in the next session.",
-      createdAt: "2025-12-10T10:30:00Z"
-    },
-    {
-      _id: "2",
-      session: "Mindful Meditation",
-      trainer: "Emily Johnson",
-      userName: "Sarah Chen",
-      date: "Dec 8, 2025",
-      rating: 4,
-      comment: "Great session, very calming. Would love more breathing exercises.",
-      status: "reviewed" as const,
-      trainerResponse: null,
-      createdAt: "2025-12-08T09:15:00Z"
-    },
-    {
-      _id: "3",
-      session: "Power Yoga",
-      trainer: "Michael Chen",
-      userName: "Alex Johnson",
-      date: "Dec 5, 2025",
-      rating: 5,
-      comment: "Challenging but rewarding! Michael pushes you to your best.",
-      status: "submitted" as const,
-      trainerResponse: "Thanks for the feedback! Keep up the great work!",
-      createdAt: "2025-12-05T14:45:00Z"
-    },
-    {
-      _id: "4",
-      session: "Breath Work Session",
-      trainer: "Sarah Martinez",
-      userName: "Emma Wilson",
-      date: "Dec 12, 2025",
-      rating: 2,
-      comment: "The session was too rushed. Didn't have enough time to practice properly.",
-      status: "flagged" as const,
-      trainerResponse: null,
-      createdAt: "2025-12-12T17:20:00Z"
-    },
-    {
-      _id: "5",
-      session: "Yin Yoga",
-      trainer: "Lisa Anderson",
-      userName: "David Brown",
-      date: "Dec 11, 2025",
-      rating: 4,
-      comment: "Relaxing and well-structured. Lisa's voice was very soothing.",
-      status: "submitted" as const,
-      trainerResponse: null,
-      createdAt: "2025-12-11T18:30:00Z"
-    }
-  ];
+  // API calls
+  const { data: feedbackData, isLoading } = useGetAllTrainerFeedbackQuery({
+    search,
+    page,
+    limit,
+    sortBy: "-createdAt",
+  });
 
-  const [feedback, setFeedback] = useState<FeedbackData[]>(staticFeedbackData);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [deleteFeedback] = useDeleteFeedbackMutation();
 
-  // Calculate pagination
-  const filteredFeedback = feedback.filter(f =>
-    f.session.toLowerCase().includes(search.toLowerCase()) ||
-    f.trainer.toLowerCase().includes(search.toLowerCase()) ||
-    f.userName.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredFeedback.length / limit);
-  const paginatedFeedback = filteredFeedback.slice(
-    (page - 1) * limit,
-    page * limit
-  );
+  const feedbacks = feedbackData?.data?.feedbacks || [];
+  const totalPages = feedbackData?.data?.totalPages || 0;
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -147,32 +90,22 @@ const FeedbackManagement = () => {
       return;
     }
 
-    // TODO: Replace with API call
-    setFeedback(prev =>
-      prev.map(f =>
-        f._id === selectedFeedback._id
-          ? { ...f, trainerResponse: replyText, status: "reviewed" }
-          : f
-      )
-    );
-
+    // TODO: Implement API call for updating trainer response
     toast.success("Trainer response updated");
     handleCloseReplyModal();
   };
 
-  const handleDeleteFeedback = async (feedbackId: string) => {
-    // TODO: Replace with API call
-    setFeedback(prev => prev.filter(f => f._id !== feedbackId));
-    toast.success("Feedback deleted successfully");
-  };
+  // const handleDeleteFeedback = async (feedbackId: string) => {
+  //   try {
+  //     await deleteFeedback(feedbackId).unwrap();
+  //     toast.success("Feedback deleted successfully");
+  //   } catch (error) {
+  //     toast.error("Failed to delete feedback");
+  //   }
+  // };
 
   const handleStatusChange = (feedbackId: string, newStatus: "submitted" | "reviewed" | "flagged") => {
-    // TODO: Replace with API call
-    setFeedback(prev =>
-      prev.map(f =>
-        f._id === feedbackId ? { ...f, status: newStatus } : f
-      )
-    );
+    // TODO: Implement API call for updating status
     toast.success(`Feedback status updated to ${newStatus}`);
   };
 
@@ -200,23 +133,23 @@ const FeedbackManagement = () => {
       accessorKey: "userName",
       header: "User Name",
       cell: ({ row }) => (
-        <span className="font-medium text-[#000000]">{row.original.userName}</span>
+        <div className="flex flex-col">
+          <span className="font-medium text-[#000000]">{row.original.userName}</span>
+          <span className="text-xs text-[#6B6B6B]">{row.original.userEmail}</span>
+        </div>
       ),
     },
-    {
-      accessorKey: "session",
-      header: "Session",
-      cell: ({ row }) => (
-        <span className="text-[#000000]">{row.original.session}</span>
-      ),
-    },
-    {
-      accessorKey: "trainer",
-      header: "Trainer",
-      cell: ({ row }) => (
-        <span className="text-[#000000]">{row.original.trainer}</span>
-      ),
-    },
+
+    // {
+    //   accessorKey: "trainer",
+    //   header: "Trainer",
+    //   cell: ({ row }) => (
+    //     <div className="flex flex-col">
+    //       <span className="font-medium text-[#000000]">{row.original.trainer.name}</span>
+    //       <span className="text-xs text-[#6B6B6B]">{row.original.trainer.email}</span>
+    //     </div>
+    //   ),
+    // },
     {
       accessorKey: "rating",
       header: "Rating",
@@ -233,37 +166,96 @@ const FeedbackManagement = () => {
             />
           ))}
           <span className={`ml-2 font-semibold ${getRatingColor(row.original.rating)}`}>
-            {row.original.rating}
+            {/* {row.original.rating} */}
           </span>
         </div>
       ),
     },
     {
+  accessorKey: "comment",
+  header: "Comment",
+  cell: ({ row }) => {
+    const comment = row.original.comment || "";
+    const MAX_LENGTH = 60;
+
+    const truncated =
+      comment.length > MAX_LENGTH
+        ? comment.slice(0, MAX_LENGTH) + "…"
+        : comment;
+
+    return (
+      <div
+        className="max-w-[260px] text-sm text-[#4B4B4B] truncate"
+        title={comment} // 👈 shows full comment on hover
+      >
+        {truncated}
+      </div>
+    );
+  },
+},
+
+    {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge className={`${getStatusColor(row.original.status)} capitalize py-1!`} >
+        <Badge className={`${getStatusColor(row.original.status)} capitalize py-1!`}>
           {row.original.status}
         </Badge>
       ),
     },
-
+    // {
+    //   id: "actions",
+    //   header: "Actions",
+    //   cell: ({ row }) => (
+    //     <div className="flex gap-2">
+    //       <Button
+    //         onClick={() => handleViewFeedback(row.original)}
+    //         variant="ghost"
+    //         size="sm"
+    //         className="p-1 h-auto"
+    //         title="View feedback"
+    //       >
+    //         <Eye className="w-4 h-4 text-[#6B6B6B]" />
+    //       </Button>
+    //       <Button
+    //         onClick={() => handleOpenReplyModal(row.original)}
+    //         variant="ghost"
+    //         size="sm"
+    //         className="p-1 h-auto"
+    //         title="Add trainer response"
+    //       >
+    //         <MessageSquare className="w-4 h-4 text-[#6B6B6B]" />
+    //       </Button>
+    //       <Button
+    //         onClick={() => handleDeleteFeedback(row.original._id)}
+    //         variant="ghost"
+    //         size="sm"
+    //         className="p-1 h-auto"
+    //         title="Delete feedback"
+    //       >
+    //         <Trash2 className="w-4 h-4 text-red-500" />
+    //       </Button>
+    //     </div>
+    //   ),
+    // },
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl text-[#1A1A1A] mb-2">Feedback Management</h1>
-          <p className="text-[#6B6B6B]">Review and manage user feedback</p>
-        </div>
+      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center justify-between px-4">
+        <MainListHeading title="Feedback Management" />
+        <CommonBreadcrump
+          title="Feedback Management"
+          href="/feedback-management"
+        />
+      </div>
 
+      <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
         {/* Search */}
         <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
           <div className="relative flex-1 max-w-md">
             <Input2
-              placeholder="Search by user, trainer, or session..."
+              placeholder="Search by user, trainer, email, or comment..."
               value={search}
               onChange={(e) => handleSearch(e.target.value)}
               name="search"
@@ -277,7 +269,7 @@ const FeedbackManagement = () => {
         <div className="flex flex-col w-full">
           <DataTable
             columns={columns}
-            data={paginatedFeedback}
+            data={feedbacks}
             isLoadingData={isLoading}
           />
         </div>
@@ -313,6 +305,7 @@ const FeedbackManagement = () => {
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">User Name</p>
                   <p className="font-medium text-[#1A1A1A]">{selectedFeedback.userName}</p>
+                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.userEmail}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">Session</p>
@@ -320,7 +313,8 @@ const FeedbackManagement = () => {
                 </div>
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">Trainer</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.trainer}</p>
+                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.trainer.name}</p>
+                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.trainer.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">Date</p>
@@ -363,14 +357,20 @@ const FeedbackManagement = () => {
 
               <div className="flex gap-3 pt-4">
                 <Button
-                  onClick={() => handleStatusChange(selectedFeedback._id, "reviewed")}
+                  onClick={() => {
+                    handleStatusChange(selectedFeedback._id, "reviewed");
+                    handleCloseFeedbackModal();
+                  }}
                   variant="themeRegular"
                   className="rounded-lg"
                 >
                   Mark as Reviewed
                 </Button>
                 <Button
-                  onClick={() => handleStatusChange(selectedFeedback._id, "flagged")}
+                  onClick={() => {
+                    handleStatusChange(selectedFeedback._id, "flagged");
+                    handleCloseFeedbackModal();
+                  }}
                   variant="outline"
                   className="rounded-lg"
                 >
@@ -390,7 +390,7 @@ const FeedbackManagement = () => {
       </Dialog>
 
       {/* Reply Modal */}
-      <Dialog open={isReplyModalOpen} onOpenChange={handleCloseReplyModal}>
+      {/* <Dialog open={isReplyModalOpen} onOpenChange={handleCloseReplyModal}>
         <VisuallyHidden>
           <DialogTitle>Add Trainer Response</DialogTitle>
         </VisuallyHidden>
@@ -420,6 +420,7 @@ const FeedbackManagement = () => {
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Write your response here..."
                   rows={5}
+                  maxLength={500}
                   className="w-full px-4 py-3 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20 resize-none"
                 />
                 <p className="text-xs text-[#6B6B6B] mt-2">
@@ -446,9 +447,9 @@ const FeedbackManagement = () => {
             </div>
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
     </div>
   );
 };
 
-export default FeedbackManagement;
+export default AdminFeedbackManagement;

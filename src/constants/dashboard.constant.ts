@@ -131,6 +131,12 @@ export const AdminNav = {
       items: [],
     },
     {
+      title: "Feedback Management",
+      url: "/feedback-management",
+      icon: MessageSquare,
+      items: [],
+    },
+    {
       title: "Logout",
       logout: true,
       url: "#",
