@@ -198,12 +198,12 @@ export function UpgradePlan({ onSelect, currentPlan, expiryDate ,subscription,cl
       </div>
 
       <div
-        className="grid grid-cols-[repeat(auto-fit,minmax(260px,360px))]
+        className="grid grid-cols-[1fr_1fr_1fr]
   justify-start lg:justify-center gap-6 md:gap-10 mb-6 bg-white 
   p-4 sm:p-6 md:p-12 rounded-xl"
       >
         {/* Gold Package Card with Radio Options */}
-        <div className="relative Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[550px] h-[550px]">
+        <div className="relative min-h-[610px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[550px] h-[550px]">
           <div className="min-h-[450px]">
             <div className="mb-6">
               <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
@@ -273,7 +273,7 @@ export function UpgradePlan({ onSelect, currentPlan, expiryDate ,subscription,cl
         </div>
 
         {/* Diamond Package Card */}
-        <div className="relative Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[600px]  h-[550px]">
+        <div className="relative min-h-[610px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[600px]  h-[550px]">
           <div className="min-h-[450px]">
             <div className="mb-6">
               <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
@@ -318,7 +318,7 @@ export function UpgradePlan({ onSelect, currentPlan, expiryDate ,subscription,cl
         </div>
 
         {/* Platinum Package Card */}
-        <div className="relative Package_Card_Default bg-[#B95E82] rounded-3xl p-8 shadow-lg text-white max-h-[600px]  h-[550px]">
+        <div className="relative min-h-[610px] Package_Card_Default bg-[#B95E82] rounded-3xl p-8 shadow-lg text-white max-h-[600px]  h-[550px]">
           <div className="min-h-[450px]">
             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-[#b97d9f] px-4 py-1 rounded-full text-sm shadow-md">
               ⭐ Best Value
