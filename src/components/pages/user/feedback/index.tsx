@@ -28,7 +28,7 @@ interface FormValues {
 }
 
 const validationSchema = Yup.object().shape({
-  trainerId: Yup.string().required('Trainer is required'),
+  trainerId: Yup.string().optional(),
   rating: Yup.number()
     .required('Rating is required')
     .min(1, 'Please select a rating')
@@ -86,7 +86,7 @@ export default function UserFeedback() {
   ) => {
     try {
       const payload = {
-        trainerId: values.trainerId,
+        trainerId: values.trainerId || null,
         rating: values.rating,
         comment: values.comment,
       };
@@ -123,7 +123,7 @@ export default function UserFeedback() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-[#e5e5e5]" style={{ borderRadius: '20px' }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -168,7 +168,7 @@ export default function UserFeedback() {
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Submit New Feedback */}
       <Card className="border-[#e5e5e5]" style={{ borderRadius: '24px' }}>
@@ -185,10 +185,10 @@ export default function UserFeedback() {
             {({ values, errors, touched, isSubmitting, setFieldValue }) => (
               <Form className="space-y-6">
                 {/* Trainer Selection */}
-                {trainerOptions && (
+                {/* {trainerOptions && (
                   <div>
                     <Select
-                      label="Select Trainer"
+                      label="Select Trainer (Optional)"
                       value={values.trainerId}
                       onChange={(val) => setFieldValue('trainerId', val)}
                       options={trainerOptions}
@@ -198,7 +198,7 @@ export default function UserFeedback() {
                       <p className="text-red-500 text-sm mt-1">{errors.trainerId}</p>
                     )}
                   </div>
-                )}
+                )} */}
 
                 {/* Rating */}
                 <div>
@@ -257,7 +257,7 @@ export default function UserFeedback() {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  disabled={isSubmitting || !values.trainerId || values.rating === 0 || values.comment.trim().length === 0}
+                  disabled={isSubmitting || values.rating === 0 || values.comment.trim().length === 0}
                   variant="theme"
                   className="w-full disabled:bg-gray-300 disabled:cursor-not-allowed"
                   style={{ borderRadius: '12px' }}
@@ -289,7 +289,7 @@ export default function UserFeedback() {
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <p className="text-sm text-[#6B6B6B] mb-2">
-                      {feedback.trainerName || 'Trainer'}
+                      {feedback.trainerName || 'General Feedback'}
                     </p>
                     <div className="flex items-center gap-1 mb-3">
                       {[1, 2, 3, 4, 5].map((star) => (

@@ -1,455 +1,333 @@
-"use client";
-import React, { useState } from "react";
-import { DataTable } from "@/components/ui/CommonTable";
-import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
-import { Input2 } from "@/components/ui/input";
-import { SearchIcon } from "@/icons/helpIcon";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
-import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Trash2, Eye, Star, MessageSquare } from "lucide-react";
-import toast from "react-hot-toast";
-import { Badge } from "@/components/ui/badge";
-import CustomPagination from "@/components/ui/CustromPagination";
-import MainListHeading from "@/components/ui/MainListHeading";
-import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
-import {
-  useGetAllFeedbackQuery,
-  useGetAllTrainerFeedbackQuery,
-} from "@/store/api/feedbackApi";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-interface FeedbackData {
-  _id: string;
-  session: string;
-  trainer: {
-    name: string;
-    email: string;
-  };
-  userName: string;
-  userEmail: string;
-  date: string;
+"use client"
+import { useState, useEffect } from 'react';
+import { Formik, Form, FormikHelpers } from 'formik';
+import * as Yup from 'yup';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button'; 
+import { Badge } from '@/components/ui/badge'; 
+import { Select } from '@/components/ui/Select2';
+import { 
+  MessageSquare,
+  Star,
+  ThumbsUp,
+  Send,
+  CheckCircle,
+  Clock,
+} from 'lucide-react';
+import toast from 'react-hot-toast';
+import { useGetActiveTrainersQuery } from '@/store/api/trainerApi';
+import { useSubmitFeedbackMutation, useGetUserFeedbackQuery } from '@/store/api/feedbackApi';
+import useGetUser from '@/hooks/useGetUser';
+
+interface FormValues {
+  trainerId: string;
   rating: number;
   comment: string;
-  status: "submitted" | "reviewed" | "flagged";
-  trainerResponse: string | null;
-  createdAt: string;
 }
 
-const AdminFeedbackManagement = () => {
-  const [search, setSearch] = useState("");
-  const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackData | null>(null);
-  const [replyText, setReplyText] = useState("");
+const validationSchema = Yup.object().shape({
+  trainerId: Yup.string().optional(),
+  rating: Yup.number()
+    .required('Rating is required')
+    .min(1, 'Please select a rating')
+    .max(5, 'Rating must be between 1 and 5'),
+  comment: Yup.string()
+    .required('Comment is required')
+    .min(10, 'Comment must be at least 10 characters')
+    .max(500, 'Comment cannot exceed 500 characters'),
+});
 
-  // API calls
-  const { data: feedbackData, isLoading } = useGetAllTrainerFeedbackQuery({
-    search,
-    page,
-    limit,
-    sortBy: "-createdAt",
+export default function UserFeedback() {
+  const [trainerOptions, setTrainerOptions] = useState<
+    { label: string; value: string }[] | null
+  >(null);
+  const [hoveredRating, setHoveredRating] = useState(0);
+
+  const { user } = useGetUser();
+
+  // Fetch active trainers
+  const { data: trainersData, isLoading: trainersLoading } = useGetActiveTrainersQuery({
+    page: 1,
+    limit: 100,
+    search: "",
   });
 
-  // const [deleteFeedback] = useDeleteFeedbackMutation();
+  // Fetch user feedback
+  const { data: feedbackData, isLoading: feedbackLoading, refetch } = useGetUserFeedbackQuery(
+    user?.id || '',
+    { skip: !user?.id }
+  );
 
-  const feedbacks = feedbackData?.data?.feedbacks || [];
-  const totalPages = feedbackData?.data?.totalPages || 0;
+  // Submit feedback mutation
+  const [submitFeedback, { isLoading: isSubmitting }] = useSubmitFeedbackMutation();
 
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    setPage(1);
-  };
-
-  const handleViewFeedback = (fb: FeedbackData) => {
-    setSelectedFeedback(fb);
-    setIsViewModalOpen(true);
-  };
-
-  const handleCloseFeedbackModal = () => {
-    setIsViewModalOpen(false);
-    setSelectedFeedback(null);
-  };
-
-  const handleOpenReplyModal = (fb: FeedbackData) => {
-    setSelectedFeedback(fb);
-    setReplyText(fb.trainerResponse || "");
-    setIsReplyModalOpen(true);
-  };
-
-  const handleCloseReplyModal = () => {
-    setIsReplyModalOpen(false);
-    setReplyText("");
-    setSelectedFeedback(null);
-  };
-
-  const handleSubmitReply = () => {
-    if (!selectedFeedback || !replyText.trim()) {
-      toast.error("Please enter a response");
-      return;
+  // Build trainer options from API data
+  useEffect(() => {
+    if (!trainersLoading && Array.isArray(trainersData?.data)) {
+      const formatted = trainersData?.data.map((item: any) => ({
+        label: item?.name,
+        value: item?._id,
+      }));
+      setTrainerOptions(formatted);
     }
+  }, [trainersData?.data, trainersLoading]);
 
-    // TODO: Implement API call for updating trainer response
-    toast.success("Trainer response updated");
-    handleCloseReplyModal();
+  const initialValues: FormValues = {
+    trainerId: '',
+    rating: 0,
+    comment: '',
   };
 
-  // const handleDeleteFeedback = async (feedbackId: string) => {
-  //   try {
-  //     await deleteFeedback(feedbackId).unwrap();
-  //     toast.success("Feedback deleted successfully");
-  //   } catch (error) {
-  //     toast.error("Failed to delete feedback");
-  //   }
-  // };
+  const handleSubmit = async (
+    values: FormValues,
+    { setSubmitting, resetForm }: FormikHelpers<FormValues>
+  ) => {
+    try {
+      const payload = {
+        trainerId: values.trainerId || null,
+        rating: values.rating,
+        comment: values.comment,
+      };
 
-  const handleStatusChange = (feedbackId: string, newStatus: "submitted" | "reviewed" | "flagged") => {
-    // TODO: Implement API call for updating status
-    toast.success(`Feedback status updated to ${newStatus}`);
-  };
+      const response: any = await submitFeedback(payload);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "submitted":
-        return "bg-blue-100 text-blue-700";
-      case "reviewed":
-        return "bg-green-100 text-green-700";
-      case "flagged":
-        return "bg-red-100 text-red-700";
-      default:
-        return "bg-gray-100 text-gray-700";
+      if (response?.data?.success) {
+        toast.success('Feedback submitted successfully!');
+        resetForm();
+        refetch();
+      } else {
+        toast.error(response?.data?.message || 'Failed to submit feedback');
+      }
+    } catch (error: any) {
+      console.error('Error submitting feedback:', error);
+      toast.error(error.message || 'Error submitting feedback');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  const getRatingColor = (rating: number) => {
-    if (rating >= 4) return "text-green-600";
-    if (rating >= 3) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  const columns: ColumnDef<FeedbackData>[] = [
-    {
-      accessorKey: "userName",
-      header: "User Name",
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-[#000000]">{row.original.userName}</span>
-          <span className="text-xs text-[#6B6B6B]">{row.original.userEmail}</span>
-        </div>
-      ),
-    },
-
-    // {
-    //   accessorKey: "trainer",
-    //   header: "Trainer",
-    //   cell: ({ row }) => (
-    //     <div className="flex flex-col">
-    //       <span className="font-medium text-[#000000]">{row.original.trainer.name}</span>
-    //       <span className="text-xs text-[#6B6B6B]">{row.original.trainer.email}</span>
-    //     </div>
-    //   ),
-    // },
-    {
-      accessorKey: "rating",
-      header: "Rating",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star
-              key={star}
-              className={`w-4 h-4 ${
-                star <= row.original.rating
-                  ? "text-[#f4b942] fill-current"
-                  : "text-[#e5e5e5]"
-              }`}
-            />
-          ))}
-          <span className={`ml-2 font-semibold ${getRatingColor(row.original.rating)}`}>
-            {/* {row.original.rating} */}
-          </span>
-        </div>
-      ),
-    },
-    {
-  accessorKey: "comment",
-  header: "Comment",
-  cell: ({ row }) => {
-    const comment = row.original.comment || "";
-    const MAX_LENGTH = 60;
-
-    const truncated =
-      comment.length > MAX_LENGTH
-        ? comment.slice(0, MAX_LENGTH) + "…"
-        : comment;
-
-    return (
-      <div
-        className="max-w-[260px] text-sm text-[#4B4B4B] truncate"
-        title={comment} // 👈 shows full comment on hover
-      >
-        {truncated}
-      </div>
-    );
-  },
-},
-
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => (
-        <Badge className={`${getStatusColor(row.original.status)} capitalize py-1!`}>
-          {row.original.status}
-        </Badge>
-      ),
-    },
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   cell: ({ row }) => (
-    //     <div className="flex gap-2">
-    //       <Button
-    //         onClick={() => handleViewFeedback(row.original)}
-    //         variant="ghost"
-    //         size="sm"
-    //         className="p-1 h-auto"
-    //         title="View feedback"
-    //       >
-    //         <Eye className="w-4 h-4 text-[#6B6B6B]" />
-    //       </Button>
-    //       <Button
-    //         onClick={() => handleOpenReplyModal(row.original)}
-    //         variant="ghost"
-    //         size="sm"
-    //         className="p-1 h-auto"
-    //         title="Add trainer response"
-    //       >
-    //         <MessageSquare className="w-4 h-4 text-[#6B6B6B]" />
-    //       </Button>
-    //       <Button
-    //         onClick={() => handleDeleteFeedback(row.original._id)}
-    //         variant="ghost"
-    //         size="sm"
-    //         className="p-1 h-auto"
-    //         title="Delete feedback"
-    //       >
-    //         <Trash2 className="w-4 h-4 text-red-500" />
-    //       </Button>
-    //     </div>
-    //   ),
-    // },
-  ];
+  const pastFeedback = feedbackData?.data || [];
+  const totalReviews = pastFeedback.length;
+  const averageRating = totalReviews > 0
+    ? (pastFeedback.reduce((sum: number, f: any) => sum + f.rating, 0) / totalReviews).toFixed(1)
+    : 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col items-start gap-2 md:flex-row md:items-center justify-between px-4">
-        <MainListHeading title="Feedback Management" />
-        <CommonBreadcrump
-          title="Feedback Management"
-          href="/feedback-management"
-        />
+    <div className="p-4 lg:p-8 space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl text-[#1A1A1A] mb-2">Feedback</h1>
+        <p className="text-[#6B6B6B]">Share your experience and help us improve</p>
       </div>
 
-      <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
-        {/* Search */}
-        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Input2
-              placeholder="Search by user, trainer, email, or comment..."
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              name="search"
-              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 text-base! placeholder:text-[#929292]!"
-            />
-            <SearchIcon />
-          </div>
-        </div>
-
-        {/* Data Table */}
-        <div className="flex flex-col w-full">
-          <DataTable
-            columns={columns}
-            data={feedbacks}
-            isLoadingData={isLoading}
-          />
-        </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="flex items-center justify-center pt-4">
-            <CustomPagination
-              totalPages={totalPages}
-              currentPage={page}
-              onPageChange={setPage}
-              visiblePages={3}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* View Feedback Modal */}
-      <Dialog open={isViewModalOpen} onOpenChange={handleCloseFeedbackModal}>
-        <VisuallyHidden>
-          <DialogTitle>View Feedback</DialogTitle>
-        </VisuallyHidden>
-        <DialogContent className="w-full! max-w-[600px]! p-10">
-          {selectedFeedback && (
-            <div className="space-y-4">
+      {/* Stats */}
+      {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Card className="border-[#e5e5e5]" style={{ borderRadius: '20px' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">
-                  Feedback Details
-                </h2>
+                <p className="text-sm text-[#6B6B6B] mb-1">Total Reviews</p>
+                <p className="text-3xl text-[#1A1A1A]">{totalReviews}</p>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">User Name</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.userName}</p>
-                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.userEmail}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">Session</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.session}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">Trainer</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.trainer.name}</p>
-                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.trainer.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">Date</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.date}</p>
-                </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+                <MessageSquare className="w-6 h-6 text-[#b95e82]" />
               </div>
+            </div>
+          </CardContent>
+        </Card>
 
+        <Card className="border-[#e5e5e5]" style={{ borderRadius: '20px' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-[#6B6B6B] mb-1">Rating</p>
+                <p className="text-sm text-[#6B6B6B] mb-1">Average Rating</p>
                 <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-5 h-5 ${
-                        star <= selectedFeedback.rating
-                          ? "text-[#f4b942] fill-current"
-                          : "text-[#e5e5e5]"
-                      }`}
+                  <p className="text-3xl">{averageRating}</p>
+                  <Star className="w-6 h-6 text-[#f4b942] fill-current" />
+                </div>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+                <ThumbsUp className="w-6 h-6 text-[#b95e82]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-[#e5e5e5]" style={{ borderRadius: '20px' }}>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[#6B6B6B] mb-1">Loading</p>
+                <p className="text-3xl">{feedbackLoading ? '...' : '0'}</p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+                <Clock className="w-6 h-6 text-[#b95e82]" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div> */}
+
+      {/* Submit New Feedback */}
+      <Card className="border-[#e5e5e5]" style={{ borderRadius: '24px' }}>
+        <CardHeader>
+          <CardTitle className="text-xl text-[#1A1A1A]">Share Your Experience</CardTitle>
+          <p className="text-sm text-[#6B6B6B] mt-1">Your feedback helps us improve our services</p>
+        </CardHeader>
+        <CardContent>
+          <Formik
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ values, errors, touched, isSubmitting, setFieldValue }) => (
+              <Form className="space-y-6">
+                {/* Trainer Selection */}
+                {/* {trainerOptions && (
+                  <div>
+                    <Select
+                      label="Select Trainer (Optional)"
+                      value={values.trainerId}
+                      onChange={(val) => setFieldValue('trainerId', val)}
+                      options={trainerOptions}
+                      placeholder="Choose a trainer..."
                     />
-                  ))}
-                  <span className="font-semibold">{selectedFeedback.rating}/5</span>
-                </div>
-              </div>
+                    {errors.trainerId && touched.trainerId && (
+                      <p className="text-red-500 text-sm mt-1">{errors.trainerId}</p>
+                    )}
+                  </div>
+                )} */}
 
-              <div>
-                <p className="text-sm text-[#6B6B6B] mb-2">Comment</p>
-                <p className="text-[#1A1A1A] leading-relaxed bg-[#f9f9f9] p-4 rounded-lg">
-                  {selectedFeedback.comment}
-                </p>
-              </div>
-
-              {selectedFeedback.trainerResponse && (
+                {/* Rating */}
                 <div>
-                  <p className="text-sm text-[#6B6B6B] mb-2">Trainer Response</p>
-                  <p className="text-[#1A1A1A] leading-relaxed bg-[#f0f8f5] p-4 rounded-lg">
-                    {selectedFeedback.trainerResponse}
-                  </p>
+                  <label className="text-sm text-[#6B6B6B] mb-3 block">
+                    How would you rate your experience?
+                  </label>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        onClick={() => setFieldValue('rating', star)}
+                        onMouseEnter={() => setHoveredRating(star)}
+                        onMouseLeave={() => setHoveredRating(0)}
+                        className="transition-transform hover:scale-110"
+                      >
+                        <Star
+                          className={`w-10 h-10 ${
+                            star <= (hoveredRating || values.rating)
+                              ? 'text-[#f4b942] fill-current'
+                              : 'text-[#e5e5e5]'
+                          }`}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {errors.rating && touched.rating && (
+                    <p className="text-red-500 text-sm mt-1">{errors.rating}</p>
+                  )}
                 </div>
-              )}
 
-              <div className="flex gap-3 pt-4">
+                {/* Feedback Text */}
+                <div>
+                  <label className="text-sm text-[#6B6B6B] mb-2 block">
+                    Tell us more about your experience
+                  </label>
+                  <textarea
+                    name="comment"
+                    value={values.comment}
+                    onChange={(e) => setFieldValue('comment', e.target.value)}
+                    onBlur={() => setFieldValue('comment', values.comment)}
+                    placeholder="Share your thoughts, suggestions, or any concerns..."
+                    rows={5}
+                    className="w-full px-4 py-3 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20 resize-none"
+                  />
+                  <div className="flex justify-between items-center mt-2">
+                    <p className="text-xs text-[#6B6B6B]">
+                      {values.comment.length}/500 characters
+                    </p>
+                    {errors.comment && touched.comment && (
+                      <p className="text-red-500 text-sm">{errors.comment}</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Submit Button */}
                 <Button
-                  onClick={() => {
-                    handleStatusChange(selectedFeedback._id, "reviewed");
-                    handleCloseFeedbackModal();
-                  }}
-                  variant="themeRegular"
-                  className="rounded-lg"
+                  type="submit"
+                  disabled={isSubmitting || values.rating === 0 || values.comment.trim().length === 0}
+                  variant="theme"
+                  className="w-full disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  style={{ borderRadius: '12px' }}
                 >
-                  Mark as Reviewed
+                  <Send className="w-4 h-4 mr-2" />
+                  {isSubmitting ? 'Submitting...' : 'Submit Feedback'}
                 </Button>
-                <Button
-                  onClick={() => {
-                    handleStatusChange(selectedFeedback._id, "flagged");
-                    handleCloseFeedbackModal();
-                  }}
-                  variant="outline"
-                  className="rounded-lg"
-                >
-                  Flag for Review
-                </Button>
-                <Button
-                  onClick={handleCloseFeedbackModal}
-                  variant="outline"
-                  className="rounded-lg ml-auto"
-                >
-                  Close
-                </Button>
+              </Form>
+            )}
+          </Formik>
+        </CardContent>
+      </Card>
+
+      {/* Past Feedback */}
+      <Card className="border-[#e5e5e5]" style={{ borderRadius: '24px' }}>
+        <CardHeader>
+          <CardTitle className="text-xl text-[#1A1A1A]">Your Feedback History</CardTitle>
+          <p className="text-sm text-[#6B6B6B] mt-1">Review your past session feedback</p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {feedbackLoading ? (
+            <p className="text-[#6B6B6B]">Loading feedback history...</p>
+          ) : pastFeedback.length > 0 ? (
+            pastFeedback.map((feedback: any) => (
+              <div
+                key={feedback._id}
+                className="p-6 bg-gradient-to-r from-[#fef9f5] to-white rounded-2xl border border-[#e5e5e5]"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <p className="text-sm text-[#6B6B6B] mb-2">
+                      {feedback.trainerName || 'General Feedback'}
+                    </p>
+                    <div className="flex items-center gap-1 mb-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`w-5 h-5 ${
+                            star <= feedback.rating
+                              ? 'text-[#f4b942] fill-current'
+                              : 'text-[#e5e5e5]'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <Badge
+                      className="bg-[#27AE60]/10 text-[#27AE60] mb-2 py-1!"
+                      style={{ borderRadius: '8px' }}
+                    >
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Submitted
+                    </Badge>
+                    <p className="text-sm text-[#494949] text-center w-full">
+                      {new Date(feedback.createdAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-[#1A1A1A] leading-relaxed">{feedback.comment}</p>
+                </div>
               </div>
-            </div>
+            ))
+          ) : (
+            <p className="text-[#6B6B6B]">No feedback submitted yet</p>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Reply Modal */}
-      {/* <Dialog open={isReplyModalOpen} onOpenChange={handleCloseReplyModal}>
-        <VisuallyHidden>
-          <DialogTitle>Add Trainer Response</DialogTitle>
-        </VisuallyHidden>
-        <DialogContent className="w-full! max-w-[600px]! p-10">
-          {selectedFeedback && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">
-                  Trainer Response
-                </h2>
-                <p className="text-[#6B6B6B] text-sm">
-                  Replying to {selectedFeedback.userName}{`'s feedback on `}{selectedFeedback.session}
-                </p>
-              </div>
-
-              <div className="bg-[#f9f9f9] p-4 rounded-lg">
-                <p className="text-sm text-[#6B6B6B] mb-1">Original Feedback</p>
-                <p className="text-[#1A1A1A]">{selectedFeedback.comment}</p>
-              </div>
-
-              <div>
-                <label className="text-sm text-[#6B6B6B] mb-2 block">
-                  Your Response
-                </label>
-                <textarea
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Write your response here..."
-                  rows={5}
-                  maxLength={500}
-                  className="w-full px-4 py-3 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20 resize-none"
-                />
-                <p className="text-xs text-[#6B6B6B] mt-2">
-                  {replyText.length}/500 characters
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={handleSubmitReply}
-                  variant="themeRegular"
-                  className="rounded-lg flex-1"
-                >
-                  Submit Response
-                </Button>
-                <Button
-                  onClick={handleCloseReplyModal}
-                  variant="outline"
-                  className="rounded-lg flex-1"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog> */}
+        </CardContent>
+      </Card>
     </div>
   );
-};
-
-export default AdminFeedbackManagement;
+}
