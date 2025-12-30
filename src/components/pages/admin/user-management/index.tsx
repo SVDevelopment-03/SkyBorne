@@ -107,7 +107,7 @@ const UserManagement = () => {
         </div>
 
         {/* Table */}
-        <div className="flex flex-col w-full pt-4 relative overflow-x-auto max-w-[897px]">
+        <div className="flex flex-col w-full pt-4 relative overflow-x-auto max-w-[897px] lg:max-w-full">
           {isLoading && (
             <div className="col-span-full flex justify-center h-full absolute items-center w-full z-50">
               <div className="flex flex-col items-center gap-2">
