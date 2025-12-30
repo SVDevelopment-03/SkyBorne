@@ -15,22 +15,26 @@ import MainListHeading from "@/components/ui/MainListHeading";
 import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
 import {
   useGetAllFeedbackQuery,
+  useUpdateFeedbackStatusMutation,
+  useUpdateTrainerResponseMutation,
+  useDeleteFeedbackMutation,
 } from "@/store/api/feedbackApi";
 
 interface FeedbackData {
   _id: string;
-  session: string;
+  session?: string;
   trainer: {
     name: string;
     email: string;
   };
-  userName: string;
-  userEmail: string;
-  date: string;
+  user: {
+    name: string;
+    email: string;
+  };
   rating: number;
   comment: string;
-  status: "submitted" | "reviewed" | "flagged";
-  trainerResponse: string | null;
+  status?: "submitted" | "reviewed" | "flagged";
+  trainerResponse?: string | null;
   createdAt: string;
 }
 
@@ -51,10 +55,12 @@ const AdminFeedbackManagement = () => {
     sortBy: "-createdAt",
   });
 
-  // const [deleteFeedback] = useDeleteFeedbackMutation();
+  const [updateStatus] = useUpdateFeedbackStatusMutation();
+  const [updateResponse] = useUpdateTrainerResponseMutation();
+  const [deleteFeedback] = useDeleteFeedbackMutation();
 
-  const feedbacks = feedbackData?.data?.feedbacks || [];
-  const totalPages = feedbackData?.data?.totalPages || 0;
+  const feedbacks = feedbackData?.data || [];
+  const totalPages = feedbackData?.totalPages || 0;
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -83,32 +89,52 @@ const AdminFeedbackManagement = () => {
     setSelectedFeedback(null);
   };
 
-  const handleSubmitReply = () => {
+  const handleSubmitReply = async () => {
     if (!selectedFeedback || !replyText.trim()) {
       toast.error("Please enter a response");
       return;
     }
 
-    // TODO: Implement API call for updating trainer response
-    toast.success("Trainer response updated");
-    handleCloseReplyModal();
+    try {
+      await updateResponse({
+        feedbackId: selectedFeedback._id,
+        trainerResponse: replyText,
+      }).unwrap();
+      toast.success("Trainer response updated successfully");
+      handleCloseReplyModal();
+    } catch (error) {
+      toast.error("Failed to update trainer response");
+      console.error(error);
+    }
   };
 
-  // const handleDeleteFeedback = async (feedbackId: string) => {
-  //   try {
-  //     await deleteFeedback(feedbackId).unwrap();
-  //     toast.success("Feedback deleted successfully");
-  //   } catch (error) {
-  //     toast.error("Failed to delete feedback");
-  //   }
-  // };
-
-  const handleStatusChange = (feedbackId: string, newStatus: "submitted" | "reviewed" | "flagged") => {
-    // TODO: Implement API call for updating status
-    toast.success(`Feedback status updated to ${newStatus}`);
+  const handleDeleteFeedbackClick = async (feedbackId: string) => {
+    if (confirm("Are you sure you want to delete this feedback?")) {
+      try {
+        await deleteFeedback(feedbackId).unwrap();
+        toast.success("Feedback deleted successfully");
+      } catch (error) {
+        toast.error("Failed to delete feedback");
+        console.error(error);
+      }
+    }
   };
 
-  const getStatusColor = (status: string) => {
+  const handleStatusChange = async (feedbackId: string, newStatus: "submitted" | "reviewed" | "flagged") => {
+    try {
+      await updateStatus({
+        feedbackId,
+        status: newStatus,
+      }).unwrap();
+      toast.success(`Feedback status updated to ${newStatus}`);
+      handleCloseFeedbackModal();
+    } catch (error) {
+      toast.error("Failed to update feedback status");
+      console.error(error);
+    }
+  };
+
+  const getStatusColor = (status?: string) => {
     switch (status) {
       case "submitted":
         return "bg-blue-100 text-blue-700";
@@ -129,26 +155,26 @@ const AdminFeedbackManagement = () => {
 
   const columns: ColumnDef<FeedbackData>[] = [
     {
-      accessorKey: "userName",
+      accessorKey: "user",
       header: "User Name",
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-medium text-[#000000]">{row.original.userName}</span>
-          <span className="text-xs text-[#6B6B6B]">{row.original.userEmail}</span>
+          <span className="font-medium text-[#000000]">{row?.original?.user?.name}</span>
+          <span className="text-xs text-[#6B6B6B]">{row?.original?.user?.email}</span>
         </div>
       ),
     },
 
-    {
-      accessorKey: "trainer",
-      header: "Trainer",
-      cell: ({ row }) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-[#000000]">{row.original.trainer.name}</span>
-          <span className="text-xs text-[#6B6B6B]">{row.original.trainer.email}</span>
-        </div>
-      ),
-    },
+    // {
+    //   accessorKey: "trainer",
+    //   header: "Trainer",
+    //   cell: ({ row }) => (
+    //     <div className="flex flex-col">
+    //       <span className="font-medium text-[#000000]">{row?.original?.trainer?.name}</span>
+    //       <span className="text-xs text-[#6B6B6B]">{row?.original?.trainer?.email}</span>
+    //     </div>
+    //   ),
+    // },
     {
       accessorKey: "rating",
       header: "Rating",
@@ -158,47 +184,43 @@ const AdminFeedbackManagement = () => {
             <Star
               key={star}
               className={`w-4 h-4 ${
-                star <= row.original.rating
+                star <= row?.original?.rating
                   ? "text-[#f4b942] fill-current"
                   : "text-[#e5e5e5]"
               }`}
             />
           ))}
-          <span className={`ml-2 font-semibold ${getRatingColor(row.original.rating)}`}>
-            {/* {row.original.rating} */}
-          </span>
         </div>
       ),
     },
     {
-  accessorKey: "comment",
-  header: "Comment",
-  cell: ({ row }) => {
-    const comment = row.original.comment || "";
-    const MAX_LENGTH = 60;
+      accessorKey: "comment",
+      header: "Comment",
+      cell: ({ row }) => {
+        const comment = row.original.comment || "";
+        const MAX_LENGTH = 60;
 
-    const truncated =
-      comment.length > MAX_LENGTH
-        ? comment.slice(0, MAX_LENGTH) + "…"
-        : comment;
+        const truncated =
+          comment.length > MAX_LENGTH
+            ? comment.slice(0, MAX_LENGTH) + "…"
+            : comment;
 
-    return (
-      <div
-        className="max-w-[260px] text-sm text-[#4B4B4B] truncate"
-        title={comment} // 👈 shows full comment on hover
-      >
-        {truncated}
-      </div>
-    );
-  },
-},
-
+        return (
+          <div
+            className="max-w-[260px] text-sm text-[#4B4B4B] truncate"
+            title={comment}
+          >
+            {truncated}
+          </div>
+        );
+      },
+    },
     {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge className={`${getStatusColor(row.original.status)} capitalize py-1!`}>
-          {row.original.status}
+        <Badge className={`${getStatusColor(row.original.status)} capitalize py-1! bg-[#27AE60]/10 text-[#27AE60] rounded-lg! pr-[8px] text-center`}>
+          {row.original.status || "submitted"}
         </Badge>
       ),
     },
@@ -226,7 +248,7 @@ const AdminFeedbackManagement = () => {
     //         <MessageSquare className="w-4 h-4 text-[#6B6B6B]" />
     //       </Button>
     //       <Button
-    //         onClick={() => handleDeleteFeedback(row.original._id)}
+    //         onClick={() => handleDeleteFeedbackClick(row.original._id)}
     //         variant="ghost"
     //         size="sm"
     //         className="p-1 h-auto"
@@ -303,12 +325,12 @@ const AdminFeedbackManagement = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">User Name</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.userName}</p>
-                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.userEmail}</p>
+                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.user.name}</p>
+                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.user.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">Session</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.session}</p>
+                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.session || "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">Trainer</p>
@@ -317,7 +339,9 @@ const AdminFeedbackManagement = () => {
                 </div>
                 <div>
                   <p className="text-sm text-[#6B6B6B] mb-1">Date</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.date}</p>
+                  <p className="font-medium text-[#1A1A1A]">
+                    {new Date(selectedFeedback.createdAt).toLocaleDateString()}
+                  </p>
                 </div>
               </div>
 
@@ -358,7 +382,6 @@ const AdminFeedbackManagement = () => {
                 <Button
                   onClick={() => {
                     handleStatusChange(selectedFeedback._id, "reviewed");
-                    handleCloseFeedbackModal();
                   }}
                   variant="themeRegular"
                   className="rounded-lg"
@@ -368,7 +391,6 @@ const AdminFeedbackManagement = () => {
                 <Button
                   onClick={() => {
                     handleStatusChange(selectedFeedback._id, "flagged");
-                    handleCloseFeedbackModal();
                   }}
                   variant="outline"
                   className="rounded-lg"
@@ -389,7 +411,7 @@ const AdminFeedbackManagement = () => {
       </Dialog>
 
       {/* Reply Modal */}
-      {/* <Dialog open={isReplyModalOpen} onOpenChange={handleCloseReplyModal}>
+      <Dialog open={isReplyModalOpen} onOpenChange={handleCloseReplyModal}>
         <VisuallyHidden>
           <DialogTitle>Add Trainer Response</DialogTitle>
         </VisuallyHidden>
@@ -401,7 +423,8 @@ const AdminFeedbackManagement = () => {
                   Trainer Response
                 </h2>
                 <p className="text-[#6B6B6B] text-sm">
-                  Replying to {selectedFeedback.userName}{`'s feedback on `}{selectedFeedback.session}
+                  Replying to {selectedFeedback.user.name}
+                  {selectedFeedback.session && `'s feedback on ${selectedFeedback.session}`}
                 </p>
               </div>
 
@@ -446,7 +469,7 @@ const AdminFeedbackManagement = () => {
             </div>
           )}
         </DialogContent>
-      </Dialog> */}
+      </Dialog>
     </div>
   );
 };

@@ -20,6 +20,7 @@ import toast from 'react-hot-toast';
 import { useGetActiveTrainersQuery } from '@/store/api/trainerApi';
 import { useSubmitFeedbackMutation, useGetUserFeedbackQuery } from '@/store/api/feedbackApi';
 import useGetUser from '@/hooks/useGetUser';
+import { log } from 'console';
 
 interface FormValues {
   trainerId: string;
@@ -47,6 +48,7 @@ export default function UserFeedback() {
 
   const { user } = useGetUser();
 
+  console.log('Current User:', user);
   // Fetch active trainers
   const { data: trainersData, isLoading: trainersLoading } = useGetActiveTrainersQuery({
     page: 1,
@@ -56,8 +58,9 @@ export default function UserFeedback() {
 
   // Fetch user feedback
   const { data: feedbackData, isLoading: feedbackLoading, refetch } = useGetUserFeedbackQuery(
-    user?.id || '',
-    { skip: !user?.id }
+      { userId: user?.id as string },
+
+     { skip: !user?.id }
   );
 
   // Submit feedback mutation
@@ -107,6 +110,8 @@ export default function UserFeedback() {
       setSubmitting(false);
     }
   };
+
+
 
   const pastFeedback = feedbackData?.data || [];
   const totalReviews = pastFeedback.length;
@@ -312,7 +317,7 @@ export default function UserFeedback() {
                       <CheckCircle className="w-3 h-3 mr-1" />
                       Submitted
                     </Badge>
-                    <p className="text-sm text-[#6B6B6B]">
+                    <p className="text-sm text-[#6B6B6B] w-full text-center">
                       {new Date(feedback.createdAt).toLocaleDateString()}
                     </p>
                   </div>

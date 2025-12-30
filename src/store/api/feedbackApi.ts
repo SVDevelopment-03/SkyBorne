@@ -2,32 +2,31 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
 
-interface FeedbackResponse {
+export interface FeedbackResponse {
   _id: string;
-  session: string;
+  session?: string;
   trainer: {
     name: string;
     email: string;
   };
-  userName: string;
-  userEmail: string;
-  date: string;
+  user: {
+    name: string;
+    email: string;
+  };
   rating: number;
   comment: string;
-  status: "submitted" | "reviewed" | "flagged";
-  trainerResponse: string | null;
+  status?: "submitted" | "reviewed" | "flagged";
+  trainerResponse?: string | null;
   createdAt: string;
 }
 
 interface FeedbackListResponse {
   success: boolean;
-  data: {
-    feedbacks: FeedbackResponse[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  message: string;
+  data: FeedbackResponse[];
+  totalPages: number;
+  totalCount: number;
+  currentPage: number;
 }
 
 interface TrainerStats {
@@ -35,12 +34,24 @@ interface TrainerStats {
   averageRating: number;
 }
 
+interface GetAllFeedbackParams {
+  search?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+}
+
+interface GetUserFeedbackParams extends GetAllFeedbackParams {
+  userId: string;
+}
+
 export const feedbackApi = createApi({
   reducerPath: "feedbackApi",
   baseQuery: axiosBaseQuery(),
   tagTypes: ["Feedback"],
   endpoints: (builder) => ({
-    getAllFeedback: builder.query<FeedbackListResponse, any>({
+    // Get all feedback with pagination
+    getAllFeedback: builder.query<FeedbackListResponse, GetAllFeedbackParams>({
       query: ({ search = "", page = 1, limit = 10, sortBy = "-createdAt" }) => ({
         url: "/feedback",
         method: "GET",
@@ -54,9 +65,11 @@ export const feedbackApi = createApi({
       providesTags: ["Feedback"],
       keepUnusedDataFor: 0,
     }),
-    getAllTrainerFeedback: builder.query<FeedbackListResponse, any>({
+
+    // Get all trainer feedback with pagination
+    getAllTrainerFeedback: builder.query<FeedbackListResponse, GetAllFeedbackParams>({
       query: ({ search = "", page = 1, limit = 10, sortBy = "-createdAt" }) => ({
-        url: "/feedback",
+        url: "/feedback/trainer",
         method: "GET",
         params: {
           search,
@@ -70,7 +83,10 @@ export const feedbackApi = createApi({
     }),
 
     // Submit feedback
-    submitFeedback: builder.mutation({
+    submitFeedback: builder.mutation<
+      { success: boolean; message: string; data: FeedbackResponse },
+      { rating: number; comment: string }
+    >({
       query: (body) => ({
         url: "/feedback",
         method: "POST",
@@ -79,14 +95,58 @@ export const feedbackApi = createApi({
       invalidatesTags: ["Feedback"],
     }),
 
-    // Get user's feedback
-    getUserFeedback: builder.query({
-      query: (userId) => ({
+    // Get user's feedback with pagination
+    getUserFeedback: builder.query<FeedbackListResponse, GetUserFeedbackParams>({
+      query: ({ userId, search = "", page = 1, limit = 10, sortBy = "-createdAt" }) => ({
         url: `/feedback/user/${userId}`,
         method: "GET",
+        params: {
+          search,
+          page,
+          limit,
+          sortBy,
+        },
       }),
       providesTags: ["Feedback"],
       keepUnusedDataFor: 0,
+    }),
+
+    // Update feedback status
+    updateFeedbackStatus: builder.mutation<
+      { success: boolean; message: string },
+      { feedbackId: string; status: "submitted" | "reviewed" | "flagged" }
+    >({
+      query: ({ feedbackId, status }) => ({
+        url: `/feedback/${feedbackId}/status`,
+        method: "PATCH",
+        data: { status },
+      }),
+      invalidatesTags: ["Feedback"],
+    }),
+
+    // Update trainer response
+    updateTrainerResponse: builder.mutation<
+      { success: boolean; message: string },
+      { feedbackId: string; trainerResponse: string }
+    >({
+      query: ({ feedbackId, trainerResponse }) => ({
+        url: `/feedback/${feedbackId}/response`,
+        method: "PATCH",
+        data: { trainerResponse },
+      }),
+      invalidatesTags: ["Feedback"],
+    }),
+
+    // Delete feedback
+    deleteFeedback: builder.mutation<
+      { success: boolean; message: string },
+      string
+    >({
+      query: (feedbackId) => ({
+        url: `/feedback/${feedbackId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Feedback"],
     }),
   }),
 });
@@ -95,5 +155,8 @@ export const {
   useSubmitFeedbackMutation,
   useGetUserFeedbackQuery,
   useGetAllTrainerFeedbackQuery,
-  useGetAllFeedbackQuery
+  useGetAllFeedbackQuery,
+  useUpdateFeedbackStatusMutation,
+  useUpdateTrainerResponseMutation,
+  useDeleteFeedbackMutation,
 } = feedbackApi;
