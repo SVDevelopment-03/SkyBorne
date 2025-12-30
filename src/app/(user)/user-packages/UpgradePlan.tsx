@@ -198,8 +198,8 @@ export function UpgradePlan({ onSelect, currentPlan, expiryDate ,subscription,cl
       </div>
 
       <div
-        className="grid grid-cols-[repeat(auto-fit,minmax(260px,260px))]
-  justify-start lg:justify-center gap-6 md:gap-10 mb-6 bg-white 
+        className="grid grid-cols-[1fr_1fr_1fr]
+  justify-start lg:justify-center gap-6 md:gap-10 mb-6 bg-white
   p-4 sm:p-6 md:p-12 rounded-xl"
       >
         {/* Gold Package Card with Radio Options */}

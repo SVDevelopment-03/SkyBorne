@@ -203,7 +203,7 @@ const TrainerManagement = () => {
           </Button>
         </div>
 
-        <div className="flex flex-col w-full pt-4 relative max-w-[933px]">
+        <div className="flex flex-col w-full pt-4 relative max-w-[933px] lg:max-w-full">
           {(isDeleting || isUpdating || isLoading) && (
             <div className="col-span-full flex justify-center h-full absolute items-center w-full z-50">
               <div className="flex flex-col items-center gap-2">
