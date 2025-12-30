@@ -32,7 +32,7 @@ interface Session {
   localTime: string;
   duration: number;
   type: string;
-  status: "upcoming" | "completed";
+  status: "upcoming" | "completed" | "failed" | "hidden";
   participants: number;
   maxParticipants: number;
   level: string;
@@ -88,7 +88,7 @@ export default function TrainerSessions() {
       duration: meeting.duration,
       localTime: meeting?.localTime,
       type: "Online",
-      status: new Date(meeting.localTime) > new Date() ? "upcoming" : "completed",
+      status: meeting.status === "completed" ? "completed" : meeting.status === "failed" ? "failed" : new Date(meeting.localTime) > new Date() ? "upcoming" : "hidden",
       participants: 0,
       maxParticipants: 20,
       level: "Intermediate",
@@ -102,6 +102,8 @@ export default function TrainerSessions() {
   );
 
   const filteredSessions = sessions.filter((session) => {
+    if (session.status === "hidden") return false;
+
     const matchesFilter = filter === "all" || session.status === filter;
     const matchesSearch =
       session.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
