@@ -39,6 +39,8 @@ function TrainerEarnings() {
   const { data: statsData, isLoading: isLoadingStats } =
     useGetTrainerEarningsSummaryQuery(undefined);
 
+  const { data: trainerstatsData, isLoading: statsLoading, error: statsError } = useGetTrainerStatsQuery();
+  
   const { data: earningsData, isLoading: isLoadingHistory, isFetching } =
     useGetTrainerEarningsListQueryQuery({
       search: searchTerm,
@@ -111,8 +113,11 @@ function TrainerEarnings() {
       accessorKey: "completionRate",
       header: "Completion Rate",
       cell: ({ row }) => (
-        <Badge className="bg-[#27AE60]/10 text-[#27AE60] py-1!" style={{ borderRadius: "8px" }}>
-          {row.original.completionRate}%
+        <Badge
+          className="bg-[#27AE60]/10 text-[#27AE60] py-1!"
+          style={{ borderRadius: "8px" }}
+        >
+          {row.original.completionRate ?? 0}%
         </Badge>
       ),
     } as const,
@@ -247,7 +252,7 @@ function TrainerEarnings() {
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    `${stats.completionRate?.value || 0}%`
+                    `${trainerstatsData?.data?.completionRate?.value || 0}%`
                   )}
                 </p>
                 {stats.completionRate?.change !== undefined && (

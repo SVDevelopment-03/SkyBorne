@@ -29,6 +29,19 @@ interface TrainerStats {
   completionRate: { value: number; change: number };
 }
 
+const groupMonthlyToWeekly = (values: number[]) => {
+  const weeks: number[][] = [];
+
+  for (let i = 0; i < values.length; i += 7) {
+    weeks.push(values.slice(i, i + 7));
+  }
+
+  return weeks.map((week) => {
+    const sum = week.reduce((a, b) => a + b, 0);
+    return Math.round(sum / week.length);
+  });
+};
+
 const TrainerDashboard = () => {
   
 
@@ -48,16 +61,22 @@ const { data: attendanceData, isLoading: attendanceLoading } = useGetSessionsAtt
   period: attendancePeriodMap[attendancePeriod],
 });
 
-// Now you can use all the data without slicing
 const weeklyAttendanceData = useMemo(() => {
-  if (!attendanceData?.data?.values) {
-    return attendancePeriod === "week" 
-      ? [90, 85, 88, 92, 90, 87, 89] 
-      : Array(30).fill(85);
+  return attendanceData?.data?.values ?? [];
+}, [attendanceData]);
+
+
+const attendanceChartData = useMemo(() => {
+  if (!attendanceData?.data?.values) return [];
+
+  if (attendancePeriod === "week") {
+    return attendanceData.data.values;
   }
-  // Use all returned data - no slicing needed
-  return attendanceData.data.values;
+
+  // Month → convert daily to weekly averages
+  return groupMonthlyToWeekly(attendanceData.data.values);
 }, [attendanceData, attendancePeriod]);
+
 
 
   // Build stats array from API data
@@ -111,8 +130,8 @@ const weeklyAttendanceData = useMemo(() => {
     colors: ["#B95E82"],
     plotOptions: {
       bar: {
-        columnWidth: "55%",
-        borderRadius: 6,
+        columnWidth: attendancePeriod === "week" ? "55%" : "45%",
+        borderRadius: 8,  
         dataLabels: {
           position: "top",
         },
@@ -127,11 +146,10 @@ const weeklyAttendanceData = useMemo(() => {
       padding: { left: 10, right: 10 },
     },
     xaxis: {
-  categories:
-    attendancePeriod === "week"
-      ? attendanceData?.data?.labels ?? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-      : attendanceData?.data?.labels ?? MONTH_LABELS,
-
+      categories:
+        attendancePeriod === "week"
+          ? ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+          : ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"],
       labels: {
         style: {
           fontSize: "12px",
@@ -156,7 +174,8 @@ const weeklyAttendanceData = useMemo(() => {
     tooltip: {
       theme: "light",
       y: {
-        formatter: (val: number) => `${Math.round(val)}%`,
+        // formatter: (val: number) => `${Math.round(val)}%`,
+        formatter: (val: number) => `${val} Students Attended`,
       },
     },
     states: {
@@ -165,27 +184,59 @@ const weeklyAttendanceData = useMemo(() => {
     },
   };
 
- const weeklyAttendanceSeries = [
+//  const weeklyAttendanceSeries = [
+//     {
+//       name: "Attendance Rate",
+//       data: weeklyAttendanceData,
+//     },
+//   ];
+
+  const weeklyAttendanceSeries = [
     {
-      name: "Attendance Rate",
-      data: weeklyAttendanceData,
+      name: attendancePeriod === "week" ? "Daily Attendance" : "Weekly Average Attendance",
+      data: attendanceChartData,
     },
   ];
 
+
   // Calculate average attendance
+  // const averageAttendance = useMemo(() => {
+  //   if (weeklyAttendanceData.length === 0) return 0;
+  //   const sum = weeklyAttendanceData.reduce((a, b) => a + b, 0);
+  //   return Math.round(sum / weeklyAttendanceData.length);
+  // }, [weeklyAttendanceData]);
+
   const averageAttendance = useMemo(() => {
-    if (weeklyAttendanceData.length === 0) return 0;
-    const sum = weeklyAttendanceData.reduce((a, b) => a + b, 0);
-    return Math.round(sum / weeklyAttendanceData.length);
-  }, [weeklyAttendanceData]);
+    if (!attendanceChartData.length) return 0;
+    const sum = attendanceChartData.reduce((a, b) => a + b, 0);
+    return Math.round(sum / attendanceChartData.length);
+  }, [attendanceChartData]);
 
   // Get highest day
+  // const highestDay = useMemo(() => {
+  //   const maxValue = Math.max(...weeklyAttendanceData);
+  //   const dayIndex = weeklyAttendanceData.indexOf(maxValue);
+  //   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  //   return { day: days[dayIndex], rate: maxValue };
+  // }, [weeklyAttendanceData]);
+
   const highestDay = useMemo(() => {
-    const maxValue = Math.max(...weeklyAttendanceData);
-    const dayIndex = weeklyAttendanceData.indexOf(maxValue);
-    const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    return { day: days[dayIndex], rate: maxValue };
-  }, [weeklyAttendanceData]);
+    const values = attendanceData?.data?.values;
+    const labels = attendanceData?.data?.labels;
+
+    if (!values || !labels || values.length === 0) {
+      return null;
+    }
+
+    const maxValue = Math.max(...values);
+    const index = values.indexOf(maxValue);
+
+    return {
+      day: labels[index],   // ✅ API label
+      rate: maxValue,
+    };
+  }, [attendanceData]);
+
 
   const userRegion = {
     region: "IN",
@@ -425,10 +476,10 @@ const weeklyAttendanceData = useMemo(() => {
 
             {/* Stats Below Chart */}
             <div className="w-full flex items-center justify-between pt-4 border-t border-gray-200">
-              <div>
+              {/* <div>
                 <p className="text-3xl font-bold text-gray-900">{averageAttendance}%</p>
-                <p className="text-sm text-gray-600 mt-1">Average this week</p>
-              </div>
+                <p className="text-sm text-gray-600 mt-1">Avg students attended</p>
+              </div> */}
               {/* <div className="text-right">
                 <p className="text-sm text-gray-500">Highest Day</p>
                 <p className="text-lg font-semibold text-gray-900 mt-1">

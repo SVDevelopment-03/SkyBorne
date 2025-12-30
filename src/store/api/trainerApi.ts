@@ -114,7 +114,7 @@ export interface TopServicesResponse {
 }
 
 export interface PeriodParams {
-  period: "3months" | "6months" | "1year";
+  period: "3months" | "6months" | "1year" | "1week" | "1month";
 }
 
 export interface GrowthPeriodParams {

@@ -153,7 +153,7 @@ const CountryManagement = () => {
             />
             <SearchIcon />
           </div>
-          <Button
+          {/* <Button
             variant="themeRegular"
             className="rounded-[10px] py-3!"
             onClick={() => {
@@ -161,7 +161,7 @@ const CountryManagement = () => {
             }}
           >
             Add Country
-          </Button>
+          </Button> */}
         </div>
 
         {/* Data Table */}
