@@ -168,19 +168,19 @@ const TrainerManagement = () => {
         <CommonBreadcrump title="Trainer Management" href="/trainers" />
       </div>
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
-        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-wrap">
             <div className="relative">
               <Input2
                 placeholder="Search by name or service"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 name="search"
-                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] min-w-[260px] md:min-w-[400px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
+                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] min-w-[260px] md:max-w-[400px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
               />
               <SearchIcon />
             </div>
-            <div className="w-full">
+            <div className="">
               <CommonSelect
                 label="Service"
                 showLabel={false}
@@ -203,7 +203,7 @@ const TrainerManagement = () => {
           </Button>
         </div>
 
-        <div className="flex flex-col w-full pt-4 relative max-w-[933px] lg:max-w-full">
+        <div className="flex flex-col w-full pt-4 relative lg:max-w-full">
           {(isDeleting || isUpdating || isLoading) && (
             <div className="col-span-full flex justify-center h-full absolute items-center w-full z-50">
               <div className="flex flex-col items-center gap-2">
@@ -232,7 +232,7 @@ const TrainerManagement = () => {
           </VisuallyHidden>
           <DialogContent
             className="
-!w-full
+    !w-full
     !max-w-[800px]
     p-10
     data-[state=open]:animate-in

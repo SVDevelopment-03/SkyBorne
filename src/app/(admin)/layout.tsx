@@ -55,7 +55,7 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
       <div className="hidden md:flex">
         <AdminSidebar /> {/* Your original sidebar */}
       </div>
-      <div>
+      <div className="min-w-0 overflow-hidden">
         <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-end">
           <div className="flex items-center justify-end gap-10 text-[#212C26]">
             <div className="relative">
