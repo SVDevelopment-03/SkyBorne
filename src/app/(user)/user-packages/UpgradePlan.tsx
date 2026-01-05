@@ -30,6 +30,7 @@ interface PackageSelectionProps {
   currentPlan: PackageType;
   expiryDate: Date;
   subscription: Subscription;
+  totalClassCredits: number;
   classCredits: ClassCredits;
 }
 
@@ -95,7 +96,7 @@ const calculateUsedClasses = (plan: PackageType, classCredits: ClassCredits): nu
   return Math.max(0, total - remaining);
 };
 
-export function UpgradePlan({ onSelect, currentPlan, expiryDate ,subscription,classCredits}: PackageSelectionProps) {
+export function UpgradePlan({ onSelect, currentPlan, expiryDate ,subscription,classCredits,totalClassCredits}: PackageSelectionProps) {
   const isCurrentGoldPlan = currentPlanIds?.includes(currentPlan);
   const isDiamondPlan = currentPlan?.toLowerCase() === "diamond";
   const isPlatinumPlan = currentPlan?.toLowerCase() === "platinum";
@@ -111,7 +112,7 @@ export function UpgradePlan({ onSelect, currentPlan, expiryDate ,subscription,cl
   };
 
   // Calculate classes from classCredits
-  const totalSessionsIncluded = getTotalClassesFromPlan(currentPlan);
+  const totalSessionsIncluded = totalClassCredits;
   const sessionsRemaining = calculateTotalRemainingClasses(classCredits);
   const sessionsUsed = calculateUsedClasses(currentPlan, classCredits);
 

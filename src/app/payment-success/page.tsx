@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useCreatePaymentVerificationMutation } from '@/store/api/paymentApi';
@@ -26,26 +26,61 @@ export default function PaymentSuccess() {
   const [autoRetrying, setAutoRetrying] = useState(false);
 
   const [verifyPayment, { isLoading }] = useCreatePaymentVerificationMutation();
+  
+  // ✅ NEW: Use ref to track if effect has already run
+  const hasCalledVerify = useRef(false);
+  const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    // ✅ NEW: Prevent double execution
+    if (hasCalledVerify.current) {
+      console.log("⚠️ Effect already executed, skipping...");
+      return;
+    }
+
     if (!searchParams) return;
+    
+    // Handle both nGenius (ref) and Stripe (sessionId) parameters
     const orderRef = localStorage.getItem("orderRef");
     const reference = searchParams.get('ref');
+    const sessionId = searchParams.get('sessionId');
 
-    if (!orderRef || !reference) {
+    // For Stripe: sessionId is the checkout session ID
+    // For nGenius: ref is the reference
+    const paymentReference = sessionId || reference;
+
+    if (!paymentReference) {
       setTimeout(() => {
-        setError('OrderRef or reference not found');
+        setError('Payment reference not found');
         setLoading(false);
       }, 0);
       return;
     }
 
+    // ✅ NEW: Mark that we've started the verification
+    hasCalledVerify.current = true;
+
     const handleVerify = async () => {
       try {
-        const response: any = await verifyPayment({
-          orderRef,
-          reference,
-        }).unwrap();
+        const verifyPayload: any = {
+          reference: paymentReference,
+        };
+
+        // Add orderRef if available (for nGenius)
+        if (orderRef) {
+          verifyPayload.orderRef = orderRef;
+        }
+
+        // Add sessionId if this is Stripe payment
+        if (sessionId) {
+          verifyPayload.paymentIntentId = sessionId; // Stripe uses sessionId as paymentIntentId
+        }
+
+        console.log("📤 Sending verification request:", verifyPayload);
+
+        const response: any = await verifyPayment(verifyPayload).unwrap();
+
+        console.log("📥 Verification response:", response);
 
         // ✅ Check if payment is successful
         if (response.success) {
@@ -57,11 +92,11 @@ export default function PaymentSuccess() {
           // ✅ If still PENDING, retry after 2 seconds
           console.log(`⏳ Payment still processing... Retry ${retryCount + 1}/5`);
           setAutoRetrying(true);
-          setRetryCount(retryCount + 1);
           setPaymentData(response); // Show current status
           
-          // Wait 2 seconds before retrying
-          setTimeout(() => {
+          // ✅ NEW: Store timeout ref for cleanup
+          retryTimeoutRef.current = setTimeout(() => {
+            setRetryCount(prev => prev + 1);
             handleVerify();
           }, 2000);
         } else if (response.status === "PENDING") {
@@ -77,15 +112,16 @@ export default function PaymentSuccess() {
           setAutoRetrying(false);
         }
       } catch (err: any) {
-        console.error('Error verifying payment:', err);
+        console.error('❌ Error verifying payment:', err);
         
         if (retryCount < 5) {
           // ✅ Retry on error
           console.log(`⏳ Retrying... Attempt ${retryCount + 1}/5`);
           setAutoRetrying(true);
-          setRetryCount(retryCount + 1);
           
-          setTimeout(() => {
+          // ✅ NEW: Store timeout ref for cleanup
+          retryTimeoutRef.current = setTimeout(() => {
+            setRetryCount(prev => prev + 1);
             handleVerify();
           }, 2000);
         } else {
@@ -98,7 +134,14 @@ export default function PaymentSuccess() {
     };
 
     handleVerify();
-  }, [searchParams, verifyPayment]);
+
+    // ✅ NEW: Cleanup function to clear pending timeouts
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []); // ✅ IMPORTANT: Empty dependency array - runs only once on mount
 
   // ✅ Loading state
   if (loading || isLoading) {

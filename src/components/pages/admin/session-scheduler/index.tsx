@@ -244,20 +244,20 @@ const ClassListManagement = () => {
 
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
         {/* Search and Create Button */}
-        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="relative">
               <Input2
                 placeholder="Search by class name or trainer..."
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 name="search"
-                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 text-base! placeholder:text-[#929292]! md:min-w-[400px]"
+                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 text-base! placeholder:text-[#929292]! md:max-w-[400px]"
               />
               <SearchIcon />
             </div>
             {/* Service Filter Dropdown */}
-            <div className="w-full md:w-auto">
+            <div>
               <CommonSelect
                 options={serviceOptions}
                 label="service"
