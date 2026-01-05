@@ -87,6 +87,7 @@ const Page = () => {
           expiryDate={user?.subscription?.endDate}
           subscription={user?.subscription}
           classCredits= {user?.classCredits}
+          totalClassCredits={user?.totalClassCredits}
         />
       )}
       {currentStep === 2 && (
