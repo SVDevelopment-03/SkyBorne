@@ -123,6 +123,7 @@ export const authApi = createApi({
 export const {
   useRegisterMutation,
   useLazyGetMeQuery,
+  useGetMeQuery,
   useUpdateProfileMutation,
   useGetDashboardStatsQuery,
   usePasswordResetRequestMutation,

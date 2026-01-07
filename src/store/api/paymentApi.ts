@@ -16,6 +16,27 @@ interface AllPaymentsResponse {
     search?: string;
   };
 }
+interface Subscription {
+  _id: string;
+  userId: string;
+  plan: string;
+  status: 'active' | 'cancelled' | 'suspended' | 'expired';
+  startDate: string;
+  endDate: string;
+  amount: number;
+  currency: string;
+  paymentMethod?: string;
+  autoRenew: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface CancelSubscriptionResponse {
+  success: boolean;
+  message: string;
+  subscription?: Subscription;
+}
+
 
 interface PaymentStatsResponse {
   success: boolean;
@@ -112,6 +133,18 @@ export const paymentApi = createApi({
       providesTags: ["Payment"],
     }),
 
+       // =======================================
+    // CANCEL SUBSCRIPTION
+    // =======================================
+    cancelSubscription: builder.mutation<CancelSubscriptionResponse, string>({
+      query: (userId) => ({
+        url: `/subscription/${userId}/cancel`,
+        method: "POST",
+      }),
+      invalidatesTags: ["Payment"],
+    }),
+
+
     // ---------------------------------------
     // GET PAYMENT STATUS
     // ---------------------------------------
@@ -138,6 +171,7 @@ export const {
   useGetPaymentHistoryQuery,
   useGetPaymentStatsQuery,
   useGetAllPaymentsQuery,
+  useCancelSubscriptionMutation,
   useGetAdminPaymentStatsQuery,
   useCreatePaymentVerificationMutation,
   useGetPaymentStatusQuery,
