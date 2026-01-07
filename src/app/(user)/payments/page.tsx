@@ -18,10 +18,14 @@ import {
   XCircle,
   Loader2,
 } from 'lucide-react';
-import { useEffect, useMemo } from 'react';
-import { useGetPaymentHistoryQuery, useGetPaymentStatsQuery } from '@/store/api/paymentApi';
+import { useEffect, useMemo, useState } from 'react';
+import { useCancelSubscriptionMutation, useGetPaymentHistoryQuery, useGetPaymentStatsQuery } from '@/store/api/paymentApi';
 import { useSelector } from 'react-redux';
 import useGetUser from '@/hooks/useGetUser';
+import { handleDeleteTrainer } from '@/utils/handleDeleteAlert';
+import Swal from 'sweetalert2';
+import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 export interface Payment {
   _id: string;
@@ -39,9 +43,15 @@ export interface Payment {
 }
 
 function UserPayments() {
+    const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
+    const router = useRouter();
+
   // Get userId from Redux or auth state
   const userId = useSelector((state: any) => state.auth.user?._id);
   const { user } = useGetUser();
+
+    const [cancelSubscription] = useCancelSubscriptionMutation();
+
 
   // RTK Query hooks
   const { data: paymentHistoryData, isLoading: isLoadingHistory } = useGetPaymentHistoryQuery(userId, {
@@ -181,6 +191,52 @@ function UserPayments() {
 
   const isLoading = isLoadingHistory || isLoadingStats;
 
+    // Handle cancel subscription
+  const handleCancelSubscription = async () => {
+    const confirmDelete = await Swal.fire({
+      title: "Cancel Subscription?",
+      html: `
+        <p class="text-center mb-3">
+          Are you sure you want to cancel your <strong>${formatPlanName(plan)}</strong> subscription?
+        </p>
+        <p class="text-sm text-gray-600 text-center">
+          You will lose access to premium features after <strong>${formatDate(subscription.endDate || new Date().toISOString())}</strong>.
+        </p>
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Cancel Subscription",
+      cancelButtonText: "Keep Subscription",
+      buttonsStyling: false,
+      customClass: {
+        confirmButton: "swal-confirm-btn px-6 py-2 rounded-md font-semibold text-white bg-red-500 hover:bg-red-600",
+        cancelButton: "swal-cancel-btn px-6 py-2 rounded-md font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 ml-3",
+      },
+      allowOutsideClick: false,
+    });
+
+    if (confirmDelete.isConfirmed) {
+      try {
+        setIsCancellingSubscription(true);
+        
+        await cancelSubscription(userId).unwrap();
+        
+        toast.success('Subscription cancelled successfully');
+        
+        // Refetch user data to update subscription status
+        // await refetchUser();
+      } catch (error) {
+        console.error('Error cancelling subscription:', error);
+        const errorMessage =
+          error instanceof Error ? error.message : 'Failed to cancel subscription';
+        toast.error(errorMessage);
+      } finally {
+        setIsCancellingSubscription(false);
+      }
+    }
+  };
+
+
   return (
     <div className="p-4 lg:p-8 space-y-6">
       {/* Header */}
@@ -291,15 +347,13 @@ function UserPayments() {
                   </div>
                 </div>
               </div>
-              {/* <Button
-                className="bg-white text-[#5eb9b4] hover:bg-gray-100 font-semibold"
+              <Button
+                className="bg-white text-[#B95E82] font-semibold"
                 style={{ borderRadius: '12px' }}
-                onClick={() => {
-                  console.log('Manage subscription');
-                }}
+                onClick={() => handleCancelSubscription()}
               >
-                Manage Subscription
-              </Button> */}
+                Cancel Subscription
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -329,11 +383,10 @@ function UserPayments() {
                 </div>
               </div>
               <Button
-                className="bg-[#5eb9b4] text-white hover:bg-[#4a9d98]"
+                variant={"theme"}
                 style={{ borderRadius: '12px' }}
                 onClick={() => {
-                  // TODO: Add navigation to plans page
-                  console.log('Navigate to plans');
+                  router.push('/user-packages');
                 }}
               >
                 <Plus className="w-4 h-4 mr-2" />
