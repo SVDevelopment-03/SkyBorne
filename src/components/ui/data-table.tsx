@@ -63,13 +63,16 @@ export function DataTable<TData, TValue>({
             >
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id} className="px-5 py-4 first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
+                  <TableHead
+                    key={header.id}
+                    className="px-5 py-4 first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg"
+                  >
                     <span className="font-bold text-black text-[17px]">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
                             header.column.columnDef.header,
-                            header.getContext()
+                            header.getContext(),
                           )}
                     </span>
                   </TableHead>
@@ -87,7 +90,10 @@ export function DataTable<TData, TValue>({
           {isLoadingData ? (
             <tr className="w-full rounded-lg">
               {columns.map((column) => (
-                <td key={column.id} className="w-full first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
+                <td
+                  key={column.id}
+                  className="w-full first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg"
+                >
                   <Skeleton className="w-full h-8 p-3" />
                 </td>
               ))}
@@ -112,8 +118,7 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                <Typography title="No Completed sessions yet"/>
-                
+                <Typography title="No Record found" />
               </TableCell>
             </TableRow>
           )}
