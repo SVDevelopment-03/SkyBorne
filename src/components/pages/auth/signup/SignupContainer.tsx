@@ -53,8 +53,7 @@ const WelcomeScreen = () => {
                   src={"/images/logo.png"}
                   alt="Skyborne Drop Logo"
                   width={44}
-                  height={50}
-                  className="object-cover w-7 md:w-11 h-8 md:h-[50px]"
+                  height={44}
                 />
               </Link>
             </div>
