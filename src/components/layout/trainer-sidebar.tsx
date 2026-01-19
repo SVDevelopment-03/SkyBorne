@@ -1,5 +1,9 @@
 "use client";
-import { AdminNav, SidebarNav, TrainerNav } from "@/constants/dashboard.constant";
+import {
+  AdminNav,
+  SidebarNav,
+  TrainerNav,
+} from "@/constants/dashboard.constant";
 import { InfoIcon } from "@/icons/dashboardIcon";
 import Image from "next/image";
 import Link from "next/link";
@@ -38,10 +42,12 @@ const TrainerSidebar = () => {
           <div className="image shrink-0">
             <Link href={"/"} className="cursor-pointer">
               <Image
-                src={"/images/logo.png"}
+                src="/images/logo.png"
                 alt="Skyborne Drop Logo"
-                width={44}
-                height={44}
+                priority
+                width={448}
+                height={512}
+                className="w-11"
               />
             </Link>
           </div>
@@ -65,7 +71,7 @@ const TrainerSidebar = () => {
                     pathname === item.url ||
                     (item.items &&
                       item.items.some((subItem) =>
-                        pathname.startsWith(subItem)
+                        pathname.startsWith(subItem),
                       ))
                       ? "shadow-[0px_3.52px_5.29px_-3.52px_#0000001A,0px_8.81px_13.22px_-2.64px_#0000001A] bg-[#B95E82] text-[#FFF7DD]"
                       : "bg-white/0 text-[#494949]"

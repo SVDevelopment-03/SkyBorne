@@ -50,10 +50,12 @@ const WelcomeScreen = () => {
             <div className="image shrink-0">
               <Link href={"/"} className="cursor-pointer">
                 <Image
-                  src={"/images/logo.png"}
+                  src="/images/logo.png"
                   alt="Skyborne Drop Logo"
-                  width={44}
-                  height={44}
+                  priority
+                  width={448}
+                  height={512}
+                  className="w-11"
                 />
               </Link>
             </div>

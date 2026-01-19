@@ -20,9 +20,12 @@ import useGetUser from "@/hooks/useGetUser";
 
 const Header = ({ isHero }: { isHero?: boolean }) => {
   const router = useRouter();
-    const {user} = useGetUser();
-    const avatarName = user?.firstName[0] + (user?.lastName ? user?.lastName[0] :'' );
-      const fullName =toTitleCase( user?.firstName +' ' + (user?.lastName ? user?.lastName :'' ));
+  const { user } = useGetUser();
+  const avatarName =
+    user?.firstName[0] + (user?.lastName ? user?.lastName[0] : "");
+  const fullName = toTitleCase(
+    user?.firstName + " " + (user?.lastName ? user?.lastName : ""),
+  );
   const menuDetail = [
     {
       title: "Home",
@@ -58,17 +61,16 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
     },
   ];
 
-  const handleClick = () =>{
-    if(user?.role == "admin"){
-      router.push("/admin-dashboard")
+  const handleClick = () => {
+    if (user?.role == "admin") {
+      router.push("/admin-dashboard");
     }
-      if(user?.role == "trainer"){
-      router.push("/trainer-dashboard")
+    if (user?.role == "trainer") {
+      router.push("/trainer-dashboard");
+    } else {
+      router.push("/dashboard");
     }
-    else{
-      router.push("/dashboard")
-    }
-  }
+  };
 
   return (
     <div className="flex items-center justify-between">
@@ -80,10 +82,12 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
         <div className="image shrink-0">
           <Link href={"/"} className="cursor-pointer">
             <Image
-              src={"/images/logo.png"}
+              src="/images/logo.png"
               alt="Skyborne Drop Logo"
-              width={44}
-              height={44}
+              priority
+              width={448}
+              height={512}
+              className="w-11"
             />
           </Link>
         </div>
@@ -100,29 +104,35 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
         </Link>
       </div>
       <div className="relative flex items-center gap-3.5">
-      {!user ?   <>
-         <Button
-          className={`${
-            !isHero && "bg-[#FFFFFF] text-[#000000]"
-          } max-md:py-1 max-md:px-4 `}
-          onClick={() => router.push("/login")}
-        >
-          Login
-        </Button>
-        <Button
-          className={`${
-            !isHero && "bg-[#FFFFFF] text-[#000000]"
-          } max-md:py-1 max-md:px-4 `}
-          onClick={() => router.push("/signup")}
-        >
-          Signup
-        </Button>
-        </>
-      :   <>
-              <div className="flex items-center cursor-pointer" onClick={handleClick}>
-                <UserAvatar name={avatarName}/>
-              </div>
-            </>}
+        {!user ? (
+          <>
+            <Button
+              className={`${
+                !isHero && "bg-[#FFFFFF] text-[#000000]"
+              } max-md:py-1 max-md:px-4 `}
+              onClick={() => router.push("/login")}
+            >
+              Login
+            </Button>
+            <Button
+              className={`${
+                !isHero && "bg-[#FFFFFF] text-[#000000]"
+              } max-md:py-1 max-md:px-4 `}
+              onClick={() => router.push("/signup")}
+            >
+              Signup
+            </Button>
+          </>
+        ) : (
+          <>
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={handleClick}
+            >
+              <UserAvatar name={avatarName} />
+            </div>
+          </>
+        )}
         <DropdownMenu>
           <DropdownMenuTrigger>
             <div className="image rounded-full">

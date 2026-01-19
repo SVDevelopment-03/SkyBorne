@@ -29,10 +29,12 @@ const Sidebar = () => {
           <div className="image shrink-0">
             <Link href={"/"} className="cursor-pointer">
               <Image
-                src={"/images/logo.png"}
+                src="/images/logo.png"
                 alt="Skyborne Drop Logo"
-                width={44}
-                height={44}
+                priority
+                width={448}
+                height={512}
+                className="w-11"
               />
             </Link>
           </div>
@@ -48,10 +50,7 @@ const Sidebar = () => {
         </div>
         <div className="flex flex-col justify-center gap-2.5 md:gap-4">
           {SidebarNav.navMain.map((item) => (
-            <div
-              className=""
-              key={item?.title}
-            >
+            <div className="" key={item?.title}>
               {!item?.logout && (
                 <Link
                   href={item?.url}
@@ -113,8 +112,11 @@ const Sidebar = () => {
                 type="regular"
                 cssClass="text-[#717182]! text-[15px]!"
               />
-              <Button variant={"themeRegular"} className="mt-6"
-              onClick={()=>router.push("/contact-us")}>
+              <Button
+                variant={"themeRegular"}
+                className="mt-6"
+                onClick={() => router.push("/contact-us")}
+              >
                 Get Help
               </Button>
             </div>
