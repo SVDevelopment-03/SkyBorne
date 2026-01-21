@@ -55,7 +55,7 @@ export default function Step7Packages() {
        window.location.href = res.paymentLink;
       }, 100);
     } catch (err) {
-      toast.error("Ppaymnent order failed");
+      toast.error("Paymnent order failed");
       console.error(err);
     }
   };
