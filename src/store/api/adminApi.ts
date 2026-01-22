@@ -5,6 +5,7 @@ import { axiosBaseQuery } from "../axiosBaseQuery";
 export interface OverviewStats {
   activeUsers: { value: number; change: number };
   monthlyRevenue: { value: number; change: number };
+  totalRevenue: { value: number; change: number };
   activeTrainers: { value: number; change: number };
   growthRate: { value: number | string; change: number };
   pendingApprovals: { value: number; change: number };
