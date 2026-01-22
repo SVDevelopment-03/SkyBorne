@@ -53,7 +53,7 @@ const Step4 = () => {
       otpSentRef.current = true;
       sendOtp({ email: userEmail });
     }
-  }, [userEmail, sendOtp]);
+  }, [userEmail]);
 
   useEffect(() => {
     if (!canResend && timer > 0) {
