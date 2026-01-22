@@ -240,14 +240,14 @@ const AdminDashboard = () => {
           fontWeight: 500,
           colors: "#000",
         },
-        formatter: (val) => `$${(val / 100).toFixed(0)}`,
+        formatter: (val) => `$${(val ).toFixed(0)}`,
       },
       axisBorder: { show: true, color: "#E8E8E8" },
     },
     tooltip: {
       theme: "light",
       y: {
-        formatter: (val: number) => `$${(val / 100).toFixed(2)}`,
+        formatter: (val: number) => `$${(val).toFixed(2)}`,
       },
     },
     states: {
@@ -458,7 +458,7 @@ const AdminDashboard = () => {
               <>
                 {maxRevenueValue > 0 && (
                   <div className="absolute top-25 right-6 bg-[#b95e82]  font-satoshi-500 text-white text-xs font-bold px-6 py-1 rounded-full">
-                    ${(maxRevenueValue / 100).toFixed(2)}
+                    ${(maxRevenueValue ).toFixed(2)}
                   </div>
                 )}
                 <div className="overflow-x-auto -mx-6">
