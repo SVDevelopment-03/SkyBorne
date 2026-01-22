@@ -37,6 +37,7 @@ const Step4 = () => {
   };
   const [showSuccess, setShowSuccess] = useState(false);
   const otpSentRef = useRef(false);
+  const emailSentToRef = useRef<string | null>(null);
 
   const { step, setStep, totalSteps, updateStepData, formData } = useSignup();
   const userEmail = formData?.step2?.email;
@@ -49,11 +50,14 @@ const Step4 = () => {
 
   useEffect(() => {
     if (!userEmail) return;
-    if (!otpSentRef?.current) {
+    
+    // Only send OTP if we haven't sent it yet to this email
+    if (!otpSentRef.current && emailSentToRef.current !== userEmail) {
       otpSentRef.current = true;
+      emailSentToRef.current = userEmail;
       sendOtp({ email: userEmail });
     }
-  }, [userEmail]);
+  }, [userEmail, sendOtp]);
 
   useEffect(() => {
     if (!canResend && timer > 0) {
@@ -113,6 +117,7 @@ const Step4 = () => {
   const prevStep = () => {
     if (step > 0) setStep(step - 1);
   };
+  
   return (
     <div className="flex flex-col gap-8 md:gap-8 h-full">
       <div className="flex items-start justify-between">
