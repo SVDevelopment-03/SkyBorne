@@ -169,6 +169,7 @@ const Step4 = () => {
                   <InputOTP
                     maxLength={6}
                     value={values?.otp}
+                    autoComplete="one-time-code"
                     onChange={(val) => setFieldValue("otp", val)}
                   >
                     <InputOTPGroup className="flex items-center gap-1.5">
