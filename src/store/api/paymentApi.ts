@@ -16,6 +16,7 @@ interface AllPaymentsResponse {
     search?: string;
   };
 }
+
 interface Subscription {
   _id: string;
   userId: string;
@@ -36,7 +37,6 @@ interface CancelSubscriptionResponse {
   message: string;
   subscription?: Subscription;
 }
-
 
 interface PaymentStatsResponse {
   success: boolean;
@@ -60,6 +60,13 @@ interface AllPaymentsParams {
   status?: string;
   page?: number;
   limit?: number;
+  country?: string;
+}
+
+interface ExportPaymentsParams {
+  search?: string;
+  status?: string;
+  country?: string;
 }
 
 export const paymentApi = createApi({
@@ -80,7 +87,6 @@ export const paymentApi = createApi({
       }),
       invalidatesTags: ["Payment"],
     }),
-
 
     // =======================================
     // GET PAYMENT HISTORY
@@ -104,8 +110,8 @@ export const paymentApi = createApi({
       providesTags: ["Payment"],
     }),
 
-     // =======================================
-    // ✅ NEW: GET ALL PAYMENTS (ADMIN)
+    // =======================================
+    // GET ALL PAYMENTS (ADMIN)
     // =======================================
     getAllPayments: builder.query<AllPaymentsResponse, AllPaymentsParams>({
       query: (params) => {
@@ -125,7 +131,10 @@ export const paymentApi = createApi({
       providesTags: ["Payment"],
     }),
 
-     getAdminPaymentStats: builder.query<PaymentStatsResponse, void>({
+    // =======================================
+    // GET ADMIN PAYMENT STATS
+    // =======================================
+    getAdminPaymentStats: builder.query<PaymentStatsResponse, void>({
       query: () => ({
         url: "/payment/admin/stats",
         method: "GET",
@@ -133,7 +142,27 @@ export const paymentApi = createApi({
       providesTags: ["Payment"],
     }),
 
-       // =======================================
+    // =======================================
+    // EXPORT PAYMENTS AS CSV
+    // =======================================
+    exportPaymentsCSV: builder.mutation<string, ExportPaymentsParams>({
+      query: (params) => {
+        const filteredParams = Object.fromEntries(
+          Object.entries(params || {}).filter(
+            ([_, v]) => v !== undefined && v !== null && v !== ''
+          )
+        );
+
+        return {
+          url: "/payment/admin/export",
+          method: "GET",
+          params: filteredParams,
+          responseType: "text", // Expect CSV text
+        };
+      },
+    }),
+
+    // =======================================
     // CANCEL SUBSCRIPTION
     // =======================================
     cancelSubscription: builder.mutation<CancelSubscriptionResponse, string>({
@@ -143,7 +172,6 @@ export const paymentApi = createApi({
       }),
       invalidatesTags: ["Payment"],
     }),
-
 
     // ---------------------------------------
     // GET PAYMENT STATUS
@@ -155,6 +183,10 @@ export const paymentApi = createApi({
       }),
       providesTags: ["Payment"],
     }),
+
+    // ---------------------------------------
+    // VERIFY PAYMENT
+    // ---------------------------------------
     createPaymentVerification: builder.mutation({
       query: (body) => ({
         url: "/payment/verify-payment",
@@ -171,6 +203,7 @@ export const {
   useGetPaymentHistoryQuery,
   useGetPaymentStatsQuery,
   useGetAllPaymentsQuery,
+  useExportPaymentsCSVMutation,
   useCancelSubscriptionMutation,
   useGetAdminPaymentStatsQuery,
   useCreatePaymentVerificationMutation,

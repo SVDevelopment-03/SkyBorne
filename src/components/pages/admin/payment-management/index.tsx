@@ -18,12 +18,13 @@ import {
   Search,
   Filter,
   Loader,
+  FileDown,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import {
   useGetAdminPaymentStatsQuery,
   useGetAllPaymentsQuery,
-  useGetPaymentStatsQuery,
+  useExportPaymentsCSVMutation,
 } from "@/store/api/paymentApi";
 import MainListHeading from "@/components/ui/MainListHeading";
 import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
@@ -31,6 +32,8 @@ import { SearchIcon } from "@/icons/helpIcon";
 import { Input2 } from "@/components/ui/input";
 import { CommonSelect } from "@/components/ui/CountrySelect";
 import CustomPagination from "@/components/ui/CustromPagination";
+import countryList from "react-select-country-list";
+import toast from "react-hot-toast";
 
 export interface AdminPayment {
   _id: string;
@@ -48,24 +51,31 @@ export interface AdminPayment {
   createdAt: string;
   updatedAt: string;
   paymentMethod?: string;
+  country?: string;
 }
 
 function AdminPayments() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
-    const [page, setPage] = useState(1);
-  
+  const [filterCountry, setFilterCountry] = useState("all");
+  const [page, setPage] = useState(1);
 
-  // RTK Query hooks for admin - get all payments
-  const { data: paymentData, isLoading: isLoadingHistory,isFetching } =
-    useGetAllPaymentsQuery({
-      search: searchTerm,
-      status: filterStatus !== "all" ? filterStatus : undefined,
-      page: page,
-    });
+  // RTK Query hooks
+  const {
+    data: paymentData,
+    isLoading: isLoadingHistory,
+    isFetching,
+  } = useGetAllPaymentsQuery({
+    search: searchTerm,
+    status: filterStatus !== "all" ? filterStatus : undefined,
+    country: filterCountry !== "all" ? filterCountry : undefined,
+    page: page,
+  });
 
   const { data: paymentStatsData, isLoading: isLoadingStats } =
     useGetAdminPaymentStatsQuery(undefined);
+
+  const [exportCSV, { isLoading: isExporting }] = useExportPaymentsCSVMutation();
 
   const totalPages = paymentData?.totalPages || 1;
 
@@ -73,8 +83,20 @@ function AdminPayments() {
   const payments = useMemo(() => paymentData?.payments || [], [paymentData]);
   const stats = useMemo(
     () => paymentStatsData?.stats || {},
-    [paymentStatsData]
+    [paymentStatsData],
   );
+
+  // Get country options
+  const countryOptions = useMemo(() => {
+    const countries = countryList().getData();
+    return [
+      { value: "all", label: "All Countries" },
+      ...countries.map((c) => ({
+        value: c.value.toUpperCase(),
+        label: c.label,
+      })),
+    ];
+  }, []);
 
   // Format date utility
   const formatDate = (dateString: string) => {
@@ -121,6 +143,43 @@ function AdminPayments() {
     { value: "PENDING", label: "Pending" },
     { value: "FAILED", label: "Failed" },
   ];
+
+  // Download CSV function using API
+  const downloadCSV = async () => {
+    try {
+      const params: any = {
+        search: searchTerm || undefined,
+        status: filterStatus !== "all" ? filterStatus : undefined,
+        country: filterCountry !== "all" ? filterCountry : undefined,
+      };
+
+      // Get CSV text from API
+      const csvText = await exportCSV(params).unwrap();
+
+      // Create blob from text
+      const blob = new Blob([csvText], { type: 'text/csv;charset=utf-8;' });
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `payments_${new Date().toISOString().split("T")[0]}.csv`
+      );
+      document.body.appendChild(link);
+      link.click();
+      
+      // Cleanup
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV exported successfully");
+    } catch (error: any) {
+      console.error("Export error:", error);
+      toast.error(error?.data?.message || error?.message || "Failed to export CSV");
+    }
+  };
 
   // Define table columns
   const columns: ColumnDef<AdminPayment>[] = [
@@ -170,6 +229,15 @@ function AdminPayments() {
       ),
     },
     {
+      accessorKey: "country",
+      header: "Country",
+      cell: ({ row }) => (
+        <div className="text-sm text-[#1A1A1A]">
+          {row.original.country || "N/A"}
+        </div>
+      ),
+    },
+    {
       accessorKey: "amount",
       header: "Amount",
       cell: ({ row }) => (
@@ -191,8 +259,8 @@ function AdminPayments() {
               isCompleted
                 ? "bg-[#27AE60]/10 text-[#27AE60]"
                 : status === "FAILED"
-                ? "bg-[#e74c3c]/10 text-[#e74c3c]"
-                : "bg-[#f4b942]/10 text-[#f4b942]"
+                  ? "bg-[#e74c3c]/10 text-[#e74c3c]"
+                  : "bg-[#f4b942]/10 text-[#f4b942]"
             }`}
             style={{ borderRadius: "8px" }}
           >
@@ -208,23 +276,6 @@ function AdminPayments() {
         );
       },
     },
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   cell: ({ row }) => (
-    //     <Button
-    //       size="sm"
-    //       variant="ghost"
-    //       className="text-[#b95e82] hover:bg-[#b95e82]/10"
-    //       onClick={() => {
-    //         // TODO: Implement invoice download or view details
-    //         console.log("View/Download invoice:", row.original._id);
-    //       }}
-    //     >
-    //       <Download className="w-4 h-4" />
-    //     </Button>
-    //   ),
-    // },
   ];
 
   const isLoading = isLoadingHistory || isLoadingStats;
@@ -239,6 +290,8 @@ function AdminPayments() {
           href="/payment-management"
         />
       </div>
+
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
           <CardContent className="p-6">
@@ -301,6 +354,7 @@ function AdminPayments() {
             </div>
           </CardContent>
         </Card>
+
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -322,36 +376,76 @@ function AdminPayments() {
         </Card>
       </div>
 
+      {/* Main Content */}
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
-        {/* Search and Create Button */}
+        {/* Search, Filters and Export Button */}
         <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
+            {/* Search Input */}
             <div className="relative">
               <Input2
                 placeholder="Search by name or service"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
                 name="search"
-                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] min-w-[260px] md:min-w-[450px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
+                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] min-w-[260px] md:min-w-[300px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
               />
               <SearchIcon />
             </div>
-            <div className="w-full">
+
+            {/* Status Filter */}
+            <div className="w-full md:w-auto">
               <CommonSelect
                 label="Payment Status"
                 showLabel={false}
                 options={paymentStatusOptions}
-                cssProp="min-h-[45px]! min-w-[300px]!"
+                cssProp="min-h-[45px]! md:min-w-[200px]!"
                 value={filterStatus}
-                onChange={(e) => setFilterStatus(e)}
+                onChange={(e) => {
+                  setFilterStatus(e);
+                  setPage(1);
+                }}
+              />
+            </div>
+
+            {/* Country Filter */}
+            <div className="w-full md:w-auto">
+              <CommonSelect
+                label="Country"
+                showLabel={false}
+                options={countryOptions}
+                cssProp="min-h-[45px]! md:min-w-[200px]!"
+                value={filterCountry}
+                onChange={(e) => {
+                  setFilterCountry(e);
+                  setPage(1);
+                }}
               />
             </div>
           </div>
+
+          {/* Download CSV Button */}
+          <Button
+            onClick={downloadCSV}
+            variant="themeRegular"
+            className="rounded-[10px] py-3!"
+            disabled={isExporting || payments.length === 0}
+          >
+            {isExporting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4" />
+            )}
+            Download CSV
+          </Button>
         </div>
 
         {/* Data Table */}
         <div className="flex flex-col w-full relative">
-           {(isFetching) && (
+          {isFetching && (
             <div className="col-span-full flex justify-center h-full absolute items-center w-full z-50">
               <div className="flex flex-col items-center gap-2">
                 <Loader className="w-8 h-8 animate-spin text-[#b95e82]" />
@@ -364,17 +458,18 @@ function AdminPayments() {
             isLoadingData={isLoadingHistory}
           />
         </div>
-         {/* Pagination Controls */}
-                {totalPages > 1 && (
-                  <div className="flex items-center justify-center pt-4">
-                    <CustomPagination
-                      totalPages={totalPages}
-                      currentPage={page}
-                      onPageChange={setPage}
-                      visiblePages={3}
-                    />
-                  </div>
-                )}
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center pt-4">
+            <CustomPagination
+              totalPages={totalPages}
+              currentPage={page}
+              onPageChange={setPage}
+              visiblePages={3}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

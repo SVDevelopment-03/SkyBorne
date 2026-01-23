@@ -1,15 +1,16 @@
-
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
 
 export interface User {
   _id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
-  phone?: string;
+  phoneNumber?: string;
   country?: string;
+  countryCode?: string;
   plan?: string;
-  status: "active" | "inactive" | "blocked";
+  isActive: boolean;
   createdAt: string;
 }
 
@@ -20,10 +21,30 @@ export interface GetUsersResponse {
     pagination: {
       currentPage: number;
       totalPages: number;
-      totalCount: number;
+      total: number;
       limit: number;
     };
   };
+}
+
+export interface GetAllUsersExportResponse {
+  success: boolean;
+  data: {
+    users: User[];
+    total: number;
+  };
+}
+
+export interface GetUsersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  country?: string;
+}
+
+export interface ExportUsersParams {
+  search?: string;
+  country?: string;
 }
 
 export const userApi = createApi({
@@ -31,16 +52,43 @@ export const userApi = createApi({
   baseQuery: axiosBaseQuery(),
   tagTypes: ["Users"],
   endpoints: (builder) => ({
-    getUsers: builder.query<
-      GetUsersResponse,
-      { page?: number; limit?: number; search?: string }
-    >({
-      query: ({ page = 1, limit = 10, search = "" }) => ({
-        url: "/users",
-        method: "GET",
-        params: { page, limit, search },
-      }),
+    getUsers: builder.query<GetUsersResponse, GetUsersParams>({
+      query: (params) => {
+        // Filter out undefined/null/empty values from params
+        const filteredParams = Object.fromEntries(
+          Object.entries(params || {}).filter(
+            ([_, v]) => v !== undefined && v !== null && v !== ''
+          )
+        );
+
+        return {
+          url: "/users",
+          method: "GET",
+          params: filteredParams,
+        };
+      },
       providesTags: ["Users"],
+    }),
+
+    // =======================================
+    // NEW: GET ALL USERS FOR EXPORT (NO PAGINATION)
+    // =======================================
+     // Export users as CSV (returns blob)
+    exportUsersCSV: builder.mutation<Blob, ExportUsersParams>({
+      query: (params) => {
+        const filteredParams = Object.fromEntries(
+          Object.entries(params || {}).filter(
+            ([_, v]) => v !== undefined && v !== null && v !== ''
+          )
+        );
+
+        return {
+          url: "/user-export",
+          method: "GET",
+          params: filteredParams,
+          responseType: "blob", // Important: tells axios to expect binary data
+        };
+      },
     }),
 
     updateUserStatus: builder.mutation<
@@ -60,4 +108,8 @@ export const userApi = createApi({
   }),
 });
 
-export const { useGetUsersQuery, useUpdateUserStatusMutation } = userApi;
+export const {
+  useGetUsersQuery,
+  useExportUsersCSVMutation,
+  useUpdateUserStatusMutation,
+} = userApi;

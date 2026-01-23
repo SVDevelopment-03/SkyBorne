@@ -87,7 +87,7 @@ export const columns = (
     accessorKey: "country",
     header: "Country",
     cell: ({ row }) => (
-      <div className="text-[16px] font-satoshi-500 uppercase text-[#666666]">
+      <div className="text-[16px] font-satoshi-500 text-[#666666]">
         {row.original.country || "—"}
       </div>
     ),
