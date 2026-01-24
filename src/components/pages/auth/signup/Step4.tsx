@@ -50,7 +50,7 @@ const Step4 = () => {
 
   useEffect(() => {
     if (!userEmail) return;
-    
+
     // Only send OTP if we haven't sent it yet to this email
     if (!otpSentRef.current && emailSentToRef.current !== userEmail) {
       otpSentRef.current = true;
@@ -117,7 +117,7 @@ const Step4 = () => {
   const prevStep = () => {
     if (step > 0) setStep(step - 1);
   };
-  
+
   return (
     <div className="flex flex-col gap-8 md:gap-8 h-full">
       <div className="flex items-start justify-between">
@@ -202,6 +202,13 @@ const Step4 = () => {
                       </span>
                     </p>
                   )}
+                  <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
+                    <p className="font-satoshi-500 text-lg font-normal leading-5 text-[#6A7282] mt-5">
+                      Note: Due to temporary delays in email delivery services,
+                      your verification code may take a little longer to arrive.
+                      Thank you for your patience.
+                    </p>
+                  </p>
                 </div>
               </div>
 
