@@ -14,6 +14,9 @@ interface PaymentData {
   currency: string;
   status: string;
   success: boolean;
+  user?: {
+    onboardingCompleted: boolean;
+  };
 }
 
 export default function PaymentSuccess() {
@@ -27,12 +30,10 @@ export default function PaymentSuccess() {
 
   const [verifyPayment, { isLoading }] = useCreatePaymentVerificationMutation();
   
-  // ✅ NEW: Use ref to track if effect has already run
   const hasCalledVerify = useRef(false);
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // ✅ NEW: Prevent double execution
     if (hasCalledVerify.current) {
       console.log("⚠️ Effect already executed, skipping...");
       return;
@@ -40,24 +41,14 @@ export default function PaymentSuccess() {
 
     if (!searchParams) return;
     
-    // Handle both nGenius (ref) and Stripe (sessionId) parameters
     const orderRef = localStorage.getItem("orderRef");
     const reference = searchParams.get('ref');
     const sessionId = searchParams.get('sessionId');
 
-    // For Stripe: sessionId is the checkout session ID
-    // For nGenius: ref is the reference
     const paymentReference = sessionId || reference;
 
-    if (!paymentReference) {
-      setTimeout(() => {
-        setError('Payment reference not found');
-        setLoading(false);
-      }, 0);
-      return;
-    }
+  
 
-    // ✅ NEW: Mark that we've started the verification
     hasCalledVerify.current = true;
 
     const handleVerify = async () => {
@@ -66,66 +57,69 @@ export default function PaymentSuccess() {
           reference: paymentReference,
         };
 
-        // Add orderRef if available (for nGenius)
         if (orderRef) {
           verifyPayload.orderRef = orderRef;
         }
 
-        // Add sessionId if this is Stripe payment
         if (sessionId) {
-          verifyPayload.paymentIntentId = sessionId; // Stripe uses sessionId as paymentIntentId
+          verifyPayload.paymentIntentId = sessionId;
         }
 
         console.log("📤 Sending verification request:", verifyPayload);
 
         const response: any = await verifyPayment(verifyPayload).unwrap();
+        console.log("📥 Verification response:", response?.user,  response?.user?.onboardingCompleted );
 
-        console.log("📥 Verification response:", response);
-
-        // ✅ Check if payment is successful
-        if (response.success) {
+        // ✅ NEW LOGIC: Check user.onboardingCompleted instead of response.success
+        if (response?.user?.onboardingCompleted === true) {
+          // Payment succeeded and subscription is activated
           setPaymentData(response);
           setLoading(false);
           setAutoRetrying(false);
-          console.log("✅ Payment verified successfully!");
-        } else if (response.status === "PENDING" && retryCount < 5) {
-          // ✅ If still PENDING, retry after 2 seconds
-          console.log(`⏳ Payment still processing... Retry ${retryCount + 1}/5`);
+          console.log("✅ Payment verified and subscription activated!");
+        } else if (response?.status === "PENDING" && retryCount < 5) {
+          // Still processing, retry after 2 seconds
+          console.log(
+            `⏳ Payment still processing... Retry ${retryCount + 1}/5`
+          );
           setAutoRetrying(true);
-          setPaymentData(response); // Show current status
+          setPaymentData(response);
           
-          // ✅ NEW: Store timeout ref for cleanup
           retryTimeoutRef.current = setTimeout(() => {
             setRetryCount(prev => prev + 1);
             handleVerify();
           }, 2000);
-        } else if (response.status === "PENDING") {
-          // ✅ Max retries reached, still pending
+        } else if (response?.status === "PENDING") {
+          // Max retries reached but still pending
           setPaymentData(response);
           setError("Payment is still processing. Please check back shortly.");
           setLoading(false);
           setAutoRetrying(false);
         } else {
-          // ✅ Payment failed or cancelled
+          // Payment failed or other status
           setPaymentData(response);
           setLoading(false);
           setAutoRetrying(false);
+          
+          // Show error if payment failed
+          if (response?.status !== "COMPLETED") {
+            setError(
+              `Payment ${response?.status?.toLowerCase() || "failed"}. Please try again.`
+            );
+          }
         }
       } catch (err: any) {
         console.error('❌ Error verifying payment:', err);
         
         if (retryCount < 5) {
-          // ✅ Retry on error
           console.log(`⏳ Retrying... Attempt ${retryCount + 1}/5`);
           setAutoRetrying(true);
           
-          // ✅ NEW: Store timeout ref for cleanup
           retryTimeoutRef.current = setTimeout(() => {
             setRetryCount(prev => prev + 1);
             handleVerify();
           }, 2000);
         } else {
-          // ✅ Max retries reached
           setError(err?.data?.error || 'Failed to verify payment');
           setLoading(false);
           setAutoRetrying(false);
@@ -135,15 +129,13 @@ export default function PaymentSuccess() {
 
     handleVerify();
 
-    // ✅ NEW: Cleanup function to clear pending timeouts
     return () => {
       if (retryTimeoutRef.current) {
         clearTimeout(retryTimeoutRef.current);
       }
     };
-  }, []); // ✅ IMPORTANT: Empty dependency array - runs only once on mount
+  }, []);
 
-  // ✅ Loading state
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -155,7 +147,6 @@ export default function PaymentSuccess() {
     );
   }
 
-  // ✅ Auto-retrying state
   if (autoRetrying && paymentData?.status === "PENDING") {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -163,7 +154,9 @@ export default function PaymentSuccess() {
           <div className="mb-6">
             <Loader className="w-16 h-16 text-blue-600 mx-auto animate-spin" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-2">Processing Payment</h1>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            Processing Payment
+          </h1>
           <p className="text-gray-600 mb-4">
             Your payment is being processed. Please wait...
           </p>
@@ -179,26 +172,27 @@ export default function PaymentSuccess() {
             </div>
           </div>
           <p className="text-xs text-gray-500">
-           {` Do not close this page. We'll verify your payment automatically.`}
+            {`Do not close this page. We'll verify your payment automatically.`}
           </p>
         </div>
       </div>
     );
   }
 
-  // ✅ Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-100 p-4">
         <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center">
           <div className="text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Verification Error</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-2">
+            Verification Error
+          </h1>
           <p className="text-gray-600 mb-6">{error}</p>
           
           <div className="flex gap-3">
             <Button
               variant={"themeRect"}
-              onClick={() => router.push('/checkout')}
+              onClick={() => router.push('/dashboard')}
               className="flex-1 transition font-semibold"
             >
               Try Again
@@ -216,13 +210,14 @@ export default function PaymentSuccess() {
     );
   }
 
-  // ✅ Payment failed/cancelled state
-  if (paymentData && !paymentData.success) {
+  if (paymentData && paymentData.user?.onboardingCompleted !== true) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-100 p-4">
         <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center">
           <div className="text-6xl mb-4">❌</div>
-          <h1 className="text-2xl font-bold text-red-600 mb-2">Payment {paymentData.status}</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-2">
+            Payment {paymentData.status}
+          </h1>
           <p className="text-gray-600 mb-6">
             Your payment could not be completed. Please try again.
           </p>
@@ -260,11 +255,9 @@ export default function PaymentSuccess() {
     );
   }
 
-  // ✅ Payment success state
   return (
     <div className="animate-fade-in min-h-[80vh] flex items-center justify-center">
       <div className="text-center max-w-2xl mx-auto">
-        {/* Success Animation */}
         <div className="mb-8 inline-block">
           <div className="relative">
             <div className="absolute inset-0 bg-[#B95E82] rounded-full blur-2xl opacity-20 animate-pulse" />
@@ -273,19 +266,23 @@ export default function PaymentSuccess() {
         </div>
 
         <h1 className="mb-3 text-4xl text-gray-800">{`You're All Set`} 🎉</h1>
-        <p className="text-xl text-gray-600 mb-12">Welcome to Skyborne. Your wellness journey begins now.</p>
+        <p className="text-xl text-gray-600 mb-12">
+          Welcome to Skyborne. Your wellness journey begins now.
+        </p>
 
-        {/* Payment Details */}
         <div className="bg-[#fef9f3] rounded-2xl p-8 shadow-sm border border-[#f0e5d8] mb-8">
           <div className="space-y-4">
             <div className="flex items-start gap-4 text-left">
               <CheckCircle className="w-6 h-6 text-[#B95E82] flex-shrink-0 mt-1" />
               <div>
                 <h3 className="text-lg mb-1 text-gray-800">Payment Confirmed</h3>
-                <p className="text-sm text-gray-600">Your payment has been processed successfully</p>
+                <p className="text-sm text-gray-600">
+                  Your payment has been processed successfully
+                </p>
                 {paymentData && (
                   <p className="text-xs text-gray-500 mt-2">
-                    Order: {paymentData.orderRef} | Amount: {"USD"} {paymentData.amount}
+                    Order: {paymentData.orderRef} | Amount: {paymentData.currency}{" "}
+                    {paymentData.amount}
                   </p>
                 )}
               </div>
@@ -301,7 +298,9 @@ export default function PaymentSuccess() {
               <CheckCircle className="w-6 h-6 text-[#B95E82] flex-shrink-0 mt-1" />
               <div>
                 <h3 className="text-lg mb-1 text-gray-800">Welcome Email Sent</h3>
-                <p className="text-sm text-gray-600">Check your inbox for next steps and class scheduling</p>
+                <p className="text-sm text-gray-600">
+                  Check your inbox for next steps and class scheduling
+                </p>
               </div>
             </div>
           </div>
