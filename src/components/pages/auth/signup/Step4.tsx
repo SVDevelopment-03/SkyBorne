@@ -204,9 +204,9 @@ const Step4 = () => {
                   )}
                   <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
                     <p className="font-satoshi-500 text-lg font-normal leading-5 text-[#6A7282] mt-5">
-                      Note: Due to temporary delays in email delivery services,
-                      your verification code may take a little longer to arrive.
-                      Thank you for your patience.
+                      Note: Due to high traffic on our website, delivery of your
+                      OTP may be delayed by 5 to 10 minutes. Thank you for your
+                      patience.
                     </p>
                   </p>
                 </div>
