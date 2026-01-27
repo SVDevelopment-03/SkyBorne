@@ -10,10 +10,12 @@ const AccordionUi = ({
   trigger,
   content,
   index,
+  videoUrl,
 }: {
   trigger: string;
   content: string;
   index?: number;
+  videoUrl?: string;
 }) => {
   return (
     <Accordion
@@ -28,6 +30,15 @@ const AccordionUi = ({
         </AccordionTrigger>
         <AccordionContent className="bg-[#FFFBF7] px-3 md:px-5 py-2.5 md:py-7 text-xs md:text-sm lg:text-lg font-normal font-montserrat text-left">
           {content}
+          {/* Video (only if present) */}
+          {videoUrl && (
+            <video
+              src={videoUrl}
+              controls
+              preload="metadata"
+              className="w-full max-w-[640px] rounded-xl border border-black/10"
+            />
+          )}
         </AccordionContent>
       </AccordionItem>
     </Accordion>

@@ -8,6 +8,7 @@ import { useGetFAQQuery } from "@/store/api/publicApi";
 export interface IFaq {
   question: string;
   answer: string;
+  videoUrl?: string;
 }
 
 const FAQ = ({ isFaq }: { isFaq?: boolean }) => {
@@ -56,6 +57,7 @@ const FAQ = ({ isFaq }: { isFaq?: boolean }) => {
                         key={i}
                         index={i}
                         trigger={content?.question}
+                        videoUrl={content.videoUrl}
                         content={content?.answer}
                       />
                     ))}
