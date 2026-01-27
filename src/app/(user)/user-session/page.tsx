@@ -13,6 +13,7 @@ import {
   MapPin,
   Loader,
   AlertCircle,
+  PlayCircle,
 } from "lucide-react";
 import {
   useGetUpcomingMeetingsQuery,
@@ -20,6 +21,17 @@ import {
   useLeaveMeetingMutation,
 } from "@/store/api/meetingApi";
 import useGetUser from "@/hooks/useGetUser";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import toast from "react-hot-toast";
+import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow";
 
 interface Session {
   id: string;
@@ -45,12 +57,16 @@ interface Session {
   }>;
   liveRegion: string;
   _id: string;
+  joined?: boolean;
 }
 
 export default function UserSessions() {
   const { user } = useGetUser();
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [showClassModal, setShowClassModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [showZoomFlow, setShowZoomFlow] = useState(false);
 
   // RTK Query hooks
   const {
@@ -63,7 +79,7 @@ export default function UserSessions() {
     search: searchQuery,
   });
 
-  const [joinMeeting] = useJoinMeetingMutation();
+  const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
 
   // Transform and filter meetings
@@ -96,6 +112,7 @@ export default function UserSessions() {
       regions: meeting.regions,
       liveRegion: meeting.liveRegion,
       _id: meeting._id,
+      joined: meeting.joined || false,
     })
   );
 
@@ -113,20 +130,56 @@ export default function UserSessions() {
     (s) => s.status === "completed"
   ).length;
 
-  const handleJoinSession = async (session: Session) => {
+  const handleJoinClass = (session: Session) => {
+    const classItem = {
+      meetingId: session._id,
+      userId: user?.id,
+      joined: session.joined,
+      participants: [],
+      participantsCount: 0,
+      image: "/images/upcoming-ico.jpg",
+      time: session.time,
+      startTime: session.localTime,
+      date: session.date,
+      title: session.name,
+      duration: `${session.duration} min`,
+      trainer: session.trainer,
+    };
+
+    setSelectedClass(classItem);
+    setShowClassModal(true);
+    toast.success(`You're set for ${session.name}!`);
+  };
+
+  const handleJoinMeeting = async (session: Session) => {
+    if (!session._id || !user?.id || !session.liveRegion) {
+      toast.error("Missing meeting or user information");
+      return;
+    }
+
     try {
-      const result = await joinMeeting({
+      const res = await joinMeeting({
         meetingId: session._id,
         userId: user?.id,
-        region: session.liveRegion || "Global",
+        region: session.liveRegion,
       }).unwrap();
+      const joinUrl = res?.data?.accessUrl;
 
-      if (result.success) {
-        window.open(result.data.accessUrl, "_blank");
+      if (joinUrl) {
+        toast.success("Joining meeting...");
+        window.open(
+          joinUrl,
+          "zoomMeetingPopup",
+          "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
+        );
+      } else {
+        toast.error("Join URL not found");
       }
     } catch (err: any) {
-      console.error("Error joining session:", err);
-      alert(err?.data?.message || "Failed to join session");
+      console.error("Join meeting error:", err);
+      toast.error(
+        err?.data?.message || err?.message || "Failed to join meeting"
+      );
     }
   };
 
@@ -320,15 +373,14 @@ export default function UserSessions() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredSessions.map((session) => {
-            const startTime = new Date(session?.localTime as string); // e.g., 2025-12-10T08:30:00.000Z
+            const startTime = new Date(session?.localTime as string);
             const now = new Date();
 
-            // calculate difference in minutes
             const diffMs = startTime.getTime() - now.getTime();
             const diffMinutes = diffMs / 1000 / 60;
 
-            // allow joining only when remaining time <= 5 minutes
             const isJoinDisabled = diffMinutes > 5;
+
             return (
               <Card
                 key={session.id}
@@ -376,12 +428,6 @@ export default function UserSessions() {
                       <MapPin className="w-4 h-4" />
                       <span className="text-sm">{session.type}</span>
                     </div>
-                    {/* <div className="flex items-center gap-2 text-[#6B6B6B]">
-                    <Users className="w-4 h-4" />
-                    <span className="text-sm">
-                      {session.regions?.length || 1} regions available
-                    </span>
-                  </div> */}
                   </div>
 
                   <div className="flex items-center gap-2 mb-4">
@@ -395,23 +441,18 @@ export default function UserSessions() {
 
                   <div className="flex gap-2">
                     {session.status === "upcoming" ? (
-                      <>
-                        <Button
-                          className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
-                          style={{ borderRadius: "12px" }}
-                          disabled={isJoinDisabled}
-                          onClick={() => handleJoinSession(session)}
-                        >
-                          Join Session
-                        </Button>
-                        {/* <Button 
-                        variant="outline"
-                        className="flex-1 border-[#b95e82] text-[#b95e82] hover:bg-[#b95e82]/10"
-                        style={{ borderRadius: '12px' }}
+                      <Button
+                        className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
+                        style={{ borderRadius: "12px" }}
+                        // disabled={isJoinDisabled || isJoining || session.joined}
+                        onClick={() => handleJoinClass(session)}
                       >
-                        View Details
-                      </Button> */}
-                      </>
+                        {isJoining
+                          ? "Loading..."
+                          : session.joined
+                          ? "Joined"
+                          : "Join Session"}
+                      </Button>
                     ) : (
                       <>
                         <Button
@@ -436,6 +477,98 @@ export default function UserSessions() {
             );
           })}
         </div>
+      )}
+
+      {/* Session Details Modal */}
+      <Dialog open={showClassModal} onOpenChange={setShowClassModal}>
+        <DialogContent className="border-[#f0ccc4]">
+          <DialogHeader>
+            <DialogTitle className="text-[#494949]">
+              Session Details
+            </DialogTitle>
+            <DialogDescription>
+             {` You're all set for`} {selectedClass?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-gradient-to-br from-[#fef9f5] to-[#ffe8e8] rounded-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar className="w-14 h-14">
+                  <AvatarFallback className="bg-gradient-to-br from-[#b95e82] to-[#d97ba3] text-white">
+                    {selectedClass?.trainer
+                      ?.split(" ")
+                      ?.map((n: string) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  {selectedClass?.trainer ? (
+                    <p className="text-[#494949]">{selectedClass?.trainer}</p>
+                  ) : (
+                    <p className="text-sm text-[#717182]">Instructor</p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-[#717182]">
+                  <Calendar className="w-4 h-4" />
+                  {selectedClass?.date} {selectedClass?.time}
+                </div>
+                <div className="flex items-center gap-2 text-[#717182]">
+                  <Clock className="w-4 h-4" />
+                  {selectedClass?.duration}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-900">
+                <strong>Reminder:</strong> Please join the session 5 minutes
+                early to set up your space and equipment.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowClassModal(false)}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm! font-medium transition-all shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background text-foreground hover:bg-[#f0ccc4]! hover:border-[#f0ccc4]! hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4! py-2! has-[>svg]:px-3 border-[#e8eeea]"
+            >
+              Close
+            </Button>
+            <Button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm! font-satoshi-500! transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 h-9 px-4! py-2! has-[>svg]:px-3 bg-gradient-to-r from-[#b95e82] to-[#d97ba3]"
+              onClick={() => {
+                toast.success("Opening session...");
+                setShowClassModal(false);
+                setShowZoomFlow(true);
+              }}
+            >
+              <PlayCircle className="w-4 h-4 mr-2" />
+              Join Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Zoom Session Flow */}
+      {selectedClass && (
+        <ZoomSessionFlow
+          isOpen={showZoomFlow}
+          isLive={
+            filteredSessions.find((s) => s._id === selectedClass.meetingId)
+              ?.regions?.[0]?.mode === "live"
+          }
+          joinMeeting={() =>
+            handleJoinMeeting(
+              filteredSessions.find(
+                (s) => s._id === selectedClass.meetingId
+              ) as Session
+            )
+          }
+          onClose={() => setShowZoomFlow(false)}
+          session={selectedClass}
+        />
       )}
     </div>
   );

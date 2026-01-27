@@ -302,7 +302,7 @@ function AdminPayments() {
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    formatCurrency(stats.totalRevenue || 0)
+                    formatCurrency(stats?.totalRevenue || 0)
                   )}
                 </p>
               </div>
@@ -322,7 +322,7 @@ function AdminPayments() {
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    formatCurrency(stats.thisMonth || 0)
+                    formatCurrency(stats?.thisMonth || 0)
                   )}
                 </p>
               </div>
@@ -344,7 +344,7 @@ function AdminPayments() {
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    stats.totalCount || 0
+                    stats?.completedCount || 0
                   )}
                 </p>
               </div>
@@ -359,12 +359,12 @@ function AdminPayments() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-base text-[#6B6B6B] mb-1">Success Rate</p>
+                <p className="text-base text-[#6B6B6B] mb-1">Total Subscriptions</p>
                 <p className="text-2xl font-semibold text-[#1A1A1A]">
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    `${stats.successRate ? stats.successRate.toFixed(1) : 0}%`
+                    <>{stats.activeSubscriptions ? stats.activeSubscriptions : 0}</>
                   )}
                 </p>
               </div>
@@ -397,7 +397,7 @@ function AdminPayments() {
             </div>
 
             {/* Status Filter */}
-            <div className="w-full md:w-auto">
+            {/* <div className="w-full md:w-auto">
               <CommonSelect
                 label="Payment Status"
                 showLabel={false}
@@ -409,7 +409,7 @@ function AdminPayments() {
                   setPage(1);
                 }}
               />
-            </div>
+            </div> */}
 
             {/* Country Filter */}
             <div className="w-full md:w-auto">
