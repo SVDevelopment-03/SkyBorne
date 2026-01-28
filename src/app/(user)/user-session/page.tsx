@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,6 +32,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
 import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow";
+import { getUserRegion } from "@/utils/timezone";
 
 interface Session {
   id: string;
@@ -67,6 +68,10 @@ export default function UserSessions() {
   const [showClassModal, setShowClassModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [showZoomFlow, setShowZoomFlow] = useState(false);
+  const [userRegion, setUserRegion] = useState<{
+    timezone: string;
+    region: string;
+  } | null>(null);
 
   // RTK Query hooks
   const {
@@ -81,6 +86,75 @@ export default function UserSessions() {
 
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
+
+  useEffect(() => {
+    const region = getUserRegion();
+    console.log("region", region);
+
+    setTimeout(() => {
+      setUserRegion(region);
+    }, 0);
+  }, []);
+
+  const formatDateWithTimezone = (isoString: string, timezone?: string) => {
+    if (!isoString) return "N/A";
+
+    try {
+      const date = new Date(isoString);
+
+      // Validate date
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+
+      // Use timezone if available, otherwise user's local timezone
+      const options = {
+        day: "numeric" as const,
+        month: "short" as const,
+        year: "numeric" as const,
+        timeZone: timezone || undefined,
+      };
+
+      return date.toLocaleDateString("en-GB", options).replace(",", "");
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "N/A";
+    }
+  };
+
+  const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
+    console.log("time", isoString, timezone);
+
+    if (!isoString) return "N/A";
+
+    try {
+      const date = new Date(isoString);
+
+      // Validate date
+      if (isNaN(date.getTime())) {
+        return "Invalid Time";
+      }
+
+      const options = {
+        hour: "numeric" as const,
+        minute: "2-digit" as const,
+        hour12: true,
+        timeZone: timezone || undefined,
+      };
+
+      return date.toLocaleTimeString("en-US", options);
+    } catch (error) {
+      console.error("Time formatting error:", error);
+      return "N/A";
+    }
+  };
+
+  // Combined format: "Oct 28, 2:30 PM"
+  const formatDateTimeWithTimezone = (isoString: string, timezone?: string) => {
+    const date = formatDateWithTimezone(isoString, timezone);
+    const time = formatTimeWithTimezone(isoString, timezone);
+    return `${date}, ${time}`;
+  };
 
   // Transform and filter meetings
   const sessions: Session[] = (meetingsData?.meetings || []).map(
@@ -113,7 +187,7 @@ export default function UserSessions() {
       liveRegion: meeting.liveRegion,
       _id: meeting._id,
       joined: meeting.joined || false,
-    })
+    }),
   );
 
   const filteredSessions = sessions.filter((session) => {
@@ -127,10 +201,22 @@ export default function UserSessions() {
 
   const upcomingCount = sessions.filter((s) => s.status === "upcoming").length;
   const completedCount = sessions.filter(
-    (s) => s.status === "completed"
+    (s) => s.status === "completed",
   ).length;
 
   const handleJoinClass = (session: Session) => {
+    const regionInfo = session?.regions?.find(
+      (r: any) => r.region == userRegion?.region,
+    );
+
+    const formattedTime = formatTimeWithTimezone(
+      session?.localTime,
+      userRegion?.timezone,
+    );
+    const formattedDate = formatDateWithTimezone(
+      session?.localTime,
+      userRegion?.timezone,
+    );
     const classItem = {
       meetingId: session._id,
       userId: user?.id,
@@ -138,9 +224,9 @@ export default function UserSessions() {
       participants: [],
       participantsCount: 0,
       image: "/images/upcoming-ico.jpg",
-      time: session.time,
-      startTime: session.localTime,
-      date: session.date,
+      time: regionInfo?.localTime,
+      startTime: session?.localTime,
+      date: formattedDate,
       title: session.name,
       duration: `${session.duration} min`,
       trainer: session.trainer,
@@ -170,7 +256,7 @@ export default function UserSessions() {
         window.open(
           joinUrl,
           "zoomMeetingPopup",
-          "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
+          "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
         );
       } else {
         toast.error("Join URL not found");
@@ -178,7 +264,7 @@ export default function UserSessions() {
     } catch (err: any) {
       console.error("Join meeting error:", err);
       toast.error(
-        err?.data?.message || err?.message || "Failed to join meeting"
+        err?.data?.message || err?.message || "Failed to join meeting",
       );
     }
   };
@@ -373,6 +459,23 @@ export default function UserSessions() {
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredSessions.map((session) => {
+            const regionInfo = session?.regions?.find(
+              (r: any) => r.region == userRegion?.region,
+            );
+
+            const formattedTime = formatTimeWithTimezone(
+              session?.localTime,
+              userRegion?.timezone,
+            );
+            const formattedDate = formatDateWithTimezone(
+              session?.localTime,
+              userRegion?.timezone,
+            );
+
+            console.log("formatted date:", formattedDate, formattedTime);
+
+            // const trainer = session?.trainer?.name ?? "";
+
             const startTime = new Date(session?.localTime as string);
             const now = new Date();
 
@@ -408,7 +511,7 @@ export default function UserSessions() {
                         </Badge>
                       </div>
                       <p className="text-sm text-[#6B6B6B]">
-                        with {session.trainer}
+                        with {session?.trainer}
                       </p>
                     </div>
                   </div>
@@ -416,12 +519,12 @@ export default function UserSessions() {
                   <div className="space-y-3 mb-4">
                     <div className="flex items-center gap-2 text-[#6B6B6B]">
                       <Calendar className="w-4 h-4" />
-                      <span className="text-sm">{session.date}</span>
+                      <span className="text-sm">{formattedDate}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[#6B6B6B]">
                       <Clock className="w-4 h-4" />
                       <span className="text-sm">
-                        {session.time} • {session.duration} min
+                        {regionInfo?.localTime} • {session.duration} min
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-[#6B6B6B]">
@@ -450,8 +553,8 @@ export default function UserSessions() {
                         {isJoining
                           ? "Loading..."
                           : session.joined
-                          ? "Joined"
-                          : "Join Session"}
+                            ? "Joined"
+                            : "Join Session"}
                       </Button>
                     ) : (
                       <>
@@ -487,7 +590,7 @@ export default function UserSessions() {
               Session Details
             </DialogTitle>
             <DialogDescription>
-             {` You're all set for`} {selectedClass?.title}
+              {` You're all set for`} {selectedClass?.title}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -562,8 +665,8 @@ export default function UserSessions() {
           joinMeeting={() =>
             handleJoinMeeting(
               filteredSessions.find(
-                (s) => s._id === selectedClass.meetingId
-              ) as Session
+                (s) => s._id === selectedClass.meetingId,
+              ) as Session,
             )
           }
           onClose={() => setShowZoomFlow(false)}
