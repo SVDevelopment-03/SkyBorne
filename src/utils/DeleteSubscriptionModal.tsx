@@ -1,8 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { useState, useCallback } from "react";
 import toast from "react-hot-toast";
 import { useCancelSubscriptionMutation } from "@/store/api/paymentApi";
+import { Button } from "@/components/ui/button";
 
 interface DeleteSubscriptionModalProps {
   open: boolean;
@@ -93,15 +96,16 @@ const DeleteSubscriptionModal = ({
           >
             Keep Subscription
           </button>
-          <button
+          <Button
+          variant={"theme"}
             onClick={handleConfirm}
             disabled={isProcessing}
             className={`px-6 py-2 rounded-lg font-satoshi-medium text-white transition text-sm
-              ${isProcessing ? "bg-gray-300 cursor-not-allowed" : "bg-[#f35e82] hover:bg-[#e34d72]"}
+              ${isProcessing ? "bg-gray-300 cursor-not-allowed" : "bg-[#b95e82]"}
             `}
           >
             {isProcessing ? "Processing..." : "Yes, Cancel"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

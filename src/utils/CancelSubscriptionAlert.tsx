@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import { useState, useCallback } from "react";
@@ -6,6 +8,7 @@ import { useSendCancellationReasonMutation } from "@/store/api/paymentApi";
 import useGetUser from "@/hooks/useGetUser";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
+import { Button } from "@/components/ui/button";
 
 interface CancelSubscriptionModalProps {
   open: boolean;
@@ -40,55 +43,14 @@ const CancelSubscriptionModal = ({ open, onClose }: CancelSubscriptionModalProps
       return;
     }
 
-    const result = await Swal.fire({
-      title: "Cancel Subscription?",
-      text: "Are you sure you want to cancel your subscription?",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Cancel",
-      cancelButtonText: "No",
-      buttonsStyling: false,
-      customClass: {
-        confirmButton:
-          "swal-confirm-btn px-6 py-2 rounded-md font-semibold text-white",
-        cancelButton:
-          "swal-cancel-btn px-6 py-2 rounded-md font-semibold border border-black text-black bg-transparent ml-3",
-      },
-    });
-
-    if (!result.isConfirmed) return;
-
     try {
       setIsProcessing(true);
-
-      console.log("📤 Sending cancel subscription reason:", {
-        userId,
-        description: reason,
-      });
-
-      const res = await sendCancellationReason({
-        userId,
-        description: reason,
-      }).unwrap();
-
-      console.log("📥 Cancel subscription response:", res);
-
-      if (res?.success === false) {
-        toast.error(res?.message || "Failed to cancel subscription");
-        return;
-      }
-
-      toast.success(res?.message || "Subscription cancelled successfully!");
+      await sendCancellationReason({ userId, description: reason }).unwrap();
+      toast.success("Cancel request sent successfully");
       onClose();
-    } catch (err: any) {
-      console.error("❌ Cancel subscription error:", err);
-
-      const errorMessage =
-        err?.data?.message ||
-        err?.error ||
-        "Failed to cancel subscription";
-
-      toast.error(errorMessage);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to send cancellation request.");
     } finally {
       setIsProcessing(false);
     }
@@ -111,7 +73,7 @@ const CancelSubscriptionModal = ({ open, onClose }: CancelSubscriptionModalProps
 
         {/* Title */}
         <h2 className="text-2xl md:text-3xl font-satoshi-semibold text-gray-900 mb-3">
-          Cancel Subscription
+          Request to Cancel Subscription
         </h2>
 
         {/* Description */}
@@ -151,19 +113,20 @@ const CancelSubscriptionModal = ({ open, onClose }: CancelSubscriptionModalProps
           >
             Keep Subscription
           </button>
-          <button
+          <Button
             onClick={handleConfirm}
+            variant={"theme"}
             disabled={!isReasonValid || isProcessing}
             className={`px-6 py-2 rounded-lg font-satoshi-medium text-white transition text-sm
               ${
                 isReasonValid
-                  ? "bg-[#f35e82] hover:bg-[#e34d72]"
+                  ? ""
                   : "bg-gray-300 cursor-not-allowed"
               }
             `}
           >
             {isProcessing ? "Processing..." : "Yes, Cancel Subscription"}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

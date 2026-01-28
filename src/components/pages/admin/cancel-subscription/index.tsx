@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 
 import React, { useState, useMemo } from "react";
@@ -27,7 +29,7 @@ const CancelSubscriptionPage = () => {
   const [selectedSubscriptionName, setSelectedSubscriptionName] = useState<string | undefined>(undefined);
 
   // ✅ Use paymentApi query to fetch cancelled subscriptions
-  const { data, isLoading, isFetching, refetch } = useGetCancelledSubscriptionsQuery({
+  const { data, isLoading, isFetching, refetch }:any = useGetCancelledSubscriptionsQuery({
     page,
     limit,
     search: search || undefined,
@@ -43,6 +45,8 @@ const CancelSubscriptionPage = () => {
       _id: s._id || s.subscriptionId,
       name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
       email: s.email || "N/A",
+      userId:s.userId || "",
+      cancelledAt: s.cancelledAt || null,
       description: s.description || "",
       createdAt: s.createdAt || s.updatedAt,
       plan: s.plan || "-", 
@@ -104,7 +108,7 @@ const CancelSubscriptionPage = () => {
               />
               <SearchIcon />
             </div>
-
+{/* 
             <div className="w-full md:w-auto">
               <CommonSelect
                 label="Country"
@@ -114,7 +118,7 @@ const CancelSubscriptionPage = () => {
                 value={filterCountry}
                 onChange={handleCountryFilter}
               />
-            </div>
+            </div> */}
           </div>
         </div>
 

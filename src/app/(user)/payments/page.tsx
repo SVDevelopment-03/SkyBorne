@@ -415,7 +415,7 @@ function UserPayments() {
                 style={{ borderRadius: '12px' }}
                 onClick={() => setShowCancelModal(true)}
               >
-                Cancel Subscription
+                Request Cancellation
               </Button>
             </div>
           </CardContent>

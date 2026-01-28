@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnDef } from "@tanstack/react-table";
 import { Toggle2 } from "@/components/ui/Toggle2";
-import { Trash2 } from "lucide-react";
+import { Trash2, Trash2Icon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const formatDate = (isoDate?: string) => {
   if (!isoDate) return "—";
@@ -21,13 +22,15 @@ export interface CancelSubscriptionRow {
   email: string;
   description: string;
   createdAt: string;
+  cancelledAt?: string;
   plan: string;
+  userId: string;
   status: "active" | "inactive";
 }
 
 export const columns = (
   handleStatusToggle: (id: string, currentStatus: "active" | "inactive") => Promise<void>,
-  handleAction: (id: string) => void
+  handleAction: (id: string, plan: string) => void
 ): ColumnDef<CancelSubscriptionRow>[] => [
   {
     id: "serial",
@@ -51,8 +54,13 @@ export const columns = (
   },
   {
     accessorKey: "createdAt",
-    header: "Created At",
+    header: "Requested At",
     cell: ({ row }) => <span>{formatDate(row.original.createdAt)}</span>,
+  },
+  {
+    accessorKey: "cancelledAt",
+    header: "Cancelled At",
+    cell: ({ row }) => <span>{row.original.cancelledAt ? formatDate(row.original.cancelledAt) : "—"}</span>,
   },
   {
     accessorKey: "plan",
@@ -73,14 +81,20 @@ export const columns = (
   {
     id: "action",
     header: "Action",
-    cell: ({ row }) => (
-      <button
-        className="text-red-500 hover:text-red-700 transition-colors"
-        onClick={() => handleAction(row.original._id, row.original.name)}
-        title="Delete"
-      >
-        <Trash2 className="w-5 h-5" />
-      </button>
-    )
+     cell: ({ row }) => {
+      console.log("row", row.original);
+      
+      return(
+        <div className="flex gap-3">
+          <Button
+            variant="outlineCancel"
+            size="sm"
+            onClick={() => handleAction(row.original.userId,row?.original?.plan)}
+            className="rounded-lg "
+          >
+            <Trash2Icon className="w-4 h-4" />
+          </Button>
+        </div>
+      )},
   },
 ];

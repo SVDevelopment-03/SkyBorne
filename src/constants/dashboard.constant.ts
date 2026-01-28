@@ -17,6 +17,7 @@ import {
   Users,
   MessageSquare,
   CircleDollarSign,
+  TicketX,
 } from "lucide-react";
 
 export const SidebarNav = {
@@ -115,7 +116,7 @@ export const AdminNav = {
      {
       title: "Cancel Subscription",
       url: "/cancel-subscription",
-      icon: Globe,
+      icon: TicketX,
       items: [],
     },
     {

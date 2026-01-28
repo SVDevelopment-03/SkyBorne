@@ -7,19 +7,15 @@ import {
 } from "@/store/api/countryApi";
 import { DataTable } from "@/components/ui/CommonTable";
 import { ColumnDef } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
 import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Trash2Icon } from "lucide-react";
 import toast from "react-hot-toast";
 import { CountryModal } from "./CountryModal";
 import { ICountry } from "@/store/api/countryApi";
 import { Toggle2 } from "@/components/ui/Toggle2";
 import { handleDeleteTrainer } from "@/utils/handleDeleteAlert";
-import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
-import MainListHeading from "@/components/ui/MainListHeading";
 import CustomPagination from "@/components/ui/CustromPagination";
 
 interface CountryRowData extends ICountry {
