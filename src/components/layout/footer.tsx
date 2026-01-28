@@ -9,6 +9,8 @@ import * as Yup from "yup";
 import { useNewsLetterMutation } from "@/store/api/publicApi";
 import { useState } from "react";
 import CancelSubscriptionAlert from "@/utils/CancelSubscriptionAlert";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 
 export const newsletterSchema = Yup.object().shape({
   email: Yup.string()
@@ -44,6 +46,10 @@ export default function Footer() {
   const [newsLetter] = useNewsLetterMutation();
   const [openCancelModal, setOpenCancelModal] = useState(false);
 
+  const user = useSelector((state: RootState) => state.auth.user);
+
+  const isLoggedIn = !!user;
+  const isSubscriptionActive = user?.subscription?.status === "active";
 
   // Formik Setup
   const formik = useFormik({
@@ -80,7 +86,9 @@ export default function Footer() {
                 </h3>
                 <ul className="space-y-5 md:space-y-2">
                   {section?.links.map((link, i) => {
-                    if (link?.title === "Cancel Subscription") {
+                    if (link?.title === "Request Cancellation") {
+                      if (!isLoggedIn || !isSubscriptionActive) return null;
+
                       return (
                         <li key={i}>
                           <button
