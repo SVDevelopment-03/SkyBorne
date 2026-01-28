@@ -3,6 +3,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Toggle2 } from "@/components/ui/Toggle2";
 import { Trash2, Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const formatDate = (isoDate?: string) => {
   if (!isoDate) return "—";
@@ -50,7 +51,23 @@ export const columns = (
   {
     accessorKey: "description",
     header: "Description",
-    cell: ({ row }) => <span>{row.original.description || "—"}</span>,
+    cell: ({ row }) => {
+      const desc = row.original.description || "—";
+      const shortDesc = desc.length > 10 ? desc.slice(0, 10) + "..." : desc;
+
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="cursor-help">{shortDesc}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs w-[200px] p-4 whitespace-normal">
+              {desc}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    },
   },
   {
     accessorKey: "createdAt",
