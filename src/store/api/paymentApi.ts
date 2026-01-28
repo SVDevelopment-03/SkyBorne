@@ -69,6 +69,16 @@ interface ExportPaymentsParams {
   country?: string;
 }
 
+interface CancelSubscriptionReasonRequest {
+  userId: string;
+  description: string;
+}
+
+interface CancelSubscriptionReasonResponse {
+  success: boolean;
+  message: string;
+}
+
 export const paymentApi = createApi({
   reducerPath: "paymentApi",
   baseQuery: axiosBaseQuery(),
@@ -195,6 +205,41 @@ export const paymentApi = createApi({
       }),
       invalidatesTags: ["Payment"],
     }),
+
+    // =======================================
+    // SEND CANCELLATION REASON
+    // =======================================
+    sendCancellationReason: builder.mutation<
+      CancelSubscriptionReasonResponse,
+      CancelSubscriptionReasonRequest
+    >({
+      query: (body) => ({
+        url: "/subscription/cancel-subscription", 
+        method: "POST",
+        data: body,
+      }),
+      invalidatesTags: ["Payment"],
+    }),
+
+    // =======================================
+    // GET ALL CANCELLED SUBSCRIPTIONS (ADMIN)
+    // =======================================
+    getCancelledSubscriptions: builder.query<AllPaymentsResponse, { page?: number; limit?: number; search?: string; country?: string }>({
+      query: (params) => {
+        const filteredParams = Object.fromEntries(
+          Object.entries(params || {}).filter(
+            ([_, v]) => v !== undefined && v !== null && v !== ''
+          )
+        );
+
+        return {
+          url: "/subscription/getAll",
+          method: "GET",
+          params: filteredParams,
+        };
+      },
+      providesTags: ["Payment"],
+    }),
   }),
 });
 
@@ -208,4 +253,6 @@ export const {
   useGetAdminPaymentStatsQuery,
   useCreatePaymentVerificationMutation,
   useGetPaymentStatusQuery,
+  useSendCancellationReasonMutation,
+  useGetCancelledSubscriptionsQuery
 } = paymentApi;

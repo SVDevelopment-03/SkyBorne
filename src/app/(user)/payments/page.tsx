@@ -19,13 +19,14 @@ import {
   Loader2,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useCancelSubscriptionMutation, useGetPaymentHistoryQuery, useGetPaymentStatsQuery } from '@/store/api/paymentApi';
+import { useGetPaymentHistoryQuery, useGetPaymentStatsQuery } from '@/store/api/paymentApi';
 import { useSelector } from 'react-redux';
 import useGetUser from '@/hooks/useGetUser';
-import { handleDeleteTrainer } from '@/utils/handleDeleteAlert';
-import Swal from 'sweetalert2';
-import toast from 'react-hot-toast';
+// import { handleDeleteTrainer } from '@/utils/handleDeleteAlert';
+// import Swal from 'sweetalert2';
+// import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
+import CancelSubscriptionModal from "@/utils/CancelSubscriptionAlert";
 
 export interface Payment {
   _id: string;
@@ -43,14 +44,15 @@ export interface Payment {
 }
 
 function UserPayments() {
-    const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
+    // const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
     const router = useRouter();
 
   // Get userId from Redux or auth state
   const userId = useSelector((state: any) => state.auth.user?._id);
   const { user } = useGetUser();
 
-    const [cancelSubscription] = useCancelSubscriptionMutation();
+    // const [cancelSubscription] = useCancelSubscriptionMutation();
 
 
   // RTK Query hooks
@@ -107,13 +109,97 @@ function UserPayments() {
   };
 
   // Define table columns
+  // const columns: ColumnDef<Payment>[] = [
+  //   {
+  //     accessorKey: 'createdAt',
+  //     header: 'Date',
+  //     cell: ({ row }) => formatDate(row.original.createdAt),
+  //   },
+  //   {
+  //     accessorKey: 'plan',
+  //     header: 'Description',
+  //     cell: ({ row }) => (
+  //       <div className="text-sm text-[#1A1A1A]">
+  //         {formatPlanName(row.original.plan)} - Monthly Subscription
+  //       </div>
+  //     ),
+  //   },
+  //   // {
+  //   //   accessorKey: 'paymentMethod',
+  //   //   header: 'Method',
+  //   //   cell: ({ row }) => (
+  //   //     <div className="text-sm text-[#6B6B6B]">
+  //   //       {row.original.reference ? `Visa ****${String(row.original.reference).slice(-4)}` : 'N/A'}
+  //   //     </div>
+  //   //   ),
+  //   // },
+  //   {
+  //     accessorKey: 'amount',
+  //     header: 'Amount',
+  //     cell: ({ row }) => (
+  //       <div className="text-sm text-[#1A1A1A] font-semibold">
+  //         {formatCurrency(row.original.amount, "USD")}
+  //       </div>
+  //     ),
+  //   },
+  //   {
+  //     accessorKey: 'status',
+  //     header: 'Status',
+  //     cell: ({ row }) => {
+  //       const status = row.original.status.toLowerCase();
+  //       const isCompleted = status === 'completed';
+
+  //       return (
+  //         <Badge
+  //           className={`py-1! ${
+  //             isCompleted
+  //               ? 'bg-[#27AE60]/10 text-[#27AE60]'
+  //               : status === 'failed'
+  //               ? 'bg-[#e74c3c]/10 text-[#e74c3c]'
+  //               : 'bg-[#f4b942]/10 text-[#f4b942]'
+  //           }`}
+  //           style={{ borderRadius: '8px' }}
+  //         >
+  //           {isCompleted ? (
+  //             <CheckCircle className="w-3 h-3 mr-1" />
+  //           ) : status === 'failed' ? (
+  //             <XCircle className="w-3 h-3 mr-1" />
+  //           ) : (
+  //             <Clock className="w-3 h-3 mr-1" />
+  //           )}
+  //           {status.charAt(0).toUpperCase() + status.slice(1)}
+  //         </Badge>
+  //       );
+  //     },
+  //   },
+  //   // {
+  //   //   accessorKey: 'invoiceId',
+  //   //   header: 'Invoice',
+  //   //   cell: ({ row }) => (
+  //   //     <Button
+  //   //       size="sm"
+  //   //       variant="ghost"
+  //   //       className="text-[#b95e82] hover:bg-[#b95e82]/10"
+  //   //       onClick={() => {
+  //   //         console.log('Download invoice:', row.original.invoiceId);
+  //   //       }}
+  //   //     >
+  //   //       <Download className="w-4 h-4 mr-2" />
+  //   //       {row.original.invoiceId || 'N/A'}
+  //   //     </Button>
+  //   //   ),
+  //   // },
+  // ];
+
   const columns: ColumnDef<Payment>[] = [
     {
+      id: 'date',
       accessorKey: 'createdAt',
       header: 'Date',
       cell: ({ row }) => formatDate(row.original.createdAt),
     },
     {
+      id: 'plan',
       accessorKey: 'plan',
       header: 'Description',
       cell: ({ row }) => (
@@ -122,16 +208,8 @@ function UserPayments() {
         </div>
       ),
     },
-    // {
-    //   accessorKey: 'paymentMethod',
-    //   header: 'Method',
-    //   cell: ({ row }) => (
-    //     <div className="text-sm text-[#6B6B6B]">
-    //       {row.original.reference ? `Visa ****${String(row.original.reference).slice(-4)}` : 'N/A'}
-    //     </div>
-    //   ),
-    // },
     {
+      id: 'amount',
       accessorKey: 'amount',
       header: 'Amount',
       cell: ({ row }) => (
@@ -141,6 +219,7 @@ function UserPayments() {
       ),
     },
     {
+      id: 'status',
       accessorKey: 'status',
       header: 'Status',
       cell: ({ row }) => {
@@ -170,71 +249,55 @@ function UserPayments() {
         );
       },
     },
-    // {
-    //   accessorKey: 'invoiceId',
-    //   header: 'Invoice',
-    //   cell: ({ row }) => (
-    //     <Button
-    //       size="sm"
-    //       variant="ghost"
-    //       className="text-[#b95e82] hover:bg-[#b95e82]/10"
-    //       onClick={() => {
-    //         console.log('Download invoice:', row.original.invoiceId);
-    //       }}
-    //     >
-    //       <Download className="w-4 h-4 mr-2" />
-    //       {row.original.invoiceId || 'N/A'}
-    //     </Button>
-    //   ),
-    // },
   ];
+
 
   const isLoading = isLoadingHistory || isLoadingStats;
 
     // Handle cancel subscription
-  const handleCancelSubscription = async () => {
-    const confirmDelete = await Swal.fire({
-      title: "Cancel Subscription?",
-      html: `
-        <p class="text-center mb-3">
-          Are you sure you want to cancel your <strong>${formatPlanName(plan)}</strong> subscription?
-        </p>
-        <p class="text-sm text-gray-600 text-center">
-          You will lose access to premium features after <strong>${formatDate(subscription.endDate || new Date().toISOString())}</strong>.
-        </p>
-      `,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, Cancel Subscription",
-      cancelButtonText: "Keep Subscription",
-      buttonsStyling: false,
-      customClass: {
-        confirmButton: "swal-confirm-btn px-6 py-2 rounded-md font-semibold text-white bg-red-500 hover:bg-red-600",
-        cancelButton: "swal-cancel-btn px-6 py-2 rounded-md font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 ml-3",
-      },
-      allowOutsideClick: false,
-    });
+  // const handleCancelSubscription = async () => {
+  //   const confirmDelete = await Swal.fire({
+  //     title: "Cancel Subscription?",
+  //     html: `
+  //       <p class="text-center mb-3">
+  //         Are you sure you want to cancel your <strong>${formatPlanName(plan)}</strong> subscription?
+  //       </p>
+  //       <p class="text-sm text-gray-600 text-center">
+  //         You will lose access to premium features after <strong>${formatDate(subscription.endDate || new Date().toISOString())}</strong>.
+  //       </p>
+  //     `,
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonText: "Yes, Cancel Subscription",
+  //     cancelButtonText: "Keep Subscription",
+  //     buttonsStyling: false,
+  //     customClass: {
+  //       confirmButton: "swal-confirm-btn px-6 py-2 rounded-md font-semibold text-white bg-red-500 hover:bg-red-600",
+  //       cancelButton: "swal-cancel-btn px-6 py-2 rounded-md font-semibold border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 ml-3",
+  //     },
+  //     allowOutsideClick: false,
+  //   });
 
-    if (confirmDelete.isConfirmed) {
-      try {
-        setIsCancellingSubscription(true);
+  //   if (confirmDelete.isConfirmed) {
+  //     try {
+  //       setIsCancellingSubscription(true);
         
-        await cancelSubscription(userId).unwrap();
+  //       await cancelSubscription(userId).unwrap();
         
-        toast.success('Subscription cancelled successfully');
+  //       toast.success('Subscription cancelled successfully');
         
-        // Refetch user data to update subscription status
-        // await refetchUser();
-      } catch (error) {
-        console.error('Error cancelling subscription:', error);
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to cancel subscription';
-        toast.error(errorMessage);
-      } finally {
-        setIsCancellingSubscription(false);
-      }
-    }
-  };
+  //       // Refetch user data to update subscription status
+  //       // await refetchUser();
+  //     } catch (error) {
+  //       console.error('Error cancelling subscription:', error);
+  //       const errorMessage =
+  //         error instanceof Error ? error.message : 'Failed to cancel subscription';
+  //       toast.error(errorMessage);
+  //     } finally {
+  //       setIsCancellingSubscription(false);
+  //     }
+  //   }
+  // };
 
 
   return (
@@ -347,13 +410,13 @@ function UserPayments() {
                   </div>
                 </div>
               </div>
-              {/* <Button
+              <Button
                 className="bg-white text-[#B95E82] font-semibold"
                 style={{ borderRadius: '12px' }}
-                onClick={() => handleCancelSubscription()}
+                onClick={() => setShowCancelModal(true)}
               >
                 Cancel Subscription
-              </Button> */}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -427,6 +490,10 @@ function UserPayments() {
           />
         </CardContent>
       </Card>
+      <CancelSubscriptionModal
+        open={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+      />
     </div>
   );
 }

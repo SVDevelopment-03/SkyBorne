@@ -206,6 +206,7 @@ export const footerSections = [
   {
     title: "RESOURCES",
     links: [
+      { title: "Cancel Subscription" },
       { title: "Pricing", link: "/packages" },
       { title: "FAQ", link: "/faq" },
       { title: "Members", link: "/testimonials" },

@@ -7,6 +7,8 @@ import Image from "next/image";
 import { footerSections, socialLinks } from "@/constants/home.constant";
 import * as Yup from "yup";
 import { useNewsLetterMutation } from "@/store/api/publicApi";
+import { useState } from "react";
+import CancelSubscriptionAlert from "@/utils/CancelSubscriptionAlert";
 
 export const newsletterSchema = Yup.object().shape({
   email: Yup.string()
@@ -40,6 +42,8 @@ const ArrowRightIcon = () => (
 export default function Footer() {
   const router = useRouter();
   const [newsLetter] = useNewsLetterMutation();
+  const [openCancelModal, setOpenCancelModal] = useState(false);
+
 
   // Formik Setup
   const formik = useFormik({
@@ -75,16 +79,25 @@ export default function Footer() {
                   {section?.title}
                 </h3>
                 <ul className="space-y-5 md:space-y-2">
-                  {section?.links.map((link, i) => (
-                    <li
-                      key={i}
-                      className="cursor-pointer hover:text-white/70 transition text-sm md:text-base font-montserrat font-normal"
-                    >
-                      <Link href={link?.link ? `${link?.link}` : "#"}>
-                        {link?.title}
-                      </Link>
-                    </li>
-                  ))}
+                  {section?.links.map((link, i) => {
+                    if (link?.title === "Cancel Subscription") {
+                      return (
+                        <li key={i}>
+                          <button
+                            onClick={() => setOpenCancelModal(true)}
+                            className="cursor-pointer hover:text-white/70 transition text-sm md:text-base font-montserrat font-normal"
+                          >
+                            {link.title}
+                          </button>
+                        </li>
+                      );
+                    }
+                    return (
+                      <li key={i} className="cursor-pointer hover:text-white/70 transition text-sm md:text-base font-montserrat font-normal">
+                        <Link href={link?.link ? `${link?.link}` : "#"}>{link?.title}</Link>
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
             ))}
@@ -179,6 +192,12 @@ export default function Footer() {
           />
         </div>
       </div>
+      {openCancelModal && (
+        <CancelSubscriptionAlert
+          open={openCancelModal}
+          onClose={() => setOpenCancelModal(false)}
+        />
+      )}
     </footer>
   );
 }

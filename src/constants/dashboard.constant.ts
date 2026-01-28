@@ -112,6 +112,12 @@ export const AdminNav = {
       icon: Users,
       items: [],
     },
+     {
+      title: "Cancel Subscription",
+      url: "/cancel-subscription",
+      icon: Globe,
+      items: [],
+    },
     {
       title: "Region Management",
       url: "/regions",
