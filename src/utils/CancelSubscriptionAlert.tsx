@@ -125,7 +125,7 @@ const CancelSubscriptionModal = ({ open, onClose }: CancelSubscriptionModalProps
               }
             `}
           >
-            {isProcessing ? "Processing..." : "Yes, Cancel Subscription"}
+            {isProcessing ? "Processing..." : "Yes, Request Cancellation"}
           </Button>
         </div>
       </div>
