@@ -45,6 +45,7 @@ export interface AdminPayment {
   amount: number;
   localAmount?: number;
   currency: string;
+  stripeSubscriptionId: string;
   plan: string;
   status: string;
   invoiceId?: string;
@@ -184,11 +185,11 @@ function AdminPayments() {
   // Define table columns
   const columns: ColumnDef<AdminPayment>[] = [
     {
-      accessorKey: "orderRef",
-      header: "Order Reference",
+      accessorKey: "stripeSubscriptionId",
+      header: "Subscription Id",
       cell: ({ row }) => (
         <div className="text-sm font-mono text-[#6B6B6B]">
-          {row.original.orderRef}
+          {row?.original?.stripeSubscriptionId}
         </div>
       ),
     },

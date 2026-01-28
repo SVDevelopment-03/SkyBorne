@@ -1,9 +1,15 @@
-import { useState } from 'react';
-import { PackageType } from './PackageSelection'; 
-import { ChevronLeft, CreditCard, Smartphone, Lock, Loader2 } from 'lucide-react';
-import { useCreatePaymentOrderMutation } from '@/store/api/paymentApi';
-import useGetUser from '@/hooks/useGetUser';
-import Link from 'next/link';
+import { useState } from "react";
+import { PackageType } from "./PackageSelection";
+import {
+  ChevronLeft,
+  CreditCard,
+  Smartphone,
+  Lock,
+  Loader2,
+} from "lucide-react";
+import { useCreatePaymentOrderMutation } from "@/store/api/paymentApi";
+import useGetUser from "@/hooks/useGetUser";
+import Link from "next/link";
 
 interface PaymentProps {
   selectedPackage: PackageType;
@@ -13,11 +19,11 @@ interface PaymentProps {
 
 const getPackagePrice = (pkg: PackageType): number => {
   const prices = {
-    'gold-yoga': 100,
-    'gold-zumba': 100,
-    'gold-mixed': 100,
-    'diamond': 200,
-    'platinum': 300
+    "gold-yoga": 100,
+    "gold-zumba": 100,
+    "gold-mixed": 100,
+    diamond: 200,
+    platinum: 300,
   };
   return prices[pkg];
 };
@@ -25,24 +31,23 @@ const getPackagePrice = (pkg: PackageType): number => {
 export function Payment({ selectedPackage, onPayment, onBack }: PaymentProps) {
   const [autoRenew, setAutoRenew] = useState(true);
   const price = getPackagePrice(selectedPackage);
-  const {user} = useGetUser(); 
+  const { user } = useGetUser();
 
-const [createPaymentOrder,{isLoading}] = useCreatePaymentOrderMutation();
+  const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
 
-const handlePayment = async () => {
-  try {
-    const res = await createPaymentOrder({
-      amount: price,
-      currency: "AED",
-      userId: user?.id ?? '6925ef6c19f63bed6b81b619', // from auth
-    }).unwrap();
+  const handlePayment = async () => {
+    try {
+      const res = await createPaymentOrder({
+        amount: price,
+        currency: "AED",
+        userId: user?.id ?? "6925ef6c19f63bed6b81b619", // from auth
+      }).unwrap();
 
-    window.location.href = res.paymentLink;
-  } catch (err) {
-    console.error(err);
-  }
-};
-
+      window.location.href = res.paymentLink;
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -70,7 +75,7 @@ const handlePayment = async () => {
           {/* Payment Methods */}
           <div className="mb-8">
             <h3 className="text-sm text-gray-700 mb-4">Payment Method</h3>
-            
+
             <div className="space-y-3">
               <div className="Payment_Primary_Button bg-[#fcf6ef] border-2 border-[#B95E82] rounded-xl p-5 cursor-pointer hover:shadow-md transition-all">
                 <div className="flex items-center gap-4">
@@ -80,7 +85,7 @@ const handlePayment = async () => {
                   <CreditCard className="w-5 h-5 text-[#B95E82]" />
                   <span className="text-gray-900">Credit / Debit Card</span>
                 </div>
-                
+
                 {/* Card Input Fields */}
                 <div className="mt-4 space-y-3">
                   <input
@@ -113,7 +118,9 @@ const handlePayment = async () => {
                   <div className="w-6 h-6 rounded-full border-2 border-gray-300" />
                   <Smartphone className="w-5 h-5 text-gray-400" />
                   <span className="text-gray-600">Digital Wallet</span>
-                  <span className="ml-auto text-sm text-gray-500">(coming soon)</span>
+                  <span className="ml-auto text-sm text-gray-500">
+                    (coming soon)
+                  </span>
                 </div>
               </div>
             </div>
@@ -133,12 +140,16 @@ const handlePayment = async () => {
                 <div
                   className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${
                     autoRenew
-                      ? 'bg-[#B95E82] border-[#B95E82]'
-                      : 'bg-white border-gray-300 group-hover:border-[#B95E82]'
+                      ? "bg-[#B95E82] border-[#B95E82]"
+                      : "bg-white border-gray-300 group-hover:border-[#B95E82]"
                   }`}
                 >
                   {autoRenew && (
-                    <svg className="w-4 h-4 text-white" viewBox="0 0 12 10" fill="none">
+                    <svg
+                      className="w-4 h-4 text-white"
+                      viewBox="0 0 12 10"
+                      fill="none"
+                    >
                       <path
                         d="M1 5L4.5 8.5L11 1.5"
                         stroke="currentColor"
@@ -152,7 +163,10 @@ const handlePayment = async () => {
               </div>
               <div className="flex-1">
                 <span className="text-sm text-gray-800">Enable auto-renew</span>
-                <p className="text-xs text-gray-600 mt-1">Your subscription will automatically renew each month. Cancel anytime.</p>
+                <p className="text-xs text-gray-600 mt-1">
+                  Your subscription will automatically renew each month. Cancel
+                  anytime.
+                </p>
               </div>
             </label>
           </div>
@@ -174,34 +188,34 @@ const handlePayment = async () => {
           onClick={handlePayment}
           className="Payment_Primary_Button w-full bg-[#B95E82] hover:bg-[#a16685] text-white py-4 px-8 rounded-full transition-all duration-300 text-lg shadow-lg"
         >
-        <span className="flex flex-row gap-2 items-center justify-center">
-                            {isLoading && (
-                              <Loader2
-                                size={24}
-                                className="animate-spin text-white! h-6! w-6!"
-                              />
-                            )}
-                           Pay now
-                          </span>
+          <span className="flex flex-row gap-2 items-center justify-center">
+            {isLoading && (
+              <Loader2
+                size={24}
+                className="animate-spin text-white! h-6! w-6!"
+              />
+            )}
+            Pay now
+          </span>
         </button>
 
         <p className="text-center text-xs text-gray-500 mt-4">
           {`By clicking "Pay Now", you agree to our`}
-           <Link
-                    href="/terms"
-                    className="text-[#B95E82] underline-offset-2 hover:underline ml-1"
-                    target="_blank"
-                  >
-                    Terms
-                  </Link>
-                  <span className="mx-1">and</span>
-                  <Link
-                    href="/privacy-policy"
-                    className="text-[#B95E82] underline-offset-2 hover:underline"
-                    target="_blank"
-                  >
-                    Privacy Policy
-                  </Link>
+          <Link
+            href="/terms"
+            className="text-[#B95E82] underline-offset-2 hover:underline ml-1"
+            target="_blank"
+          >
+            Terms
+          </Link>
+          <span className="mx-1">and</span>
+          <Link
+            href="/privacy-policy"
+            className="text-[#B95E82] underline-offset-2 hover:underline"
+            target="_blank"
+          >
+            Privacy Policy
+          </Link>
         </p>
       </div>
     </div>
