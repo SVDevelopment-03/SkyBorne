@@ -4,8 +4,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-  import "react-phone-number-input/style.css";
-
+import "react-phone-number-input/style.css";
 import {
   Mail,
   Phone,
@@ -33,6 +32,13 @@ interface UserProp {
   country: string;
 }
 
+const isValidEmail = (email: string) => {
+  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i.test(email) 
+         && !/\.\./.test(email)  
+         && !/^\./.test(email)    
+         && !/\.$/.test(email);   
+};
+
 export default function UserProfile() {
   const { user } = useGetUser();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
@@ -46,6 +52,11 @@ export default function UserProfile() {
     phone: "",
     country: "",
   });
+
+  const [errors, setErrors] = useState<{
+    email?: string;
+    phone?: string;
+  }>({});
 
   console.log("user data", user);
 
@@ -106,6 +117,22 @@ export default function UserProfile() {
   };
 
   const handleSave = async () => {
+    setErrors({});
+
+    // EMAIL VALIDATION
+    if (!formData.email || !isValidEmail(formData.email)) {
+      setErrors({ email: "Please enter a valid email address" });
+      toast.error("Invalid email address");
+      return;
+    }
+
+    // PHONE VALIDATION
+    if (!formData.phone || !isValidPhoneNumber(formData.phone)) {
+      setErrors({ phone: "Please enter a valid phone number" });
+      toast.error("Invalid phone number");
+      return;
+    }
+
     try {
       setUpdateError("");
       setUpdateSuccess("");
@@ -120,12 +147,17 @@ export default function UserProfile() {
         }
       });
 
+      if (updatePayload.phone) {
+        const phoneNumber = parsePhoneNumber(updatePayload.phone);
+        updatePayload.phone = phoneNumber?.number;
+      }
+
       if (Object.keys(updatePayload).length === 0) {
         setUpdateSuccess("No changes to save");
         setIsEditing(false);
         return;
       }
-
+      console.log("Update payload going to API:", updatePayload);
       await updateProfile(updatePayload).unwrap();
       toast.success("Profile updated successfully!")
       setUpdateSuccess("Profile updated successfully!");
@@ -280,17 +312,22 @@ export default function UserProfile() {
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6B6B6B] pointer-events-none" />
               <input
                 type="email"
                 value={formData.email || ""}
-                disabled={true}
-                className="w-full pl-10 pr-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed disabled:opacity-50"
+                disabled={!isEditing}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                className={`w-full pl-10 pr-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none 
+                ${errors.email ? "border-red-500" : "border-[#e5e5e5]"} disabled:bg-gray-50 disabled:opacity-50`}
               />
+              {errors.email && (
+                <p className="text-xs text-red-500 mt-1">{errors.email}</p>
+              )}
             </div>
-            <p className="text-xs text-[#6B6B6B] mt-1">
-              Email cannot be changed
-            </p>
+            {/* <p className="text-xs text-[#6B6B6B] mt-1">
+              You can update your email address
+            </p> */}
           </div>
 
           {/* <div>
@@ -320,7 +357,8 @@ export default function UserProfile() {
                   defaultCountry="AE"
                   value={formData.phone}
                   onChange={(value) => handleInputChange("phone", value || "")}
-                  className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20"
+                  className={`w-full px-4 py-2 border rounded-xl focus:outline-none ${errors.phone ? "border-red-500" : "border-[#e5e5e5]"}`}
+                  // className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20"
                 />
               ) : (
                 <>
