@@ -28,6 +28,7 @@ export default function AdminSidebarDrawer() {
   const [showAlert, setShowAlert] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+    const [open, setOpen] = useState(false);
 
   const handleLogoutConfirm = () => {
     removeTokens();
@@ -37,7 +38,7 @@ export default function AdminSidebarDrawer() {
   return (
     <div className="md:hidden">
       {/* -------- Drawer Trigger Button -------- */}
-      <Drawer direction="left">
+      <Drawer direction="left" open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>
           <button className="w-16 p-3 px-6 rounded-md text-[24px] font-bold text-[#494949]">
             ☰
@@ -107,7 +108,12 @@ export default function AdminSidebarDrawer() {
 
                     {item?.logout && (
                       <div
-                        onClick={() => setShowAlert(true)}
+                         onClick={() => {
+                          setOpen(false); // CLOSE drawer
+                          setTimeout(() => {
+                            setShowAlert(true); // THEN show swal
+                          }, 200); // wait for drawer animation
+                        }}
                         className={`font-medium rounded-[12px] flex items-center gap-4 p-3.5 cursor-pointer ${
                           selected === i
                             ? "shadow-[0px_3.52px_5.29px_-3.52px_#0000001A,0px_8.81px_13.22px_-2.64px_#0000001A] bg-[#B95E82] text-[#FFF7DD]"

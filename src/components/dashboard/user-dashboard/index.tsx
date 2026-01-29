@@ -244,15 +244,77 @@ export default function Page() {
   );
   type TimeFilter = "3months" | "6months" | "1year";
 
-  const formatDateWithTimezone = (isoString: string, timezone?: string) => {
+  // ✅ Helper function to format date with timezone awareness
+  // If region is not 'live' and region time has passed, shows next day date for recording
+  const formatDateWithTimezone = (
+    isoString: string,
+    timezone?: string,
+    regionTimeStr?: string,
+    mode?: string,
+  ) => {
+    console.log("🎯 formatDateWithTimezone called:", {
+      isoString,
+      timezone,
+      regionTimeStr,
+      mode,
+    });
+
     if (!isoString) return "N/A";
 
     try {
-      const date = new Date(isoString);
+      let date = new Date(isoString);
 
       // Validate date
       if (isNaN(date.getTime())) {
         return "Invalid Date";
+      }
+
+      // ✅ NEW LOGIC: If region is not live and region time has passed,
+      // show next day's date for recording class
+      if (mode !== "live" && regionTimeStr) {
+        const classDatetime = new Date(isoString);
+        const currentTime = Date.now();
+
+        console.log("📅 Recording Mode Detected:");
+        console.log("  ISO Time:", isoString);
+        console.log("  Region Time String:", regionTimeStr);
+        console.log("  Class DateTime:", classDatetime.toISOString());
+        console.log("  Current Time:", new Date(currentTime).toISOString());
+
+        // Parse region time string (e.g., "10:00 AM")
+        const [timeStr, period] = regionTimeStr.split(" ");
+        const [hours, minutes] = timeStr.split(":");
+
+        let hour = parseInt(hours, 10);
+        const minute = parseInt(minutes, 10);
+
+        // Convert to 24-hour format
+        if (period === "PM" && hour !== 12) {
+          hour += 12;
+        } else if (period === "AM" && hour === 12) {
+          hour = 0;
+        }
+
+        // Create a new date with the region's time for comparison
+        const regionDateTime = new Date(classDatetime);
+        regionDateTime.setHours(hour, minute, 0, 0);
+
+        console.log(
+          "  Region DateTime (for comparison):",
+          regionDateTime.toISOString(),
+        );
+        console.log(
+          "  Time Difference (ms):",
+          currentTime - regionDateTime.getTime(),
+        );
+
+        // If region time is in the past and mode is 'replay', add 1 day to the date
+        if (currentTime > regionDateTime.getTime()) {
+          console.log(
+            "📅 Recording class time has passed, showing next day date",
+          );
+          date = new Date(date.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
+        }
       }
 
       // Use timezone if available, otherwise user's local timezone
@@ -263,7 +325,12 @@ export default function Page() {
         timeZone: timezone || undefined,
       };
 
-      return date.toLocaleDateString("en-GB", options).replace(",", "");
+      const formattedDate = date
+        .toLocaleDateString("en-GB", options)
+        .replace(",", "");
+      console.log("✅ Final Formatted Date:", formattedDate);
+
+      return formattedDate;
     } catch (error) {
       console.error("Date formatting error:", error);
       return "N/A";
@@ -495,7 +562,7 @@ export default function Page() {
               <div
                 className={`flex flex-col gap-3 w-full h-full items-stretch ${
                   upcomingData?.meetings?.length === 0 || !upcomingData
-                    ? "justify-center"
+                    ? "justify-start"
                     : ""
                 }`}
               >
@@ -521,10 +588,15 @@ export default function Page() {
                       meeting?.localTime,
                       userRegion?.timezone
                     );
+                    
+                    // ✅ Use the enhanced formatDateWithTimezone with recording mode support
                     const formattedDate = formatDateWithTimezone(
                       meeting?.localTime,
-                      userRegion?.timezone
+                      userRegion?.timezone,
+                      regionInfo?.localTime,
+                      regionInfo?.mode,
                     );
+                    
                     const trainer = meeting?.trainer?.name ?? "";
 
                     return (
@@ -541,7 +613,7 @@ export default function Page() {
                         image="/images/upcoming-ico.jpg"
                         startTime={meeting?.localTime}
                         time={regionInfo?.localTime} // Use formatted time
-                        date={formattedDate} // Use formatted date
+                        date={formattedDate} // Use formatted date with recording logic
                         title={meeting?.title ?? "Untitled"}
                         duration={`${meeting?.duration ?? 0} min`}
                       />

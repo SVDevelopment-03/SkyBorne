@@ -19,6 +19,7 @@ const TrainerSidebar = () => {
   const [showAlert, setShowAlert] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  
 
   const matchRoute = (pathname: string, route: string) => {
     // Convert `:id` to regex matcher

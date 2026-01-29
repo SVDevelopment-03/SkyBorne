@@ -144,7 +144,7 @@ const handleJoin = async () => {
       </div>
 
       <div className="flex flex-col items-end justify-between h-full gap-10">
-        {/* DATE */}
+        {/* DATE - Now displays the corrected date from parent */}
         <div className="rounded-[10px] bg-white px-3 py-2 flex items-center gap-1.25 min-w-[70px]">
           <DashboardCalenderIcon />
           <Typography
