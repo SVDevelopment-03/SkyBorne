@@ -19,6 +19,12 @@ import {
   useUpdateTrainerResponseMutation,
   useDeleteFeedbackMutation,
 } from "@/store/api/feedbackApi";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FeedbackData {
   _id: string;
@@ -197,21 +203,26 @@ const AdminFeedbackManagement = () => {
       accessorKey: "comment",
       header: "Comment",
       cell: ({ row }) => {
-        const comment = row.original.comment || "";
-        const MAX_LENGTH = 60;
-
-        const truncated =
-          comment.length > MAX_LENGTH
-            ? comment.slice(0, MAX_LENGTH) + "…"
-            : comment;
+        const comment = row.original.comment || "—";
+        const shortComment =
+          comment.length > 10 ? comment.slice(0, 10) + "…" : comment;
 
         return (
-          <div
-            className="max-w-[260px] text-sm text-[#4B4B4B] truncate"
-            title={comment}
-          >
-            {truncated}
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span className="max-w-[200px] text-sm text-[#4B4B4B] cursor-help">
+                  {shortComment}
+                </span>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="max-w-xs w-[200px] whitespace-normal text-sm p-4"
+              >
+                {comment}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         );
       },
     },
