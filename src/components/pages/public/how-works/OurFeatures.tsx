@@ -16,28 +16,28 @@ interface FeatureDetailProps {
 
 const featureDetails = [
   {
-    image: "/images/how-works-1.jpg",
+    image: "/images/SkyborneMockups/Choose_Your_Focus.png",
     heading: "Choose Your Focus",
     description:
       "Select the wellness experience you want yoga, fitness, meditation, or nutrition. Explore diverse programs and choose what motivates you most, whether it’s stress relief, strength, balance, or mindful eating. Skyborne lets you personalize your own journey, at your pace, with options for every goal and lifestyle",
     buttonText: "01",
   },
   {
-    image: "/images/how-works-2.jpg",
+    image: "/images/SkyborneMockups/Find_Your_Program.png",
     heading: "Find Your Program",
     description:
       "Browse our selection of live and on-demand classes and curated wellness tracks. With options ranging from guided yoga, dynamic fitness sessions, mindful meditation, and practical nutrition tips, you can tailor your experience to fit your goals. Discover programs by interest, duration, or expertise level, and start building your personal path to lasting wellness one step, one session, one habit at a time",
     buttonText: "02",
   },
   {
-    image: "/images/how-works-3.jpg",
+    image: "/images/SkyborneMockups/Book_Instantly1.png",
     heading: "Book Instantly",
     description:
       "Secure your spot, join a live session, or access content whenever it fits your schedule. Skyborne makes booking effortless single-click reservations, instant confirmations, and flexible options whether you want to join now, later, or catch up on-demand. Never miss out our reminders and calendar integrations keep you on track, so you can focus only on your wellbeing",
     buttonText: "03",
   },
   {
-    image: "/images/how-works-4.jpg",
+    image: "/images/SkyborneMockups/Track_Your_Progress.png",
     heading: "Track Your Progress",
     description:
       "Track your journey with Skyborne’s dashboard. View session history, earn badges, and receive encouragement. Reflect on attendance, set goals, and enjoy rewards. The dashboard consolidates your stats and achievements, helping you stay motivated. Share your progress or keep it private it's your choice.",

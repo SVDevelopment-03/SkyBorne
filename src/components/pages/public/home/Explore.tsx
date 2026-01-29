@@ -12,9 +12,9 @@ interface CardImage {
 }
 
 const imageCards: CardImage[] = [
-  { id: 1, src: "/images/explore-section1.svg", alt: "section-1" },
-  { id: 2, src: "/images/explore-section2.svg", alt: "section-2" },
-  { id: 3, src: "/images/explore-section3.svg", alt: "section-3" },
+  { id: 1, src: "/images/SkyborneMockups/Choose_Your_Focus.png", alt: "section-1" },
+  { id: 2, src: "/images/SkyborneMockups/Find_Your_Program.png", alt: "section-2" },
+  { id: 3, src: "/images/SkyborneMockups/Book_Instantly.png", alt: "section-3" },
 ];
 
 // import bgExplore from "../../../../public/images/explore-main.svg"
@@ -79,7 +79,7 @@ const Explore = () => {
                   width={422}
                   height={426}
                   className={`w-[308px] md:w-[422px] h-[311px] md:h-[426px] rounded-xl shadow-lg object-cover transition-all duration-300 ${
-                    active === img.id ? "ring-4 ring-[#FFF7DD]" : "opacity-80"
+                    active === img.id ? "ring-4 ring-[#FFF7DD]" : "opacity-100"
                   }`}
                 />
               </motion.div>
@@ -94,12 +94,12 @@ const Explore = () => {
                 onMouseEnter={() => setActive(img.id)}
                 // Hovering on number highlights image
                 onClick={() => setActive(img.id)}
-                className={`cursor-pointer text-sm md:text-[22px] leading-normal transition-all duration-300 ${
+                className={`cursor-pointer text-sm md:text-[22px] leading-normal transition-all duration-300 relative z-20 !text-[#fff7dd] drop-shadow-[0_2px_6px_rgba(0,0,0,0.6)] ${
                   active === img.id
-                    ? "text-[#FFF7DD] scale-125"
+                    ? "scale-125 opacity-100"
                     : active === null && i == 2
-                    ? "text-[#FFF7DD] scale-125"
-                    : "text-[#FFF7DD]/50 hover:text-[#FFF7DD]/80"
+                    ? "scale-125 opacity-100"
+                    : "opacity-70 hover:opacity-100"
                 }`}
               >
                 {img.id.toString().padStart(2, "0")}
