@@ -37,6 +37,17 @@ export interface Payment {
   createdAt: string;
 }
 
+export interface CountryRevenueRow {
+  country: string;
+  count: number;
+  amount: number;
+}
+
+export interface CountryRevenueData {
+  rows: CountryRevenueRow[];
+  grandTotal: CountryRevenueRow;
+}
+
 export const adminApi = createApi({
   reducerPath: "adminApi",
   baseQuery: axiosBaseQuery(),
@@ -117,6 +128,17 @@ export const adminApi = createApi({
       }),
       providesTags: ["AdminStats"],
     }),
+        // ✅ NEW: Get revenue by country
+    getRevenueByCountry: builder.query<
+      { success: boolean; data: CountryRevenueData },
+      void
+    >({
+      query: () => ({
+        url: "/stats/revenue-by-country",
+        method: "GET",
+      }),
+      providesTags: ["AdminStats"],
+    }),
   }),
 });
 
@@ -124,6 +146,7 @@ export const {
   useGetOverviewStatsQuery,
   useGetUserGrowthQuery,
   useGetMonthlyRevenueQuery,
+  useGetRevenueByCountryQuery,
   useGetRecentActivitiesQuery,
   useGetTopServicesQuery,
   useGetPendingApprovalsQuery,

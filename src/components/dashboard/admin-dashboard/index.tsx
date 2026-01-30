@@ -20,6 +20,7 @@ import {
   useGetRecentActivitiesQuery,
   useGetTopServicesQuery,
 } from "@/store/api/adminApi";
+import RevenueByCountryTable from "@/app/(admin)/admin-dashboard/RevenueByCountry";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -484,7 +485,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Recent Activities */}
           <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 max-h-[450px] overflow-y-auto [scrollbar-width:thin]">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-lg font-bold text-gray-900 mb-2">
               Recent Activity
             </h2>
             <p className="text-gray-600 text-sm mb-6">Latest admin actions</p>
@@ -520,6 +521,9 @@ const AdminDashboard = () => {
               </div>
             )}
           </div>
+
+           {/* Revenue by Country Table - ✅ NEW */}
+          <RevenueByCountryTable />
 
           {/* Top Performing Services */}
           {/* <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100">
