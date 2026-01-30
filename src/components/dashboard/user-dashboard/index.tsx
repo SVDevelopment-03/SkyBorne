@@ -469,18 +469,18 @@ export default function Page() {
     <>
       {/* <Join/> */}
 
-      <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-between">
-        <div className="relative">
+      <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-between gap-6 border-b border-[#E6E6E6]">
+        <div className="relative max-xl:w-[70%]">
           <Input2
             placeholder="Search sessions..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             name="search"
-            className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-[610px] h-11 top-[25px] left-[30px] rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
+            className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full xl:w-[610px] h-11 top-[25px] left-[30px] rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
           />
           <SearchIcon />
         </div>
-        <div className="flex items-center gap-10 text-[#212C26]">
+        <div className="flex items-center md:gap-10 text-[#212C26]">
           <div className="relative">
             {/* <Bell className="h-8 w-8" /> */}
             {/* <div className="bg-[#E05252] absolute -top-1.5 -right-1 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] rounded-full h-5 w-5 px-1.5 py-0.5">
@@ -489,7 +489,7 @@ export default function Page() {
           </div>
           <div className="flex items-center gap-2">
             <UserAvatar name={avatarName} />
-            <div>
+            <div className="max-md:hidden">
               <Typography title={fullName} cssClass="text-[#212C26]!" />
               <Typography
                 title="Premium Member"
@@ -510,7 +510,7 @@ export default function Page() {
             src="/images/dashboard-banner.jpg"
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-7">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-7">
           {goalDetail?.map((goal, i) => (
             <div
               key={i}
@@ -549,7 +549,7 @@ export default function Page() {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-7.5 ">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-7.5 ">
           <div
             className={`bg-white rounded-[20px] p-7 pb-0 flex flex-col items-start gap-7.5 h-hull`}
           >
@@ -640,7 +640,7 @@ export default function Page() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-[65%_35%] gap-7.5">
+        <div className="grid grid-cols-1 lg:grid-cols-[65%_35%] gap-7.5">
           <div
             className={`bg-white rounded-[20px] p-7 flex flex-col items-start gap-7.5 w-full`}
           >

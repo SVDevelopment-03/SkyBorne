@@ -409,7 +409,7 @@ export default function UserSessions() {
       </div>
 
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">

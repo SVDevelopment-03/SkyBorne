@@ -200,7 +200,7 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="p-4 lg:p-8 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-8 space-y-5 sm:space-y-6">
       <div>
         <h1 className="text-3xl text-[#1A1A1A] mb-2">My Profile</h1>
         <p className="text-[#6B6B6B]">
@@ -217,14 +217,14 @@ export default function UserProfile() {
         }}
       >
         <CardContent className="p-8">
-          <div className="flex flex-col md:flex-row items-center gap-6 text-white">
+          <div className="flex flex-col sm:flex-col md:flex-row items-center gap-4 sm:gap-6 text-white">
             <div className="relative">
-              <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-5xl font-bold">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold">
                 {getInitials()}
               </div>
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-3xl mb-2">
+              <h2 className="text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2">
                 {user?.firstName} {user?.lastName}
               </h2>
               <p className="text-white/90 mb-4">
@@ -248,7 +248,7 @@ export default function UserProfile() {
             <Button
               onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
               disabled={isUpdating}
-              className="bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949] disabled:opacity-50"
+              className="w-full sm:w-auto bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949] disabled:opacity-50" 
               style={{ borderRadius: "12px" }}
             >
               {isUpdating ? (
@@ -273,14 +273,14 @@ export default function UserProfile() {
       </Card>
 
       {/* Personal Information */}
-      <Card className="border-[#e5e5e5]" style={{ borderRadius: "24px" }}>
+      <Card className="border-[#e5e5e5] mb-20 sm:mb-0" style={{ borderRadius: "24px" }}>
         <CardHeader>
           <CardTitle className="text-xl text-[#1A1A1A]">
             Personal Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-[#6B6B6B] mb-2 block">
                 First Name
@@ -375,7 +375,7 @@ export default function UserProfile() {
           </div>
 
           {isEditing && (
-            <div className="flex gap-3 justify-end pt-4">
+            <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
               <Button
                 onClick={handleCancel}
                 variant="outline"

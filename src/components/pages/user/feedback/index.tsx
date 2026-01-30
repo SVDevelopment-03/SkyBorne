@@ -120,7 +120,7 @@ export default function UserFeedback() {
     : 0;
 
   return (
-    <div className="p-4 lg:p-8 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-8 space-y-5 sm:space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl text-[#1A1A1A] mb-2">Feedback</h1>
@@ -181,7 +181,7 @@ export default function UserFeedback() {
           <CardTitle className="text-xl text-[#1A1A1A]">Share Your Experience</CardTitle>
           <p className="text-sm text-[#6B6B6B] mt-1">Your feedback helps us improve our services</p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           <Formik
             initialValues={initialValues}
             validationSchema={validationSchema}
@@ -210,7 +210,7 @@ export default function UserFeedback() {
                   <label className="text-sm text-[#6B6B6B] mb-3 block">
                     How would you rate your experience?
                   </label>
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
@@ -221,7 +221,7 @@ export default function UserFeedback() {
                         className="transition-transform hover:scale-110"
                       >
                         <Star
-                          className={`w-10 h-10 ${
+                          className={`w-8 h-8 sm:w-10 sm:h-10 ${
                             star <= (hoveredRating || values.rating)
                               ? 'text-[#f4b942] fill-current'
                               : 'text-[#e5e5e5]'
@@ -277,7 +277,7 @@ export default function UserFeedback() {
       </Card>
 
       {/* Past Feedback */}
-      <Card className="border-[#e5e5e5]" style={{ borderRadius: '24px' }}>
+      <Card className="border-[#e5e5e5] mb-20 sm:mb-0" style={{ borderRadius: '24px' }}>
         <CardHeader>
           <CardTitle className="text-xl text-[#1A1A1A]">Your Feedback History</CardTitle>
           <p className="text-sm text-[#6B6B6B] mt-1">Review your past session feedback</p>
@@ -310,13 +310,13 @@ export default function UserFeedback() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge
+                    {/* <Badge
                       className="bg-[#27AE60]/10 text-[#27AE60] mb-2 py-1!"
                       style={{ borderRadius: '8px' }}
                     >
                       <CheckCircle className="w-3 h-3 mr-1" />
                       Submitted
-                    </Badge>
+                    </Badge> */}
                     <p className="text-sm text-[#6B6B6B] w-full text-center">
                       {new Date(feedback.createdAt).toLocaleDateString()}
                     </p>
