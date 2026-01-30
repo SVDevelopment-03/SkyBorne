@@ -270,7 +270,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className="px-8 py-6">
+      <div className="px-0 md:px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
@@ -284,10 +284,10 @@ const AdminDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="p-8">
+      <div className="lg:p-8">
         {/* Stats Grid */}
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 mb-8">
+        <div className="md:grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-6 mb-8">
           {statsLoading ? (
             <div className="col-span-full flex justify-center py-12">
               <div className="flex flex-col items-center gap-2">
@@ -304,6 +304,7 @@ const AdminDashboard = () => {
           ) : (
             <>
               {/* First Card - Spans 2 rows */}
+              
               <div className="rounded-lg p-8 bg-white row-span-2 flex flex-col justify-between">
                 <div>
                   <div className="flex items-start justify-between mb-3">

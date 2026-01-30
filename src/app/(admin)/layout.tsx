@@ -52,7 +52,7 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
         <AdminSidebarDrawer />
       </div>
 
-      <div className="hidden ;g:flex">
+      <div className="hidden lg:flex">
         <AdminSidebar /> {/* Your original sidebar */}
       </div>
       <div className="min-w-0 overflow-hidden">
@@ -76,7 +76,7 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
             </div>
           </div>
         </div>
-        <div className="h-dvh overflow-y-auto [scrollbar-width:none] p-10">
+        <div className="h-dvh overflow-y-auto [scrollbar-width:none] py-10 px-4 lg:px-10">
           {children}
         </div>
       </div>

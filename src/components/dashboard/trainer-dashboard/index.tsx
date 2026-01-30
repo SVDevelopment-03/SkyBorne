@@ -282,7 +282,7 @@ const attendanceChartData = useMemo(() => {
   return (
     <div className="min-h-scree">
       {/* Header */}
-      <div className="px-8 py-6">
+      <div className="px-2 lg:px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Welcome back, {user?.firstName || "Trainer"}! 🌟</h1>
@@ -292,7 +292,7 @@ const attendanceChartData = useMemo(() => {
       </div>
 
       {/* Main Content */}
-      <div className="p-8">
+      <div className="py-8 px-2 lg:px-8">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {statsLoading ? (
