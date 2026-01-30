@@ -21,10 +21,20 @@ import { Button } from "@/components/ui/button";
 import { CommonSelect } from "@/components/ui/CountrySelect";
 import CustomPagination from "@/components/ui/CustromPagination";
 import countryList from "react-select-country-list";
+import { set } from "lodash";
 
 export interface DisplayUser extends UserRowData {
   countryCode?: string;
 }
+
+const planOptions = [
+  { value: "all", label: "All Plans" },
+  { value: "gold-yoga", label: "Gold Yoga" },
+  { value: "gold-zumba", label: "Gold Zumba" },
+  { value: "gold-mixed", label: "Gold Mixed" },
+  { value: "diamond", label: "Diamond" },
+  { value: "platinum", label: "Platinum" },
+];
 
 const UserManagement = () => {
   const [search, setSearch] = useState("");
@@ -33,8 +43,8 @@ const UserManagement = () => {
   const [limit] = useState(10);
 
   const [updateStatus] = useUpdateUserStatusMutation();
-    const [exportCSV, { isLoading: isExporting }] = useExportUsersCSVMutation();
-
+  const [exportCSV, { isLoading: isExporting }] = useExportUsersCSVMutation();
+  const [filterPlan, setFilterPlan] = useState("all");
 
   // Get country options
   const countryOptions = useMemo(() => {
@@ -48,11 +58,17 @@ const UserManagement = () => {
     ];
   }, []);
 
+  const handlePlanFilter = (value: string) => {
+    setFilterPlan(value);
+    setPage(1);
+  };
+
   const { data, isLoading, isFetching, refetch } = useGetUsersQuery({
     page,
     limit,
     search: search,
     country: filterCountry !== "all" ? filterCountry : undefined,
+    plan: filterPlan !== "all" ? filterPlan : undefined,
   });
 
 
@@ -105,6 +121,7 @@ const downloadCSV = async () => {
     const params: ExportUsersParams = {
       search: search || undefined,
       country: filterCountry !== "all" ? filterCountry : undefined,
+      plan: filterPlan !== "all" ? filterPlan : undefined,
     };
 
     // Get CSV text from API
@@ -165,9 +182,21 @@ const downloadCSV = async () => {
                 label="Country"
                 showLabel={false}
                 options={countryOptions}
-                cssProp="min-h-[45px]! md:min-w-[200px]!"
+                cssProp="min-h-[45px]! md:min-w-[160px]!"
                 value={filterCountry}
                 onChange={handleCountryFilter}
+              />
+            </div>
+
+            {/* Plan Filter */}
+            <div className="w-full md:w-auto">
+              <CommonSelect
+                label="All Plans"
+                showLabel={false}
+                options={planOptions}
+                cssProp="min-h-[45px]! md:min-w-[160px]!"
+                value={filterPlan}
+                onChange={handlePlanFilter}
               />
             </div>
           </div>

@@ -40,11 +40,13 @@ export interface GetUsersParams {
   limit?: number;
   search?: string;
   country?: string;
+  plan?: string;
 }
 
 export interface ExportUsersParams {
   search?: string;
   country?: string;
+  plan?: string;
 }
 
 export const userApi = createApi({
