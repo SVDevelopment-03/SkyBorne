@@ -51,12 +51,12 @@ export default function UserLayout({ children }: AuthLayoutProps) {
   if (checking) return null;
 
   return (
-    <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 md:grid-cols-[260px_1fr] h-dvh overflow-hidden">
-      <div className="hidden md:flex">
+    <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 lg:grid-cols-[260px_1fr] h-dvh overflow-hidden">
+      <div className="hidden lg:flex">
         <Sidebar />
       </div>
 
-      <div className="flex md:hidden">
+      <div className="flex lg:hidden">
         <SidebarDrawer /> 
       </div>
       <div className="flex flex-col h-dvh overflow-hidden">

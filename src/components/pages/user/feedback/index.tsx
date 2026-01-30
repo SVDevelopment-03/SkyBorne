@@ -245,6 +245,7 @@ export default function UserFeedback() {
                     value={values.comment}
                     onChange={(e) => setFieldValue('comment', e.target.value)}
                     onBlur={() => setFieldValue('comment', values.comment)}
+                    maxLength={500}
                     placeholder="Share your thoughts, suggestions, or any concerns..."
                     rows={5}
                     className="w-full px-4 py-3 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20 resize-none"

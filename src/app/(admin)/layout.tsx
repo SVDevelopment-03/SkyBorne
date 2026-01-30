@@ -47,12 +47,12 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
   if (checking) return null;
 
   return (
-    <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 md:grid-cols-[300px_1fr] min-h-dvh">
-      <div className="md:hidden">
+    <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 lg:grid-cols-[300px_1fr] min-h-dvh">
+      <div className="lg:hidden">
         <AdminSidebarDrawer />
       </div>
 
-      <div className="hidden md:flex">
+      <div className="hidden ;g:flex">
         <AdminSidebar /> {/* Your original sidebar */}
       </div>
       <div className="min-w-0 overflow-hidden">

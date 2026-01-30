@@ -662,7 +662,7 @@ export default function Page() {
             </div>
           </div>
           <div
-            className={`bg-white rounded-[20px] p-7 flex flex-col items-start justify-start gap-7.5 w-full [&>*:first-child]:justify-start`}
+            className={`bg-white rounded-[20px] p-7 mb-16 sm:mb-0 flex flex-col items-start justify-start gap-7.5 w-full [&>*:first-child]:justify-start`}
           >
             <DashboardTitle
               title="Your Credits Journey"

@@ -469,7 +469,7 @@ export default function UserSessions() {
       <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex gap-2 w-full md:w-auto">
+            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
                 onClick={() => setFilter("all")}

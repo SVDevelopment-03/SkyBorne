@@ -36,7 +36,7 @@ export default function AdminSidebarDrawer() {
   };
 
   return (
-    <div className="md:hidden">
+    <div className="lg:hidden">
       {/* -------- Drawer Trigger Button -------- */}
       <Drawer direction="left" open={open} onOpenChange={setOpen}>
         <DrawerTrigger asChild>

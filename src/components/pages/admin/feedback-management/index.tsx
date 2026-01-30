@@ -50,7 +50,9 @@ const AdminFeedbackManagement = () => {
   const [limit] = useState(10);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isReplyModalOpen, setIsReplyModalOpen] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackData | null>(null);
+  const [selectedFeedback, setSelectedFeedback] = useState<FeedbackData | null>(
+    null,
+  );
   const [replyText, setReplyText] = useState("");
 
   // API calls
@@ -67,6 +69,18 @@ const AdminFeedbackManagement = () => {
 
   const feedbacks = feedbackData?.data || [];
   const totalPages = feedbackData?.totalPages || 0;
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenModal = (fb: FeedbackData) => {
+    setSelectedFeedback(fb);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedFeedback(null);
+  };
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -126,7 +140,10 @@ const AdminFeedbackManagement = () => {
     }
   };
 
-  const handleStatusChange = async (feedbackId: string, newStatus: "submitted" | "reviewed" | "flagged") => {
+  const handleStatusChange = async (
+    feedbackId: string,
+    newStatus: "submitted" | "reviewed" | "flagged",
+  ) => {
     try {
       await updateStatus({
         feedbackId,
@@ -165,8 +182,12 @@ const AdminFeedbackManagement = () => {
       header: "User Name",
       cell: ({ row }) => (
         <div className="flex flex-col">
-          <span className="font-medium text-[#000000]">{row?.original?.user?.name}</span>
-          <span className="text-xs text-[#6B6B6B]">{row?.original?.user?.email}</span>
+          <span className="font-medium text-[#000000]">
+            {row?.original?.user?.name}
+          </span>
+          <span className="text-xs text-[#6B6B6B]">
+            {row?.original?.user?.email}
+          </span>
         </div>
       ),
     },
@@ -203,26 +224,18 @@ const AdminFeedbackManagement = () => {
       accessorKey: "comment",
       header: "Comment",
       cell: ({ row }) => {
+        const fb = row.original;
         const comment = row.original.comment || "—";
         const shortComment =
           comment.length > 10 ? comment.slice(0, 10) + "…" : comment;
 
         return (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <span className="max-w-[200px] text-sm text-[#4B4B4B] cursor-help">
-                  {shortComment}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent
-                side="top"
-                className="max-w-xs w-[200px] whitespace-normal text-sm p-4"
-              >
-                {comment}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          <span
+            className="max-w-[200px] text-sm text-[#4B4B4B] cursor-pointer"
+            onClick={() => handleOpenModal(fb)}
+          >
+            {shortComment}
+          </span>
         );
       },
     },
@@ -230,7 +243,9 @@ const AdminFeedbackManagement = () => {
       accessorKey: "status",
       header: "Status",
       cell: ({ row }) => (
-        <Badge className={`${getStatusColor(row.original.status)} capitalize py-1! bg-[#27AE60]/10 text-[#27AE60] rounded-lg! pr-[8px] text-center`}>
+        <Badge
+          className={`${getStatusColor(row.original.status)} capitalize py-1! bg-[#27AE60]/10 text-[#27AE60] rounded-lg! pr-[8px] text-center`}
+        >
           {row.original.status || "submitted"}
         </Badge>
       ),
@@ -319,166 +334,64 @@ const AdminFeedbackManagement = () => {
         )}
       </div>
 
-      {/* View Feedback Modal */}
-      <Dialog open={isViewModalOpen} onOpenChange={handleCloseFeedbackModal}>
+      {/* Region Modal */}
+      <Dialog open={isModalOpen} onOpenChange={handleCloseModal}>
         <VisuallyHidden>
-          <DialogTitle>View Feedback</DialogTitle>
+          <DialogTitle>Region Management</DialogTitle>
         </VisuallyHidden>
-        <DialogContent className="w-full! max-w-[600px]! p-10">
-          {selectedFeedback && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-4">
-                  Feedback Details
-                </h2>
-              </div>
+        <DialogContent
+          className="
+                  !w-full!
+                  !max-w-[600px]!
+                  p-10
+                  data-[state=open]:animate-in
+                  data-[state=open]:fade-in-0
+                  data-[state=open]:zoom-in-95
+                  data-[state=open]:slide-in-from-top-20
+                  data-[state=closed]:animate-out
+                  data-[state=closed]:fade-out-0
+                  data-[state=closed]:zoom-out-95
+                  data-[state=closed]:slide-out-to-top-20
+                  duration-500
+                "
+        >
+          <div className="flex flex-col gap-6">
+            {/* User Name */}
+            <div>
+              <p className="text-sm text-gray-500">User Name</p>
+              <p className="text-lg font-semibold text-black">
+                {selectedFeedback?.user?.name}
+              </p>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">User Name</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.user.name}</p>
-                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.user.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">Session</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.session || "N/A"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">Trainer</p>
-                  <p className="font-medium text-[#1A1A1A]">{selectedFeedback.trainer.name}</p>
-                  <p className="text-xs text-[#6B6B6B]">{selectedFeedback.trainer.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-1">Date</p>
-                  <p className="font-medium text-[#1A1A1A]">
-                    {new Date(selectedFeedback.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm text-[#6B6B6B] mb-1">Rating</p>
-                <div className="flex items-center gap-2">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <Star
-                      key={star}
-                      className={`w-5 h-5 ${
-                        star <= selectedFeedback.rating
-                          ? "text-[#f4b942] fill-current"
-                          : "text-[#e5e5e5]"
-                      }`}
-                    />
-                  ))}
-                  <span className="font-semibold">{selectedFeedback.rating}/5</span>
-                </div>
-              </div>
-
-              <div>
-                <p className="text-sm text-[#6B6B6B] mb-2">Comment</p>
-                <p className="text-[#1A1A1A] leading-relaxed bg-[#f9f9f9] p-4 rounded-lg">
-                  {selectedFeedback.comment}
-                </p>
-              </div>
-
-              {selectedFeedback.trainerResponse && (
-                <div>
-                  <p className="text-sm text-[#6B6B6B] mb-2">Trainer Response</p>
-                  <p className="text-[#1A1A1A] leading-relaxed bg-[#f0f8f5] p-4 rounded-lg">
-                    {selectedFeedback.trainerResponse}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={() => {
-                    handleStatusChange(selectedFeedback._id, "reviewed");
-                  }}
-                  variant="themeRegular"
-                  className="rounded-lg"
-                >
-                  Mark as Reviewed
-                </Button>
-                <Button
-                  onClick={() => {
-                    handleStatusChange(selectedFeedback._id, "flagged");
-                  }}
-                  variant="outline"
-                  className="rounded-lg"
-                >
-                  Flag for Review
-                </Button>
-                <Button
-                  onClick={handleCloseFeedbackModal}
-                  variant="outline"
-                  className="rounded-lg ml-auto"
-                >
-                  Close
-                </Button>
+            {/* Rating */}
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Rating</p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <Star
+                    key={star}
+                    className={`w-6 h-6 ${
+                      star <= (selectedFeedback?.rating || 0)
+                        ? "text-[#f4b942] fill-current"
+                        : "text-[#e5e5e5]"
+                    }`}
+                  />
+                ))}
               </div>
             </div>
-          )}
-        </DialogContent>
-      </Dialog>
 
-      {/* Reply Modal */}
-      <Dialog open={isReplyModalOpen} onOpenChange={handleCloseReplyModal}>
-        <VisuallyHidden>
-          <DialogTitle>Add Trainer Response</DialogTitle>
-        </VisuallyHidden>
-        <DialogContent className="w-full! max-w-[600px]! p-10">
-          {selectedFeedback && (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold text-[#1A1A1A] mb-1">
-                  Trainer Response
-                </h2>
-                <p className="text-[#6B6B6B] text-sm">
-                  Replying to {selectedFeedback.user.name}
-                  {selectedFeedback.session && `'s feedback on ${selectedFeedback.session}`}
+            {/* Full Comment */}
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Comment</p>
+
+              <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 leading-relaxed w-full max-w-full overflow-hidden">
+                <p className="break-all whitespace-pre-wrap">
+                  {selectedFeedback?.comment}
                 </p>
-              </div>
-
-              <div className="bg-[#f9f9f9] p-4 rounded-lg">
-                <p className="text-sm text-[#6B6B6B] mb-1">Original Feedback</p>
-                <p className="text-[#1A1A1A]">{selectedFeedback.comment}</p>
-              </div>
-
-              <div>
-                <label className="text-sm text-[#6B6B6B] mb-2 block">
-                  Your Response
-                </label>
-                <textarea
-                  value={replyText}
-                  onChange={(e) => setReplyText(e.target.value)}
-                  placeholder="Write your response here..."
-                  rows={5}
-                  maxLength={500}
-                  className="w-full px-4 py-3 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20 resize-none"
-                />
-                <p className="text-xs text-[#6B6B6B] mt-2">
-                  {replyText.length}/500 characters
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={handleSubmitReply}
-                  variant="themeRegular"
-                  className="rounded-lg flex-1"
-                >
-                  Submit Response
-                </Button>
-                <Button
-                  onClick={handleCloseReplyModal}
-                  variant="outline"
-                  className="rounded-lg flex-1"
-                >
-                  Cancel
-                </Button>
               </div>
             </div>
-          )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>
