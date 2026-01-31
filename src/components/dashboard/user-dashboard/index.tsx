@@ -168,7 +168,8 @@ export default function Page() {
     console.log("region", region);
 
     setTimeout(() => {
-      setUserRegion(region);
+     setUserRegion(region);
+      // setUserRegion({region:"Gulf",timezone:'Asia/Dubai'});
     }, 0);
   }, []);
 

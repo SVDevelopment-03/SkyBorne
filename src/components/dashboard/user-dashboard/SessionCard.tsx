@@ -57,6 +57,8 @@ const SessionCard = ({
   const [showZoomFlow, setShowZoomFlow] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [showClassModal, setShowClassModal] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
 const handleJoin = async () => {
   if (!meetingId || !userId || !region) {
@@ -66,9 +68,14 @@ const handleJoin = async () => {
 
   try {
     const res = await joinMeeting({ meetingId, userId ,region}).unwrap();
-    const joinUrl =  res?.data?.accessUrl;
+    const { accessUrl:joinUrl, mode } = res?.data;
 
-    if (joinUrl) {
+      if (!joinUrl) {
+      toast.error("Access URL not found");
+      return;
+    }
+
+    if (mode=='live') {
       toast.success("Joining meeting...");
       window.open(
         joinUrl,
@@ -76,7 +83,9 @@ const handleJoin = async () => {
         "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
       );
     } else {
-      toast.error("Join URL not found");
+      // 👇 OPEN YOUR VIDEO PLAYER MODAL
+      setVideoUrl(joinUrl);
+      setShowVideoPlayer(true);
     }
   } catch (err: any) {
     console.error("Join meeting error:", err);
@@ -273,6 +282,27 @@ const handleJoin = async () => {
         onClose={() => setShowZoomFlow(false)}
         session={selectedClass}
       />
+      {showVideoPlayer && (
+  <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+    <div className="bg-white w-[90%] max-w-4xl rounded-lg p-4">
+      <button
+        className="mb-3 text-right w-full"
+        onClick={() => setShowVideoPlayer(false)}
+      >
+        Close
+      </button>
+
+      <video
+        src={videoUrl as string}
+        controls
+        autoPlay
+        className="w-full rounded-lg"
+      />
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 };

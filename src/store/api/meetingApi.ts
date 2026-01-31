@@ -110,6 +110,17 @@ export const meetingApi = createApi({
       }),
       providesTags: ["Meetings"],
     }),
+    getAllUserMeetings: builder.query({
+      query: ({ region, search }) => ({
+        url: "/meetings/all",
+        method: "GET",
+        params: {
+          region,
+          search,
+        },
+      }),
+      providesTags: ["Meetings"],
+    }),
     // For trainers - fetch their assigned sessions (NEW)
     getTrainerUpcomingMeetings: builder.query({
       query: ({ search = "", date }) => ({
@@ -265,6 +276,7 @@ export const {
   useCreateMeetingMutation,
   useGetAllMeetingsQuery,
   useGetMeetingByIdQuery,
+  useGetAllUserMeetingsQuery,
   useUpdateMeetingMutation,
   useGetAllTrainerMeetingsQuery,
   useGetTrainerUpcomingMeetingsQuery, // New hook

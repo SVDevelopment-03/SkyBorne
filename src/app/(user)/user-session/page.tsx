@@ -16,6 +16,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import {
+  useGetAllUserMeetingsQuery,
   useGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
@@ -68,6 +69,8 @@ export default function UserSessions() {
   const [showClassModal, setShowClassModal] = useState(false);
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [showZoomFlow, setShowZoomFlow] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [userRegion, setUserRegion] = useState<{
     timezone: string;
     region: string;
@@ -79,7 +82,7 @@ export default function UserSessions() {
     isLoading,
     error: fetchError,
     refetch,
-  } = useGetUpcomingMeetingsQuery({
+  } = useGetAllUserMeetingsQuery({
     region: "",
     search: searchQuery,
   });
@@ -93,6 +96,7 @@ export default function UserSessions() {
 
     setTimeout(() => {
       setUserRegion(region);
+     // setUserRegion({ region: "Gulf", timezone: "Asia/Dubai" });
     }, 0);
   }, []);
 
@@ -125,7 +129,7 @@ export default function UserSessions() {
       // show next day's date for recording class
       if (mode !== "live" && regionTimeStr) {
         const classDatetime = new Date(isoString);
-        const currentTime= Date.now();
+        const currentTime = Date.now();
 
         console.log("📅 Recording Mode Detected:");
         console.log("  ISO Time:", isoString);
@@ -280,7 +284,7 @@ export default function UserSessions() {
       session?.localTime,
       userRegion?.timezone,
     );
-    
+
     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
     const formattedDate = formatDateWithTimezone(
       session?.localTime,
@@ -288,7 +292,7 @@ export default function UserSessions() {
       regionInfo?.localTime,
       regionInfo?.mode,
     );
-    
+
     const classItem = {
       meetingId: session._id,
       userId: user?.id,
@@ -314,16 +318,20 @@ export default function UserSessions() {
       toast.error("Missing meeting or user information");
       return;
     }
-
     try {
       const res = await joinMeeting({
         meetingId: session._id,
         userId: user?.id,
-        region: session.liveRegion,
+        region: userRegion?.region,
       }).unwrap();
-      const joinUrl = res?.data?.accessUrl;
+      const { accessUrl: joinUrl, mode } = res?.data;
 
-      if (joinUrl) {
+      if (!joinUrl) {
+        toast.error("Access URL not found");
+        return;
+      }
+
+      if (mode == "live") {
         toast.success("Joining meeting...");
         window.open(
           joinUrl,
@@ -331,7 +339,9 @@ export default function UserSessions() {
           "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
         );
       } else {
-        toast.error("Join URL not found");
+        // 👇 OPEN YOUR VIDEO PLAYER MODAL
+        setVideoUrl(joinUrl);
+        setShowVideoPlayer(true);
       }
     } catch (err: any) {
       console.error("Join meeting error:", err);
@@ -341,11 +351,32 @@ export default function UserSessions() {
     }
   };
 
-  const handleViewRecording = (session: Session) => {
-    if (session.recordingUrl) {
-      window.open(session.recordingUrl, "_blank");
-    } else {
-      alert("Recording not yet available");
+  const handleViewRecording = async (session: Session) => {
+    if (!session._id || !user?.id || !session.liveRegion) {
+      toast.error("Missing meeting or user information");
+      return;
+    }
+    try {
+      const res = await joinMeeting({
+        meetingId: session._id,
+        userId: user?.id,
+        region: userRegion?.region,
+      }).unwrap();
+      const {recordUrl, mode } = res?.data;
+
+      if (!recordUrl) {
+        toast.error("Access URL not found");
+        return;
+      }
+        // 👇 OPEN YOUR VIDEO PLAYER MODAL
+        setVideoUrl(recordUrl);
+        setShowVideoPlayer(true);
+      
+    } catch (err: any) {
+      console.error("Join meeting error:", err);
+      toast.error(
+        err?.data?.message || err?.message || "Failed to join meeting",
+      );
     }
   };
 
@@ -539,7 +570,7 @@ export default function UserSessions() {
               session?.localTime,
               userRegion?.timezone,
             );
-            
+
             // ✅ Use the enhanced formatDateWithTimezone with recording mode support
             const formattedDate = formatDateWithTimezone(
               session?.localTime,
@@ -635,19 +666,19 @@ export default function UserSessions() {
                     ) : (
                       <>
                         <Button
-                          className="flex-1 bg-[#5eb9b4] hover:bg-[#4a9d98] text-white"
+                          className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
                           style={{ borderRadius: "12px" }}
                           onClick={() => handleViewRecording(session)}
                         >
                           Watch Recording
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="outline"
                           className="flex-1 border-[#5eb9b4] text-[#5eb9b4] hover:bg-[#5eb9b4]/10"
                           style={{ borderRadius: "12px" }}
                         >
                           View Summary
-                        </Button>
+                        </Button> */}
                       </>
                     )}
                   </div>
@@ -748,6 +779,26 @@ export default function UserSessions() {
           onClose={() => setShowZoomFlow(false)}
           session={selectedClass}
         />
+      )}
+
+      {showVideoPlayer && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white w-[90%] max-w-4xl rounded-lg p-4">
+            <button
+              className="mb-3 text-right w-full"
+              onClick={() => setShowVideoPlayer(false)}
+            >
+              Close
+            </button>
+
+            <video
+              src={videoUrl as string}
+              controls
+              autoPlay
+              className="w-full rounded-lg"
+            />
+          </div>
+        </div>
       )}
     </div>
   );
