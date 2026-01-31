@@ -162,56 +162,63 @@ const downloadCSV = async () => {
       </div>
 
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
-        {/* Search, Filters and Export Button */}
-        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
-            {/* Search Input */}
-            <div className="relative">
-              <Input2
-                placeholder="Search by name or email"
-                value={search}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] min-w-[260px] md:min-w-[300px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
-              />
-              <SearchIcon />
-            </div>
+        {/* <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full"> */}
+        {/* <div className="flex flex-wrap md:flex-nowrap items-center gap-4 w-full"> */}
+        {/* <div className="flex flex-wrap lg:flex-nowrap items-center gap-4 w-full"> */}
+        <div className="flex flex-col lg:flex-row lg:items-center gap-4 w-full">
 
-            {/* Country Filter */}
-            <div className="w-full md:w-auto">
-              <CommonSelect
-                label="Country"
-                showLabel={false}
-                options={countryOptions}
-                cssProp="min-h-[45px]! md:min-w-[160px]!"
-                value={filterCountry}
-                onChange={handleCountryFilter}
-              />
-            </div>
-
-            {/* Plan Filter */}
-            <div className="w-full md:w-auto">
-              <CommonSelect
-                label="All Plans"
-                showLabel={false}
-                options={planOptions}
-                cssProp="min-h-[45px]! md:min-w-[160px]!"
-                value={filterPlan}
-                onChange={handlePlanFilter}
-              />
-            </div>
+        {/* LEFT SIDE — Filters (wrap allowed) */}
+        <div className="flex flex-wrap gap-4 w-full min-w-0">
+          {/* Search Input */}
+          <div className="relative w-full sm:w-full md:w-[300px]">
+            <Input2
+              placeholder="Search by name or email"
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
+            />
+            <SearchIcon />
           </div>
 
-          {/* Download CSV Button */}
+          {/* Country Filter */}
+          <div className="w-full md:w-auto">
+            <CommonSelect
+              label="Country"
+              showLabel={false}
+              options={countryOptions}
+              cssProp="min-h-[45px]! md:min-w-[160px]!"
+              value={filterCountry}
+              onChange={handleCountryFilter}
+            />
+          </div>
+
+          {/* Plan Filter */}
+          <div className="w-full md:w-auto">
+            <CommonSelect
+              label="All Plans"
+              showLabel={false}
+              options={planOptions}
+              cssProp="min-h-[45px]! md:min-w-[160px]!"
+              value={filterPlan}
+              onChange={handlePlanFilter}
+            />
+          </div>
+        </div>
+
+        {/* RIGHT SIDE — Action Button (isolated, never overlaps) */}
+        {/* <div className="flex shrink-0 self-start lg:self-auto"> */}
+        <div className="flex w-full lg:w-auto">
           <Button
             onClick={downloadCSV}
             variant="themeRegular"
-            className="rounded-[10px] py-3!"
+            // className="rounded-[10px] py-3!"
+            className="rounded-[10px] py-3! w-full sm:w-auto "
           >
             <FileDown className="w-4 h-4" />
             Download CSV
           </Button>
         </div>
-
+      </div>
         {/* Table */}
         <div className="flex flex-col w-full pt-4 relative overflow-x-auto max-w-[897px] lg:max-w-full">
           {(isLoading || isFetching) && (
