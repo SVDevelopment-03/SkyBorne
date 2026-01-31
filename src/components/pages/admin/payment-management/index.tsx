@@ -293,8 +293,9 @@ function AdminPayments() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
+      <div className="w-full flex flex-wrap gap-4 justify-start">
+        {/* Card 1 */}
+        <Card className="flex-[1_1_calc(25%-1rem)] min-w-[220px] max-w-full border-[#e5e5e5] rounded-[20px]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -314,7 +315,8 @@ function AdminPayments() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
+        {/* Card 2 */}
+        <Card className="flex-[1_1_calc(25%-1rem)] min-w-[220px] max-w-full border-[#e5e5e5] rounded-[20px]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -334,13 +336,12 @@ function AdminPayments() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
+        {/* Card 3 */}
+        <Card className="flex-[1_1_calc(25%-1rem)] min-w-[220px] max-w-full border-[#e5e5e5] rounded-[20px]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-base text-[#6B6B6B] mb-1">
-                  Total Transactions
-                </p>
+                <p className="text-base text-[#6B6B6B] mb-1">Total Transactions</p>
                 <p className="text-2xl font-semibold text-[#1A1A1A]">
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
@@ -356,7 +357,8 @@ function AdminPayments() {
           </CardContent>
         </Card>
 
-        <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
+        {/* Card 4 */}
+        <Card className="flex-[1_1_calc(25%-1rem)] min-w-[220px] max-w-full border-[#e5e5e5] rounded-[20px]">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
@@ -365,7 +367,7 @@ function AdminPayments() {
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    <>{stats.activeSubscriptions ? stats.activeSubscriptions : 0}</>
+                    stats.activeSubscriptions || 0
                   )}
                 </p>
               </div>
@@ -377,13 +379,15 @@ function AdminPayments() {
         </Card>
       </div>
 
+
+
       {/* Main Content */}
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
         {/* Search, Filters and Export Button */}
-        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full flex-wrap">
+          <div className="flex flex-col md:flex-row md:items-center gap-4 w-full md:w-auto flex-wrap">
             {/* Search Input */}
-            <div className="relative">
+            <div className="relative flex-1 min-w-[260px] md:min-w-[300px]">
               <Input2
                 placeholder="Search by name or service"
                 value={searchTerm}
@@ -392,28 +396,13 @@ function AdminPayments() {
                   setPage(1);
                 }}
                 name="search"
-                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] min-w-[260px] md:min-w-[300px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
+                className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
               />
               <SearchIcon />
             </div>
-
-            {/* Status Filter */}
-            {/* <div className="w-full md:w-auto">
-              <CommonSelect
-                label="Payment Status"
-                showLabel={false}
-                options={paymentStatusOptions}
-                cssProp="min-h-[45px]! md:min-w-[200px]!"
-                value={filterStatus}
-                onChange={(e) => {
-                  setFilterStatus(e);
-                  setPage(1);
-                }}
-              />
-            </div> */}
-
+            
             {/* Country Filter */}
-            <div className="w-full md:w-auto">
+            <div className="w-full md:w-auto min-w-[150px]">
               <CommonSelect
                 label="Country"
                 showLabel={false}
@@ -429,19 +418,21 @@ function AdminPayments() {
           </div>
 
           {/* Download CSV Button */}
-          <Button
-            onClick={downloadCSV}
-            variant="themeRegular"
-            className="rounded-[10px] py-3!"
-            disabled={isExporting || payments.length === 0}
-          >
-            {isExporting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <FileDown className="w-4 h-4" />
-            )}
-            Download CSV
-          </Button>
+          <div className="flex-shrink-0 w-full md:w-auto">
+            <Button
+              onClick={downloadCSV}
+              variant="themeRegular"
+              className="rounded-[10px] py-3! w-full md:w-auto"
+              disabled={isExporting || payments.length === 0}
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4" />
+              )}
+              Download CSV
+            </Button>
+          </div>
         </div>
 
         {/* Data Table */}
