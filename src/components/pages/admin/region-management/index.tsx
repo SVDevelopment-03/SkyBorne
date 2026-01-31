@@ -25,9 +25,10 @@ const RegionAndCountryManagement = () => {
           className="w-full"
         >
           {/* Tab List */}
-          <TabsList className="grid w-full grid-cols-2 mb-6 min-h-[45px] font-satoshi-500 text-lg!">
-            <TabsTrigger value="regions" className="font-satoshi-500! text-lg!">Region Management</TabsTrigger>
-            <TabsTrigger value="countries" className="font-satoshi-500! text-lg!">Country Management</TabsTrigger>
+          {/* <TabsList className="grid w-full grid-cols-2 mb-6 min-h-[45px] font-satoshi-500 text-lg!"> */}
+          <TabsList className="flex w-full mb-6 min-h-[45px] font-satoshi-500 text-lg! overflow-x-auto">
+            <TabsTrigger value="regions" className="font-satoshi-500! text-lg! whitespace-nowrap">Region Management</TabsTrigger>
+            <TabsTrigger value="countries" className="font-satoshi-500! text-lg! whitespace-nowrap">Country Management</TabsTrigger>
           </TabsList>
 
           {/* Region Management Tab */}
