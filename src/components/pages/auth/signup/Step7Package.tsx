@@ -1,44 +1,46 @@
-import { useState } from "react";
-import { PackageSelection } from "./PackageSelection";
-import { ReviewConfirm } from "./ReviewConfirm";
-import { Payment } from "./Payment";
-import { Confirmation } from "./Confirmation";
+"use client";
+import {
+  PackageSelection,
+  PackageType,
+} from "@/components/pages/auth/signup/PackageSelection";
 import useGetUser from "@/hooks/useGetUser";
+import { useState } from "react";
+import { ReviewConfirm } from "@/components/pages/auth/signup/ReviewConfirm";
+import { Payment } from "@/components/pages/auth/signup/Payment";
+import { Confirmation } from "@/components/pages/auth/signup/Confirmation";
 import { useCreatePaymentOrderMutation } from "@/store/api/paymentApi";
 import toast from "react-hot-toast";
-
-export type PackageType =
-  | "gold-yoga"
-  | "gold-zumba"
-  | "gold-mixed"
-  | "diamond"
-  | "platinum";
 
 export interface CheckoutState {
   selectedPackage: PackageType | null;
   autoRenew: boolean;
 }
 
-export default function Step7Packages() {
+const Page = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [billingType, setBillingType] = useState<"monthly" | "yearly">("monthly");
   const [state, setState] = useState<CheckoutState>({
     selectedPackage: null,
     autoRenew: false,
   });
   const { user } = useGetUser();
-  const getPackagePrice = (pkg: PackageType): number => {
-    const prices = {
+  
+  const getPackagePrice = (pkg: PackageType, billing: "monthly" | "yearly" = "monthly"): number => {
+    const monthlyPrices = {
       "gold-yoga": 100,
       "gold-zumba": 100,
       "gold-mixed": 100,
       diamond: 200,
       platinum: 300,
     };
-    return prices[pkg];
+    const basePrice = monthlyPrices[pkg];
+    return billing === "yearly" ? Math.round(basePrice * 12 * 0.95) : basePrice;
   };
 
+  console.log("userrr" , user);
+  
   const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
-  const price = getPackagePrice(state.selectedPackage!);
+  const price = getPackagePrice(state.selectedPackage!, billingType);
 
   const handlePaymentTransaction = async () => {
     try {
@@ -47,12 +49,13 @@ export default function Step7Packages() {
         currency: "USD",
         userId: user?.id,
         plan: state.selectedPackage,
+        billingType: billingType,
       }).unwrap();
 
       localStorage.setItem("orderRef", res?.orderRef);
 
       setTimeout(() => {
-       window.location.href = res.paymentLink;
+        window.location.href = res.paymentLink;
       }, 100);
     } catch (err) {
       toast.error("Paymnent order failed");
@@ -82,34 +85,45 @@ export default function Step7Packages() {
     goToStep(4);
   };
 
-  const totalSteps = 4;
-
   return (
-    <div className="">
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {currentStep === 1 && (
-          <PackageSelection onSelect={handlePackageSelect} />
-        )}
+    <div className="p-[30px]">
+      {currentStep === 1 && (
+        <PackageSelection
+          onSelect={handlePackageSelect}
+          currentPlan={user?.plan}
+          expiryDate={user?.subscription?.endDate}
+          subscription={user?.subscription}
+          classCredits={user?.classCredits}
+          totalClassCredits={user?.totalClassCredits}
+          onBillingTypeChange={setBillingType}
+        />
+      )}
+      {currentStep === 2 && (
+        <ReviewConfirm
+          selectedPackage={state.selectedPackage!}
+          onConfirm={handleReviewConfirm}
+          isLoading={isLoading}
+          onBack={() => goToStep(1)}
+          billingType={billingType}
+        />
+      )}
 
-        {currentStep === 2 && (
-          <ReviewConfirm
-            selectedPackage={state.selectedPackage!}
-            onConfirm={handleReviewConfirm}
-            isLoading={isLoading}
-            onBack={() => goToStep(1)}
-          />
-        )}
+      {currentStep === 3 && (
+        <Payment
+          selectedPackage={state.selectedPackage!}
+          onPayment={handlePayment}
+          onBack={() => goToStep(2)}
+          billingType={billingType}
+        />
+      )}
 
-        {currentStep === 3 && (
-          <Payment
-            selectedPackage={state.selectedPackage!}
-            onPayment={handlePayment}
-            onBack={() => goToStep(2)}
-          />
-        )}
-
-        {currentStep === 4 && <Confirmation />}
-      </main>
+      {currentStep === 4 && <Confirmation />}
     </div>
   );
-}
+};
+
+export default Page;
+
+
+
+

@@ -9,6 +9,7 @@ import useGetUser from "@/hooks/useGetUser";
 import toast from "react-hot-toast";
 import Swal from "sweetalert2";
 import { Button } from "@/components/ui/button";
+import { error } from "console";
 
 interface CancelSubscriptionModalProps {
   open: boolean;
@@ -48,9 +49,9 @@ const CancelSubscriptionModal = ({ open, onClose }: CancelSubscriptionModalProps
       await sendCancellationReason({ userId, description: reason }).unwrap();
       toast.success("Cancel request sent successfully");
       onClose();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to send cancellation request.");
+    } catch (err:any) {
+      
+      toast.error(err?.data?.message ?? "Failed to send cancellation request.");
     } finally {
       setIsProcessing(false);
     }

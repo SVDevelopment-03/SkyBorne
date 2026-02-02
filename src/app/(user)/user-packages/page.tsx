@@ -15,26 +15,29 @@ import toast from "react-hot-toast";
 
 const Page = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [billingType, setBillingType] = useState<"monthly" | "yearly">("monthly");
   const [state, setState] = useState<CheckoutState>({
     selectedPackage: null,
     autoRenew: false,
   });
   const { user } = useGetUser();
-  const getPackagePrice = (pkg: PackageType): number => {
-    const prices = {
+  
+  const getPackagePrice = (pkg: PackageType, billing: "monthly" | "yearly" = "monthly"): number => {
+    const monthlyPrices = {
       "gold-yoga": 100,
       "gold-zumba": 100,
       "gold-mixed": 100,
       diamond: 200,
       platinum: 300,
     };
-    return prices[pkg];
+    const basePrice = monthlyPrices[pkg];
+    return billing === "yearly" ? Math.round(basePrice * 12 * 0.95) : basePrice;
   };
 
   console.log("userrr" , user);
   
   const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
-  const price = getPackagePrice(state.selectedPackage!);
+  const price = getPackagePrice(state.selectedPackage!, billingType);
 
   const handlePaymentTransaction = async () => {
     try {
@@ -43,6 +46,7 @@ const Page = () => {
         currency: "USD",
         userId: user?.id,
         plan: state.selectedPackage,
+        billingType: billingType,
       }).unwrap();
 
       localStorage.setItem("orderRef", res?.orderRef);
@@ -86,8 +90,9 @@ const Page = () => {
           currentPlan={user?.plan}
           expiryDate={user?.subscription?.endDate}
           subscription={user?.subscription}
-          classCredits= {user?.classCredits}
+          classCredits={user?.classCredits}
           totalClassCredits={user?.totalClassCredits}
+          onBillingTypeChange={setBillingType}
         />
       )}
       {currentStep === 2 && (
@@ -96,6 +101,7 @@ const Page = () => {
           onConfirm={handleReviewConfirm}
           isLoading={isLoading}
           onBack={() => goToStep(1)}
+          billingType={billingType}
         />
       )}
 
@@ -104,6 +110,7 @@ const Page = () => {
           selectedPackage={state.selectedPackage!}
           onPayment={handlePayment}
           onBack={() => goToStep(2)}
+          billingType={billingType}
         />
       )}
 

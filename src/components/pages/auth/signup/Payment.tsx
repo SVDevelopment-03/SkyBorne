@@ -15,22 +15,29 @@ interface PaymentProps {
   selectedPackage: PackageType;
   onPayment: (autoRenew: boolean) => void;
   onBack: () => void;
+  billingType?: "monthly" | "yearly";
 }
 
-const getPackagePrice = (pkg: PackageType): number => {
-  const prices = {
+const getPackagePrice = (pkg: PackageType, billingType: "monthly" | "yearly" = "monthly"): number => {
+  const monthlyPrices = {
     "gold-yoga": 100,
     "gold-zumba": 100,
     "gold-mixed": 100,
     diamond: 200,
     platinum: 300,
   };
-  return prices[pkg];
+  const basePrice = monthlyPrices[pkg];
+  return billingType === "yearly" ? Math.round(basePrice * 12 * 0.95) : basePrice;
 };
 
-export function Payment({ selectedPackage, onPayment, onBack }: PaymentProps) {
+const getBillingPeriodText = (billingType: "monthly" | "yearly" = "monthly"): string => {
+  return billingType === "yearly" ? "year" : "month";
+};
+
+export function Payment({ selectedPackage, onPayment, onBack, billingType = "monthly" }: PaymentProps) {
   const [autoRenew, setAutoRenew] = useState(true);
-  const price = getPackagePrice(selectedPackage);
+  const price = getPackagePrice(selectedPackage, billingType);
+  const billingPeriod = getBillingPeriodText(billingType);
   const { user } = useGetUser();
 
   const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
@@ -39,8 +46,9 @@ export function Payment({ selectedPackage, onPayment, onBack }: PaymentProps) {
     try {
       const res = await createPaymentOrder({
         amount: price,
-        currency: "AED",
-        userId: user?.id ?? "6925ef6c19f63bed6b81b619", // from auth
+        currency: "USD",
+        userId: user?.id ?? "6925ef6c19f63bed6b81b619",
+        billingType: billingType,
       }).unwrap();
 
       window.location.href = res.paymentLink;
@@ -133,7 +141,6 @@ export function Payment({ selectedPackage, onPayment, onBack }: PaymentProps) {
                 <input
                   type="checkbox"
                   checked={autoRenew}
-                  disabled
                   onChange={(e) => setAutoRenew(e.target.checked)}
                   className="sr-only"
                 />
@@ -164,7 +171,7 @@ export function Payment({ selectedPackage, onPayment, onBack }: PaymentProps) {
               <div className="flex-1">
                 <span className="text-sm text-gray-800">Enable auto-renew</span>
                 <p className="text-xs text-gray-600 mt-1">
-                  Your subscription will automatically renew each month. Cancel
+                  Your subscription will automatically renew each {billingPeriod}. Cancel
                   anytime.
                 </p>
               </div>
@@ -178,15 +185,16 @@ export function Payment({ selectedPackage, onPayment, onBack }: PaymentProps) {
               <span className="text-xs opacity-75">Due today</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-2xl">${price}.00</span>
-              <span className="text-sm opacity-90">/month</span>
+              <span className="text-2xl">${price}</span>
+              <span className="text-sm opacity-90">/{billingPeriod}</span>
             </div>
           </div>
         </div>
 
         <button
           onClick={handlePayment}
-          className="Payment_Primary_Button w-full bg-[#B95E82] hover:bg-[#a16685] text-white py-4 px-8 rounded-full transition-all duration-300 text-lg shadow-lg"
+          disabled={isLoading}
+          className="Payment_Primary_Button w-full bg-[#B95E82] hover:bg-[#a16685] text-white py-4 px-8 rounded-full transition-all duration-300 text-lg shadow-lg disabled:opacity-50"
         >
           <span className="flex flex-row gap-2 items-center justify-center">
             {isLoading && (

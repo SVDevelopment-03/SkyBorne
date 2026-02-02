@@ -6,37 +6,54 @@ interface ReviewConfirmProps {
   onConfirm: () => void;
   onBack: () => void;
   isLoading?: boolean;
+  billingType?: "monthly" | "yearly";
 }
 
-const getPackageInfo = (pkg: PackageType) => {
-  const packages = {
+const getClassesInfo = (pkg: PackageType, billingType: "monthly" | "yearly" = "monthly"): string => {
+  const classInfo = {
+    "gold-yoga": billingType === "monthly" ? "2 Yoga" : "24 Yoga",
+    "gold-zumba": billingType === "monthly" ? "2 Zumba" : "24 Zumba",
+    "gold-mixed": billingType === "monthly" ? "1 Yoga + 1 Zumba" : "12 Yoga + 12 Zumba",
+    diamond: billingType === "monthly" ? "2 Yoga + 2 Zumba" : "24 Yoga + 24 Zumba",
+    platinum: billingType === "monthly" ? "2 Yoga + 2 Zumba + 1 Specialized" : "24 Yoga + 24 Zumba + 12 Specialized",
+  };
+  return classInfo[pkg];
+};
+
+const getPackageInfo = (pkg: PackageType, billingType: "monthly" | "yearly" = "monthly") => {
+  const monthlyPrices = {
     "gold-yoga": {
       name: "Gold Package",
-      details: "2 Yoga",
-      price: 100,
+      monthlyPrice: 100,
     },
     "gold-zumba": {
       name: "Gold Package",
-      details: "2 Zumba",
-      price: 100,
+      monthlyPrice: 100,
     },
     "gold-mixed": {
       name: "Gold Package",
-      details: "Mixed (1 Yoga + 1 Zumba)",
-      price: 100,
+      monthlyPrice: 100,
     },
     diamond: {
       name: "Diamond Package",
-      details: "2 Yoga + 2 Zumba",
-      price: 200,
+      monthlyPrice: 200,
     },
     platinum: {
       name: "Platinum Package",
-      details: "2 Yoga + 2 Zumba + 1 Specialized",
-      price: 300,
+      monthlyPrice: 300,
     },
   };
-  return packages[pkg];
+
+  const baseInfo = monthlyPrices[pkg];
+  const yearlyPrice = Math.round(baseInfo.monthlyPrice * 12 * 0.95);
+
+  return {
+    ...baseInfo,
+    price: billingType === "yearly" ? yearlyPrice : baseInfo.monthlyPrice,
+    billingCycle: billingType === "yearly" ? "Yearly" : "Monthly",
+    classes: getClassesInfo(pkg, billingType),
+    discount: billingType === "yearly" ? "Save 5%" : null,
+  };
 };
 
 export function ReviewConfirm({
@@ -44,8 +61,9 @@ export function ReviewConfirm({
   onConfirm,
   onBack,
   isLoading,
+  billingType = "monthly",
 }: ReviewConfirmProps) {
-  const packageInfo = getPackageInfo(selectedPackage);
+  const packageInfo = getPackageInfo(selectedPackage, billingType);
 
   return (
     <div className="animate-fade-in">
@@ -83,14 +101,21 @@ export function ReviewConfirm({
             <div className="flex justify-between items-start py-3 px-4 bg-[#fcf6ef] rounded-xl">
               <span className="text-gray-600">Includes:</span>
               <span className="text-gray-900 text-right">
-                {packageInfo.details}
+                {packageInfo.classes}
               </span>
             </div>
 
             <div className="flex justify-between items-center py-3 px-4 bg-[#fcf6ef] rounded-xl">
               <span className="text-gray-600">Billing Cycle:</span>
-              <span className="text-gray-900">Monthly</span>
+              <span className="text-gray-900">{packageInfo.billingCycle}</span>
             </div>
+
+            {packageInfo.discount && (
+              <div className="flex justify-between items-center py-3 px-4 bg-green-50 rounded-xl border border-green-200">
+                <span className="text-green-700 font-semibold">Discount:</span>
+                <span className="text-green-700 font-semibold">{packageInfo.discount}</span>
+              </div>
+            )}
 
             <div className="flex justify-between items-center py-4 px-4 bg-[#B95E82] text-white rounded-xl">
               <span className="text-lg">Total:</span>
@@ -129,27 +154,13 @@ export function ReviewConfirm({
                 </div>
                 <div className="flex-1">
                   <p className="font-satoshi-500 text-[#494949] text-base">
-                    Your subscription will automatically renew each month.
+                    Your subscription will automatically renew each {packageInfo.billingCycle.toLowerCase()}.
                     Cancel anytime.
                   </p>
                 </div>
               </label>
             </div>
           </div>
-
-          {/* <div className="bg-[#fcf6ef] rounded-xl p-4 border border-[#e8d4c0]">
-            <div className="flex items-start gap-3">
-              <div className="w-5 h-5 rounded-full bg-[#B95E82] flex items-center justify-center flex-shrink-0 mt-0.5">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-              <div className="text-sm text-gray-700">
-                <p className="mb-1">
-                  17% discount already applied to this plan
-                </p>
-                <p className="text-xs text-gray-600">{`You're getting the best value for your wellness journey`}</p>
-              </div>
-            </div>
-          </div> */}
         </div>
 
         <div className="flex gap-4">
