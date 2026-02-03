@@ -24,7 +24,7 @@ export const Subscription = ({
   const router = useRouter();
   return (
     <div
-      className={`cursor-pointer min-h-[440px] ${
+      className={`cursor-pointer min-h-[300px] ${
         isSelected
           ? "bg-[linear-gradient(180.02deg,rgba(255,207,189,0.7)-51.68%,rgba(255,247,221,0.7)99.98%)] shadow-[0px_4.44px_8.88px_0px_#0000001A,0px_4.44px_8.88px_0px_#0000001A] hover:scale-105 transition"
           : "bg-[linear-gradient(180.02deg,rgba(255,207,189,0.25)_-51.68%,rgba(255,247,221,0.25)_99.98%)] shadow-[0px_3.63px_7.25px_0px_#0000001A,0px_3.63px_7.25px_0px_#0000001A] hover:scale-105 transition"
@@ -33,7 +33,7 @@ export const Subscription = ({
       } rounded-[30px] text-[#494949] hover:bg-[linear-gradient(180.02deg,rgba(255,207,189,0.7)-51.68%,rgba(255,247,221,0.7)99.98%)] hover:shadow-[0px_4.44px_8.88px_0px_#0000001A,0px_4.44px_8.88px_0px_#0000001A]`}
     >
       <div
-        className={`relative min-h-[440px] flex flex-col h-full font-montserrat ${
+        className={`relative min-h-[300px] flex flex-col h-full font-montserrat ${
           isSelected
             ? "gap-9.5 md:gap-16 px-6 md:px-9 pt-11 md:pt-16 pb-8 md:pb-12"
             : "gap-4.5 md:gap-11 px-3 md:px-5 pt-8 md:pt-12 pb-8 md:pb-12"
