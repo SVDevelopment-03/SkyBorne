@@ -101,8 +101,13 @@ export default function Footer() {
                       );
                     }
                     return (
-                      <li key={i} className="cursor-pointer hover:text-white/70 transition text-sm md:text-base font-montserrat font-normal">
-                        <Link href={link?.link ? `${link?.link}` : "#"}>{link?.title}</Link>
+                      <li
+                        key={i}
+                        className="cursor-pointer hover:text-white/70 transition text-sm md:text-base font-montserrat font-normal"
+                      >
+                        <Link href={link?.link ? `${link?.link}` : "#"}>
+                          {link?.title}
+                        </Link>
                       </li>
                     );
                   })}
@@ -113,7 +118,7 @@ export default function Footer() {
 
           {/* Subscribe Section */}
           <div className="flex flex-col md:items-end justify-between gap-2 max-md:order-3">
-            <h3 className="font-semibold text-lg md:text-[24px] leading-normal uppercase md:text-right">
+            <h3 className="font-semibold text-lg md:text-[24px] leading-normal uppercase ml-2 md:ml-0 md:text-right">
               SUBSCRIBE TO RECEIVE MORE UPDATES
             </h3>
             <form onSubmit={formik.handleSubmit}>
@@ -168,9 +173,9 @@ export default function Footer() {
             ))}
           </div>
 
-          <div className="text-left md:text-right md:max-w-[328px] max-md:order-4 ml-auto">
+          <div className="text-left md:text-right md:max-w-[328px] max-md:order-4 ml-2 md:ml-auto">
             <p className="text-sm md:text-lg font-montserrat">
-              Copyright 2025. Skyborne Drop{" "}
+              Copyright 2026. Skyborne Drop{" "}
             </p>
             <p className="mt-1">
               <span
@@ -190,7 +195,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="image w-full pt-6.5 md:pt-14">
+        <div className="image w-full pt-6.5 md:pt-14 hidden md:block">
           <Image
             src={"/images/footer.svg"}
             alt="Skyborne footer"
@@ -198,6 +203,18 @@ export default function Footer() {
             height={349}
             className="object-cover md:object-contain w-full rounded-[10px] max-md:min-h-[178px]"
           />
+        </div>
+
+        <div className="w-full pt-6.5 md:pt-14 md:hidden">
+          <div className="relative w-full aspect-[467/349]">
+            <Image
+              src="/images/footer.svg"
+              alt="Skyborne footer"
+              fill
+              className="object-contain rounded-[10px]"
+              sizes="(max-width: 768px) 100vw, 467px"
+            />
+          </div>
         </div>
       </div>
       {openCancelModal && (

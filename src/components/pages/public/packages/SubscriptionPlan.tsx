@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 const SubscriptionPlans = () => {
   const [hydrated, setHydrated] = useState(false);
   const [isSelected, setIsSelected] = useState(1);
+  const [isYearly, setIsYearly] = useState(false);
   const { data, isLoading, error } = useGetPlansQuery(undefined);
   const plans: IPlan[] = data?.data || [];
 
@@ -32,8 +33,16 @@ const SubscriptionPlans = () => {
         />
         <div className="flex flex-col items-center gap-16 w-full">
           <div className="rounded-4xl bg-[#FFE8E8] py-2 px-5 flex items-center gap-5">
-            <CustomButtons variant={"theme"} text="Monthly" />
-            <CustomButtons variant={"themeOutline"} text="Yearly" />
+            <CustomButtons
+              variant={!isYearly ? "theme" : "themeOutline"}
+              text="Monthly"
+              onClick={() => setIsYearly(false)}
+            />
+            <CustomButtons
+              variant={isYearly ? "theme" : "themeOutline"}
+              text="Yearly"
+              onClick={() => setIsYearly(true)}
+            />
           </div>
           <div className="w-full max-lg:overflow-x-auto max-lg:[scrollbar-width:none]">
             <div className="flex items-center justify-center gap-5 md:gap-14 pt-10 pb-3 min-w-[800px]">
@@ -50,6 +59,7 @@ const SubscriptionPlans = () => {
                       image={plan?.image}
                       isSelected={index == isSelected}
                       price={plan?.price}
+                      isYearly={isYearly}
                     />
                   );
                 })}

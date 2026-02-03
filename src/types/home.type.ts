@@ -30,6 +30,7 @@ export interface CustomButtonsProps {
   variant?: VariantType;
   text: string;
   cssClass?: string;
+  onClick?: () => void;
 }
 
 export interface OurValueProp {
@@ -46,15 +47,14 @@ export interface DashboardHeadingProps {
   title: string;
   description: string;
   cssClass?: string;
-  buttonText?:string;
-  selectText?:string;
-  dateFilter?:boolean;
+  buttonText?: string;
+  selectText?: string;
+  dateFilter?: boolean;
 }
-
 
 export interface SessionCardProps {
   image: string;
-  duration:string;
+  duration: string;
   time: string;
   date: string;
   title: string;
@@ -63,11 +63,11 @@ export interface SessionCardProps {
 export interface SessionProps {
   meetingId: string;
   userId: string;
-  startTime:string;
+  startTime: string;
   joined: boolean;
-  trainer:string;
-  region:string;
-  isLive:boolean;
+  trainer: string;
+  region: string;
+  isLive: boolean;
   participants: {
     avatar?: string;
     name?: string;
@@ -81,7 +81,6 @@ export interface SessionProps {
   title: string;
 }
 
-
 export interface ServiceType {
   id: string;
   title: string;
@@ -92,7 +91,7 @@ export interface ServiceType {
 
 export interface IPlan {
   _id: string;
-  planId: string;  // UUID you added
+  planId: string; // UUID you added
   name: string;
   description: string;
   features: string[];
@@ -104,12 +103,10 @@ export interface IPlan {
   updatedAt: string;
 }
 
-
-
-export interface ITestimonial  {
+export interface ITestimonial {
   title: string;
-  _id:string;
+  _id: string;
   description: string;
   isActive: boolean;
-  user: {image:string,name:string,totalClasses:number};
+  user: { image: string; name: string; totalClasses: number };
 }

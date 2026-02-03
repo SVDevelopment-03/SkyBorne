@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
 import { Button } from "@/components/ui/button";
 import { useGetPlansQuery } from "@/store/api/publicApi";
@@ -12,6 +14,7 @@ interface SubscriptionProp {
   price?: string;
   features: string[];
   isSelected?: boolean;
+  isYearly?: boolean;
 }
 
 export const Subscription = ({
@@ -20,8 +23,40 @@ export const Subscription = ({
   features,
   price,
   isSelected,
+  isYearly = false,
 }: SubscriptionProp) => {
   const router = useRouter();
+
+  // Calculate yearly price with 5% discount
+  const calculatePrice = () => {
+    if (!price) return "0";
+    
+    const monthlyPrice = parseFloat(price);
+    if (isYearly) {
+      // Multiply by 12 and apply 5% discount
+      const yearlyPrice = monthlyPrice * 12;
+      const discountedPrice = yearlyPrice * 0.95; // 5% discount
+      return discountedPrice.toFixed(0);
+    }
+    return price;
+  };
+
+  const getPricePeriod = () => {
+    return isYearly ? "/year" : "/month";
+  };
+
+  const displayPrice = calculatePrice();
+
+  const gold = [<> 24 yoga classes</>];
+  const diamond = [<> 24 yoga classes</>, <> 24 zumba classes</>];
+  const platinum = [<> 24 yoga classes</>, <> 24 zumba classes</>, <> 12 special classes</>];
+
+    const yearlyPlan:any = {
+      0: gold,
+      1: diamond,
+      2: platinum,
+    };
+
   return (
     <div
       className={`cursor-pointer min-h-[300px] ${
@@ -47,9 +82,15 @@ export const Subscription = ({
             width={70}
             className=""
           />
-          <span className="text-white text-[10px] leading-normal text-center w-9 absolute left-6 top-7  ">
-            $<span className="text-xs font-bold">{price}</span> /month
+          <span className="text-white text-[10px] leading-normal text-center w-9 absolute left-6 top-7">
+            $<span className="text-xs font-bold">{displayPrice}</span>{" "}
+            {getPricePeriod()}
           </span>
+          {isYearly && (
+            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[8px] font-bold px-2 py-1 rounded-full whitespace-nowrap">
+              Save 5%
+            </span>
+          )}
         </div>
         <div className={`flex flex-col ${isSelected ? "gap-7" : "gap-8"}`}>
           <Image
@@ -72,7 +113,7 @@ export const Subscription = ({
                     height={9}
                     width={12}
                   />
-                  {feature}
+                  {isYearly ? yearlyPlan[i][i] : feature }
                 </li>
               ))}
             </ul>

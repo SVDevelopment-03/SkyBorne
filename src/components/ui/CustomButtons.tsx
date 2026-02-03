@@ -6,11 +6,13 @@ const CustomButtons = ({
   variant = "theme",
   text,
   cssClass,
+  onClick,
 }: CustomButtonsProps) => {
   return (
     <Button
       variant={variant}
       className={`px-[42px]! py-3! text-sm! md:text-lg! leading-tight! font-satoshi-500 max-h-9 ${cssClass}`}
+      onClick={onClick}
     >
       {text}
     </Button>
