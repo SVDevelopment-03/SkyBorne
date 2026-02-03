@@ -12,6 +12,7 @@ const ContactUs = () => {
           src="/images/about-us.jpg"
           badge="Contact us"
           heading="Your Journey Starts Here"
+          cssClass="contact-banner"
         />
       </div>
       <div className="px-4 md:px-6 xl:p-0">

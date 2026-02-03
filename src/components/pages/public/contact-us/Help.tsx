@@ -61,7 +61,7 @@ const Help = () => {
         <div className="md:mt-4.5 flex items-start md:grid md:grid-cols-1 lg:grid-cols-1 gap-6">
           {helpDetails?.map((help) => (
             <div
-              className="bg-[#FFE8E8] rounded-2xl p-2.5 md:p-4 pt-6 max-md:w-[298px] shrink-0"
+              className="bg-[#FFE8E8] rounded-2xl p-3 md:p-4 pt-6 w-full max-w-[420px] mx-auto"
               key={help?.id}
             >
               <HelpDetail

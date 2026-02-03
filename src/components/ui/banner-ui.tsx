@@ -17,7 +17,9 @@ const BannerUi = ({ src, badge, heading, cssClass }: BannerUiProps) => {
         style={{ backgroundImage: `url(${src})` }}
       >
         <Header />
-        <div className="flex flex-col justify-end md:justify-center gap-4 md:gap-6 h-full min-h-[510px] mt-10">
+        <div className={`flex flex-col justify-end md:justify-center gap-4 md:gap-6 h-full min-h-[510px] ${
+          cssClass ? "mt-0 md:mt-10" : "mt-10"
+        }`}>
           <Badge variant={"blur"}>{badge}</Badge>
           <BannerHeading title={heading} cssClass={cssClass} />
         </div>
