@@ -75,9 +75,9 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
   return (
     <div className="flex items-center justify-between">
       <div
-        className={`flex items-center gap-1 ${
+        className={`flex items-center gap-1 min-h-0 ${
           isHero ? "bg-logo" : "bg-white/20 backdrop-blur-[20px]"
-        } rounded-[300px] px-2.5 md:px-4 py-1.5 md:py-2.5 max-w-[97px] md:max-w-[154px]`}
+        } rounded-[300px] px-2 sm:px-2.5 md:px-4 py-[2px] sm:py-[4px] md:py-2.5 max-w-[120px] md:max-w-[154px]`}
       >
         <div className="image shrink-0">
           <Link href={"/"} className="cursor-pointer">
@@ -87,16 +87,15 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
               priority
               width={448}
               height={512}
-              className="w-11"
+              className="w-9 sm:w-10 md:w-11"
             />
           </Link>
         </div>
-        <Link href={"/"} className="cursor-pointer">
-          <div className="logo-text font-Satoshi">
+        <Link href={"/"} className="cursor-pointer min-w-0">
+          <div className="logo-text font-Satoshi min-w-0">
             <h2
-              className={`font-medium text-[11px] md:text-lg leading-none font-satoshi-500 text-[#494949] ${
-                isHero ? "text-[#494949]" : "text-[#FFFFFF]"
-              }`}
+              className={`font-medium text-[10px] sm:text-[11px] md:text-lg leading-tight font-satoshi-500
+              ${isHero ? "text-[#494949]" : "text-[#FFFFFF]"}`}
             >
               Skyborne Drop
             </h2>

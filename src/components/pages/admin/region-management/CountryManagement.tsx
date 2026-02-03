@@ -136,10 +136,10 @@ const CountryManagement = () => {
         <MainListHeading title="Country Management" />
         <CommonBreadcrump title="Country Management" href="/regions" />
       </div> */}
-      <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
+      <div className="flex flex-col gap-6 px-3 py-6 md:p-6 bg-white rounded-lg overflow-x-hidden">
         {/* Search and Create Button */}
       <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative w-full md:flex-1 md:max-w-md">
             <Input2
               placeholder="Search by country name..."
               value={search}
@@ -161,7 +161,7 @@ const CountryManagement = () => {
         </div>
 
         {/* Data Table */}
-        <div className="flex flex-col w-full">
+        <div className="w-full overflow-x-hidden">
           <DataTable
             columns={columns as ColumnDef<CountryRowData, unknown>[]}
             data={countries as CountryRowData[]}
@@ -172,7 +172,7 @@ const CountryManagement = () => {
         {/* Pagination Controls */}
    {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center pt-4">
+          <div className="flex justify-center w-full pt-4 px-2">
             <CustomPagination
               totalPages={totalPages}
               currentPage={page}
