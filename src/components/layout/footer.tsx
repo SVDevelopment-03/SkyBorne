@@ -205,13 +205,13 @@ export default function Footer() {
           />
         </div>
 
-        <div className="w-full pt-6.5 md:pt-14 md:hidden">
-          <div className="relative w-full aspect-[467/349]">
+        <div className="w-full md:hidden max-h-[180px]">
+          <div className="relative w-full min-h-[220px]">
             <Image
               src="/images/footer.svg"
               alt="Skyborne footer"
               fill
-              className="object-contain rounded-[10px]"
+              className="object-contain rounded-[10px] min-h-[220px] h-[220px]"
               sizes="(max-width: 768px) 100vw, 467px"
             />
           </div>
