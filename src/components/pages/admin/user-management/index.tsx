@@ -240,13 +240,26 @@ const downloadCSV = async () => {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center pt-4">
-            <CustomPagination
-              totalPages={totalPages}
-              currentPage={page}
-              onPageChange={setPage}
-              visiblePages={3}
-            />
+          <div className="relative w-full pt-4">
+            
+            {/* Left fade for mobile */}
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-6 bg-gradient-to-r from-white to-transparent md:hidden" />
+
+            {/* Right fade for mobile */}
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-white to-transparent md:hidden" />
+
+            {/* Scroll container */}
+            <div className="overflow-x-auto md:overflow-visible px-6">
+              <div className="min-w-max md:min-w-0 flex justify-center">
+                <CustomPagination
+                  totalPages={totalPages}
+                  currentPage={page}
+                  onPageChange={setPage}
+                  visiblePages={3}
+                />
+              </div>
+            </div>
+
           </div>
         )}
       </div>

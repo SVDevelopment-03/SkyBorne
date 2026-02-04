@@ -136,7 +136,7 @@ const CountryManagement = () => {
         <MainListHeading title="Country Management" />
         <CommonBreadcrump title="Country Management" href="/regions" />
       </div> */}
-      <div className="flex flex-col gap-6 px-3 py-6 md:p-6 bg-white rounded-lg overflow-x-hidden">
+      <div className="flex flex-col gap-6 px-3 py-6 md:p-6 bg-white rounded-lg overflow-x-hidden md:overflow-x-visible">
         {/* Search and Create Button */}
       <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
           <div className="relative w-full md:flex-1 md:max-w-md">
@@ -172,13 +172,20 @@ const CountryManagement = () => {
         {/* Pagination Controls */}
    {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex justify-center w-full pt-4 px-2">
-            <CustomPagination
-              totalPages={totalPages}
-              currentPage={page}
-              onPageChange={setPage}
-              visiblePages={3}
-            />
+          <div className="relative w-full pt-4">
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-6 bg-gradient-to-r from-white to-transparent md:hidden" />
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-white to-transparent md:hidden" />
+
+            <div className="overflow-x-auto md:overflow-visible px-6">
+              <div className="min-w-max md:min-w-0 flex justify-center">
+                <CustomPagination
+                  totalPages={totalPages}
+                  currentPage={page}
+                  onPageChange={setPage}
+                  visiblePages={3}
+                />
+              </div>
+            </div>
           </div>
         )}
 

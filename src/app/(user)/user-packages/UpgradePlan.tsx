@@ -167,11 +167,13 @@ export function UpgradePlan({
       >
         <CardContent className="p-8 py-2">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 text-white">
-            <div className="flex items-start gap-4 w-full">
+            {/* <div className="flex items-start gap-4 w-full"> */}
+            <div className="flex flex-col sm:flex-row items-start gap-4 w-full">
               <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
                 <Package className="w-8 h-8 text-white" />
               </div>
-              <div className="flex-1 flex items-center w-full">
+              {/* <div className="flex-1 flex items-center w-full"> */}
+              <div className="flex-1 flex flex-col sm:flex-row sm:items-center w-full">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
                     <h2 className="text-2xl capitalize">
@@ -188,10 +190,12 @@ export function UpgradePlan({
                     {billingType === "monthly" ? "Monthly" : "Yearly"} Subscription
                   </p>
                 </div>
-                <div className="space-y-2 ml-auto">
+                {/* <div className="space-y-2 ml-auto"> */}
+                <div className="space-y-2 md:ml-auto w-full md:w-auto">
                   <div className="flex items-center gap-2">
                     <Check className="w-5 h-5" />
-                    <span>
+                    {/* <span> */}
+                    <span className="break-words">
                       {sessionsRemaining} of {totalSessionsIncluded} sessions
                       remaining
                     </span>
@@ -229,7 +233,8 @@ export function UpgradePlan({
       </Card>
 
       <div className="animate-fade-in overflow-y-auto">
-        <div className="text-center mb-12 mt-4">
+        {/* <div className="text-center mb-12 mt-4"> */}
+        <div className="text-center mb-8 sm:mb-12 mt-4">
           <h1 className="mb-3 text-gray-800">Upgrade Your Plan</h1>
           <p className="text-gray-600">
             Select a membership that fits your wellness goals.
@@ -238,13 +243,15 @@ export function UpgradePlan({
 
         {/* Billing Type Selector */}
         <div className="flex items-center justify-center mb-8">
-          <div className="rounded-4xl bg-[#FFE8E8] py-2 px-5 flex items-center gap-5 mx-auto">
+          {/* <div className="rounded-4xl bg-[#FFE8E8] py-2 px-5 flex items-center gap-5 mx-auto"> */}
+          <div className="rounded-4xl bg-[#FFE8E8] py-2 px-3 sm:px-5 flex items-center gap-2 sm:gap-5 mx-auto w-fit max-w-full">
             <button
               onClick={() => {
                 setBillingType("monthly");
                 onBillingTypeChange?.("monthly");
               }}
-              className={`px-6 py-2 rounded-full font-medium transition-all ${
+              // className={`px-6 py-2 rounded-full font-medium transition-all ${
+              className={`px-4 sm:px-6 py-2 text-sm sm:text-base rounded-full font-medium transition-all ${
                 billingType === "monthly"
                   ? "bg-[#B95E82] text-white"
                   : "text-[#B95E82] hover:bg-white/50"
@@ -270,18 +277,32 @@ export function UpgradePlan({
 
         {/* PACKAGES GRID */}
         <div
-          className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr]
-  justify-start lg:justify-center gap-6 md:gap-10 mb-6 bg-white
-  p-4 sm:p-6 md:p-12 rounded-xl"
+          // className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr]
+          //   justify-start lg:justify-center gap-6 md:gap-10 mb-6 bg-white
+          //   p-4 sm:p-6 md:p-12 rounded-xl"
+          // className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+          //   gap-5 sm:gap-6 md:gap-8 mb-6 bg-white
+          //   p-4 sm:p-6 md:p-10 rounded-xl"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+            gap-4 sm:gap-6 md:gap-8 mb-6 bg-white
+            p-4 sm:p-6 md:p-10 rounded-xl items-stretch"
         >
           {/* Gold Package Card with Radio Options */}
-          <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[550px] h-[550px]">
-            <div className="min-h-[450px]">
+          <div className="flex flex-col Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-5 sm:p-6 md:p-8 shadow-sm border border-[#f0e5d8] h-full">
+          {/* <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[550px] h-[550px]"> */}
+            {/* <div className="min-h-[450px]"> */}
+            <div className="flex-1">
               <div className="mb-6">
-                <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
+                {/* <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
                   <span className="text-sm text-gray-700">🟡 Gold Package</span>
+                </div> */}
+                <div className="flex justify-center mb-4">
+                  <div className="bg-white border border-[#e8d4c0] rounded-full px-5 py-2">
+                    <span className="text-sm text-gray-700">🟡 Gold Package</span>
+                  </div>
                 </div>
-                <h2 className="text-3xl text-gray-800 mb-2">
+                {/* <h2 className="text-3xl text-gray-800 mb-2"> */}
+                <h2 className="text-2xl sm:text-3xl text-gray-800 mb-2 break-words">
                   {billingType === "monthly" ? (
                     <>
                       ${goldMonthly} <span className="text-lg text-gray-600">/Month</span>
@@ -329,7 +350,8 @@ export function UpgradePlan({
                           )}
                         </div>
                         <div className="flex-1">
-                          <span className="text-sm text-gray-800">
+                          {/* <span className="text-sm text-gray-800"> */}
+                          <span className="text-sm text-gray-800 break-words">
                             {billingType === "monthly" 
                               ? `${option.label} ${option.description}` 
                               : option.id === "gold-yoga" ? "24 Yoga" : option.id === "gold-zumba" ? "24 Zumba" : "12 Yoga + 12 Zumba"}
@@ -341,7 +363,8 @@ export function UpgradePlan({
                 </div>
               </div>
             </div>
-            <div className="absolute bottom-2 right-1 w-full p-6">
+            {/* <div className="absolute bottom-2 right-1 w-full p-6"> */}
+            <div className="mt-auto pt-4">
               <button
                 onClick={handleGoldSelect}
                 disabled={!selectedGoldOption}
@@ -353,15 +376,25 @@ export function UpgradePlan({
           </div>
 
           {/* Diamond Package Card */}
-          <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[600px]  h-[550px]">
-            <div className="min-h-[450px]">
+          {/* <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[600px]  h-[550px]"> */}
+          <div className="flex flex-col Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-5 sm:p-6 md:p-8 shadow-sm border border-[#f0e5d8] h-full">
+            {/* <div className="min-h-[450px]"> */}
+            <div className="flex-1">
               <div className="mb-6">
-                <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
+                {/* <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
                   <span className="text-sm text-gray-700">
                     💎 Diamond Package
                   </span>
+                </div> */}
+                <div className="flex justify-center mb-4">
+                  <div className="bg-white border border-[#e8d4c0] rounded-full px-5 py-2">
+                    <span className="text-sm text-gray-700">
+                      💎 Diamond Package
+                    </span>
+                  </div>
                 </div>
-                <h2 className="text-3xl text-gray-800 mb-2">
+                {/* <h2 className="text-3xl text-gray-800 mb-2"> */}
+                <h2 className="text-2xl sm:text-3xl text-gray-800 mb-2 break-words">
                   {billingType === "monthly" ? (
                     <>
                       ${diamondMonthly} <span className="text-lg text-gray-600">/Month</span>
@@ -399,7 +432,8 @@ export function UpgradePlan({
                 </ul>
               </div>
             </div>
-            <div className="absolute bottom-2 right-1 w-full p-6">
+            {/* <div className="absolute bottom-2 right-1 w-full p-6"> */}
+            <div className="mt-auto pt-4">
               <button
                 onClick={() => onSelect("diamond")}
                 className="w-full bg-[#B95E82] hover:bg-[#a16685] text-white py-3 px-6 rounded-full transition-all duration-300"
@@ -410,17 +444,25 @@ export function UpgradePlan({
           </div>
 
           {/* Platinum Package Card */}
-          <div className="relative min-w-[292px] min-h-[610px] Package_Card_Default bg-[#B95E82] rounded-3xl p-8 shadow-lg text-white max-h-[600px]  h-[550px]">
-            <div className="min-h-[450px]">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-[#b97d9f] px-4 py-1 rounded-full text-sm shadow-md">
+          {/* <div className="flex flex-col Package_Card_Default bg-[#B95E82] rounded-3xl p-5 sm:p-6 md:p-8 shadow-lg text-white h-full"> */}
+          <div className="relative flex flex-col Package_Card_Default bg-[#B95E82] rounded-3xl p-5 sm:p-6 md:p-8 shadow-lg text-white h-full">
+            <div className="flex-1">
+              <div className="absolute -top-2 sm:-top-3 left-1/2 -translate-x-1/2 bg-white text-[#b97d9f] px-2 sm:px-3 py-1 text-[10px] sm:text-sm rounded-full shadow-md whitespace-nowrap">
                 ⭐ Best Value
               </div>
               <div className="">
                 <div className="mb-6 mt-2">
-                  <div className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-5 py-2 mb-4">
+                  {/* <div className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-5 py-2 mb-4">
                     <span className="text-sm text-white">
                       🔷 Platinum Package
                     </span>
+                  </div> */}
+                  <div className="flex justify-center mb-4">
+                    <div className="bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-5 py-2">
+                      <span className="text-sm text-white">
+                        🔷 Platinum Package
+                      </span>
+                    </div>
                   </div>
                   <h2 className="text-3xl mb-2">
                     {billingType === "monthly" ? (
@@ -466,7 +508,8 @@ export function UpgradePlan({
                   </ul>
                 </div>
               </div>
-              <div className="absolute bottom-2 right-1 w-full p-6">
+              {/* <div className="absolute bottom-2 right-1 w-full p-6"> */}
+              <div className="mt-auto pt-4">
                 <button
                   onClick={() => onSelect("platinum")}
                   className="w-full  bg-white text-[#b97d9f] hover:bg-white/95 py-3 px-6 rounded-full transition-all duration-300"

@@ -188,14 +188,21 @@ export function PackageSelection({
         </div>
 
         {/* PACKAGES GRID */}
-        <div
+        {/* <div
           className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr]
-  justify-start lg:justify-center gap-6 md:gap-10 mb-6 bg-white
-  p-4 sm:p-6 md:p-12 rounded-xl"
+            justify-start lg:justify-center gap-6 md:gap-10 mb-6 bg-white
+            p-3 sm:p-6 md:p-12 rounded-xl"
+        > */}
+        <div
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3
+            items-stretch gap-6 md:gap-10 auto-rows-fr mb-6 bg-white
+            p-3 sm:p-6 md:p-12 rounded-xl"
         >
           {/* Gold Package Card with Radio Options */}
-          <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[550px] h-[550px]">
-            <div className="min-h-[450px]">
+          {/* <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[550px] h-[550px]"> */}
+          <div className="relative flex flex-col min-h-[610px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-5 sm:p-6 md:p-8 shadow-sm border border-[#f0e5d8]">
+            {/* <div className="min-h-[450px]"> */}
+            <div className="flex flex-col flex-grow">
               <div className="mb-6">
                 <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
                   <span className="text-sm text-gray-700">🟡 Gold Package</span>
@@ -248,7 +255,8 @@ export function PackageSelection({
                           )}
                         </div>
                         <div className="flex-1">
-                          <span className="text-sm text-gray-800">
+                          {/* <span className="text-sm text-gray-800"> */}
+                          <span className="text-sm text-gray-800 break-words">
                             {billingType === "monthly" 
                               ? `${option.label} ${option.description}` 
                               : option.id === "gold-yoga" ? "24 Yoga" : option.id === "gold-zumba" ? "24 Zumba" : "12 Yoga + 12 Zumba"}
@@ -260,7 +268,8 @@ export function PackageSelection({
                 </div>
               </div>
             </div>
-            <div className="absolute bottom-2 right-1 w-full p-6">
+            {/* <div className="absolute bottom-2 right-1 w-full p-6"> */}
+            <div className="mt-auto pt-4">
               <button
                 onClick={handleGoldSelect}
                 disabled={!selectedGoldOption}
@@ -272,8 +281,9 @@ export function PackageSelection({
           </div>
 
           {/* Diamond Package Card */}
-          <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[600px]  h-[550px]">
-            <div className="min-h-[450px]">
+          {/* <div className="relative min-h-[610px] min-w-[292px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-8 shadow-sm border border-[#f0e5d8] max-h-[600px]  h-[550px]"> */}
+          <div className="relative flex flex-col min-h-[610px] Package_Card_Default bg-[#FFCFBD33] rounded-3xl p-5 sm:p-6 md:p-8 shadow-sm border border-[#f0e5d8]">
+            <div className="flex flex-col flex-grow">
               <div className="mb-6">
                 <div className="inline-block bg-white border border-[#e8d4c0] rounded-full px-5 py-2 mb-4">
                   <span className="text-sm text-gray-700">
@@ -305,20 +315,23 @@ export function PackageSelection({
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-[#b97d9f] shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-800">
+                    {/* <span className="text-sm text-gray-800"> */}
+                    <span className="text-sm text-gray-800 break-words">
                       {billingType === "monthly" ? "2 Yoga Classes" : "24 Yoga Classes"}
                     </span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Check className="w-5 h-5 text-[#b97d9f] shrink-0 mt-0.5" />
-                    <span className="text-sm text-gray-800">
+                    {/* <span className="text-sm text-gray-800"> */}
+                    <span className="text-sm text-gray-800 break-words">
                       {billingType === "monthly" ? "2 Zumba Classes" : "24 Zumba Classes"}
                     </span>
                   </li>
                 </ul>
               </div>
             </div>
-            <div className="absolute bottom-2 right-1 w-full p-6">
+            {/* <div className="absolute bottom-2 right-1 w-full p-6"> */}
+            <div className="mt-auto pt-4">
               <button
                 onClick={() => onSelect("diamond")}
                 className="w-full bg-[#B95E82] hover:bg-[#a16685] text-white py-3 px-6 rounded-full transition-all duration-300"
@@ -329,12 +342,16 @@ export function PackageSelection({
           </div>
 
           {/* Platinum Package Card */}
-          <div className="relative min-w-[292px] min-h-[610px] Package_Card_Default bg-[#B95E82] rounded-3xl p-8 shadow-lg text-white max-h-[600px]  h-[550px]">
-            <div className="min-h-[450px]">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-[#b97d9f] px-4 py-1 rounded-full text-sm shadow-md">
+          {/* <div className="relative min-w-[292px] min-h-[610px] Package_Card_Default bg-[#B95E82] rounded-3xl p-8 shadow-lg text-white max-h-[600px]  h-[550px]"> */}
+          <div className="relative flex flex-col min-h-[610px] Package_Card_Default bg-[#B95E82] rounded-3xl p-5 sm:p-6 md:p-8 shadow-lg text-white">
+            {/* ⭐ Best Value Badge FIX */}
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-10">
+              <div className="bg-white text-[#b97d9f] px-4 py-1 rounded-full text-xs sm:text-sm shadow-md whitespace-nowrap">
                 ⭐ Best Value
               </div>
-              <div className="">
+            </div>
+            <div className="flex flex-col flex-grow">
+
                 <div className="mb-6 mt-2">
                   <div className="inline-block bg-white/20 backdrop-blur-sm border border-white/30 rounded-full px-5 py-2 mb-4">
                     <span className="text-sm text-white">
@@ -385,7 +402,8 @@ export function PackageSelection({
                   </ul>
                 </div>
               </div>
-              <div className="absolute bottom-2 right-1 w-full p-6">
+              {/* <div className="absolute bottom-2 right-1 w-full p-6"> */}
+              <div className="mt-auto pt-4">
                 <button
                   onClick={() => onSelect("platinum")}
                   className="w-full  bg-white text-[#b97d9f] hover:bg-white/95 py-3 px-6 rounded-full transition-all duration-300"
@@ -402,7 +420,6 @@ export function PackageSelection({
             Flexible sessions. No lock-in.
           </p>
         </div>
-      </div>
     </div>
   );
 }

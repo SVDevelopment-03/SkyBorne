@@ -453,13 +453,16 @@ function AdminPayments() {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center pt-4">
-            <CustomPagination
-              totalPages={totalPages}
-              currentPage={page}
-              onPageChange={setPage}
-              visiblePages={3}
-            />
+          // <div className="flex items-center justify-center pt-4">
+          <div className="flex items-center justify-center pt-4 w-full overflow-x-auto sm:overflow-visible">
+            <div className="min-w-max sm:min-w-0">
+              <CustomPagination
+                totalPages={totalPages}
+                currentPage={page}
+                onPageChange={setPage}
+                visiblePages={3}
+              />
+            </div>
           </div>
         )}
       </div>

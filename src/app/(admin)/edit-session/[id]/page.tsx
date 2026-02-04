@@ -539,7 +539,8 @@ export default function EditMeeting() {
 
                 {/* Section 3: Live Region & Time */}
                 <section className="space-y-4">
-                  <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-4 space-y-4">
+                  {/* <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-4 space-y-4"> */}
+                  <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-3 sm:p-4 space-y-4 w-full overflow">
                     <div className="flex items-center gap-2">
                       <Globe className="w-5 h-5 text-[#b95e82]" />
                       <h3 className="text-large text-[#262626]">
@@ -551,8 +552,10 @@ export default function EditMeeting() {
                       regions will receive the recorded version automatically.
                     </p>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {regionOptions && <div>
+                    {/* <div className="grid md:grid-cols-2 gap-4"> */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+                      {/* {regionOptions && <div> */}
+                      {regionOptions && <div className="w-full min-w-0">
                         <Select
                           label="🌍 Select Region"
                           value={values.liveRegion}
@@ -567,7 +570,7 @@ export default function EditMeeting() {
                         )}
                       </div>}
 
-                      <div className="space-y-2">
+                      <div className="space-y-2 w-full min-w-[170px] sm:min-w-0">
                         <label className="block flex items-center gap-2">
                           <Clock className="w-4 h-4 text-[#b95e82]" />
                           Select Time

@@ -149,7 +149,7 @@ const Step1 = () => {
             </span>
           </p>
         </div>
-        <div className="flex justify-center items-center gap-4 md:gap-5.5">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 md:gap-5.5">
           <Button
             variant={"outlineBlack"}
             onClick={prevStep}

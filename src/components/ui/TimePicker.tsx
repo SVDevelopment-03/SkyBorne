@@ -74,7 +74,8 @@ const handleHourBlur = () => {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    // <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2 min-w-0">
       <input
         type="text"
         value={hour}
@@ -97,7 +98,8 @@ const handleHourBlur = () => {
         className="w-14 px-3 py-2 border rounded-lg text-center"
       />
 
-      <div className="flex border rounded-lg overflow-hidden">
+      {/* <div className="flex border rounded-lg overflow-hidden"> */}
+      <div className="flex border rounded-lg overflow-hidden flex-shrink-0">
         <button
           type="button"
           onClick={() => handlePeriodChange("AM")}

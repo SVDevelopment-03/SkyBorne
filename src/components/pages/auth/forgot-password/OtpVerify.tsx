@@ -86,7 +86,7 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-8 md:gap-8 h-full">
+    <div className="flex flex-col gap-6 sm:gap-8 h-full">
       <div className="flex flex-col gap-5">
         <Typography
           title="Keep Your Skyborne Account Secure"
@@ -95,7 +95,7 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
         />
         <Typography title="You can change preferences anytime." type="theme" />
       </div>
-      <div className="bg-[#FFE8E8] border border-[#B95E82] p-4 flex items-start gap-3 rounded-[10px]">
+      <div className="bg-[#FFE8E8] border border-[#B95E82] p-3 sm:p-4 flex items-start gap-2 sm:gap-3 rounded-[10px]">
         <div className="p-2 bg-[#E1E1E1] w-8 h-8 rounded-full">
           <ShieldIcon />
         </div>
@@ -103,7 +103,8 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
           <Typography
             title={`OTP sent to ${userEmail}`}
             type="lgBlack"
-            cssClass="text-base!"
+            // cssClass="text-base!"
+            cssClass="text-base! break-all max-w-full"
           />
           <Typography
             title="Change email"
@@ -123,7 +124,7 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
             <Form>
               {/* 2 Column Grid */}
               <div className="grid grid-cols-1">
-                <div className="flex flex-col gap-8 pt-7.5 px-0.5">
+                <div className="flex flex-col gap-6 sm:gap-8 pt-5 sm:pt-7.5 px-0">
                   <h2 className="font-arial font-normal text-xl text-[#0A0A0A]">
                     Enter OTP *
                   </h2>
@@ -132,12 +133,12 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
                     value={values?.otp}
                     onChange={(val) => setFieldValue("otp", val)}
                   >
-                    <InputOTPGroup className="flex items-center gap-1.5">
+                    <InputOTPGroup className="flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 w-full max-w-[280px] sm:max-w-none">
                       {[0, 1, 2, 3, 4, 5]?.map((i) => (
                         <InputOTPSlot
                           key={i}
                           index={i}
-                          className="bg-[#F3F3F5] border border-[#00000000] rounded-xl size-14.5 text-lg font-satoshi-500"
+                          className="bg-[#F3F3F5] border border-[#00000000] rounded-xl size-10 sm:size-14.5 text-base sm:text-lg font-satoshi-500"
                         />
                       ))}
                     </InputOTPGroup>
@@ -148,11 +149,11 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
                 )}
                 <div className="flex flex-col items-start pt-4">
                   {!canResend ? (
-                    <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
+                    <p className="font-satoshi-500 text-sm sm:text-lg font-normal leading-5 text-[#6A7282]">
                       Resend in 00:{timer < 10 && "0"} {timer}s
                     </p>
                   ) : (
-                    <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
+                    <p className="font-satoshi-500 text-sm sm:text-lg font-normal leading-5 text-[#6A7282]">
                       {`Didn't receive it?`}
                       <span
                         className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer"
@@ -165,7 +166,7 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
                 </div>
               </div>
 
-              <div className="flex justify-start items-center gap-4 md:gap-5.5 pt-[57px]">
+              <div className="flex flex-col sm:flex-row justify-start items-stretch sm:items-center gap-3 sm:gap-4 md:gap-5.5 pt-8 sm:pt-[57px]">
                 <Button
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
