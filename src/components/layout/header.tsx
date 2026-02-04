@@ -77,7 +77,7 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
       <div
         className={`flex items-center gap-1 min-h-0 ${
           isHero ? "bg-logo" : "bg-white/20 backdrop-blur-[20px]"
-        } rounded-[300px] px-2 sm:px-2.5 md:px-4 py-[2px] sm:py-[4px] md:py-2.5 max-w-[120px] md:max-w-[154px]`}
+        } rounded-[300px] px-2 mr-2 sm:mr-0 sm:px-2.5 md:px-4 py-[2px] sm:py-[4px] md:py-2.5 max-w-[120px] md:max-w-[154px]`}
       >
         <div className="image shrink-0">
           <Link href={"/"} className="cursor-pointer">

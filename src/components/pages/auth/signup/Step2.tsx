@@ -298,7 +298,7 @@ const Step2 = () => {
               <div className="grid grid-cols-1  gap-4 px-[26px] pt-[20px]">
                 <Button
                   variant={"outlineBlackRect"}
-                  className="py-[17px]! px-[123px]!"
+                  className="w-full py-[17px]!"
                   onClick={() => googleLogin()}
                   type="button"
                 >
@@ -348,7 +348,7 @@ const Step2 = () => {
                   </span>
                 </p>
               </div>
-              <div className="flex justify-center items-center gap-4 md:gap-5.5">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-5.5">
                 <Button
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"

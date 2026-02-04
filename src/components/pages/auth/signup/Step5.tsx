@@ -85,7 +85,7 @@ const Step5 = () => {
           cssClass="leading-tight"
         />
       </div>
-      <div className="form h-full overflow-auto [scrollbar-width:none]">
+      <div className="form h-full overflow-auto px-1 sm:px-0 [scrollbar-width:none]">
         <Formik
           initialValues={initialValues}
           validationSchema={Step5Schema}
@@ -114,16 +114,22 @@ const Step5 = () => {
                 touched={touched?.wellnessRole}
               />
               <div className="py-4">
-                <div className="bg-[#FFE8E8] border border-[#B95E82] px-6 lg:px-15 py-5 lg:py-7.5 flex items-start gap-3 rounded-[10px]">
+                {/* <div className="bg-[#FFE8E8] border border-[#B95E82] px-6 lg:px-15 py-5 lg:py-7.5 flex items-start gap-3 rounded-[10px]"> */}
+                <div className="bg-[#FFE8E8] border border-[#B95E82] 
+                  px-3 sm:px-6 lg:px-15 
+                  py-4 sm:py-5 lg:py-7.5 
+                  flex items-start gap-3 rounded-[10px]">
                   <Typography
                     title="We use age to suggest safe, relevant programs and personalize your experience."
                     type="lgBlack"
-                    cssClass="text-sm! leading-normal md:text-base! lg:text-[22px]! md:leading-none!"
+                    // cssClass="text-sm! leading-normal md:text-base! lg:text-[22px]! md:leading-none!"
+                    cssClass="text-sm! leading-normal break-words md:text-base! lg:text-[22px]! md:leading-none!"
                   />
                 </div>
               </div>
 
-              <div className="flex justify-center items-center gap-4 md:gap-5.5">
+              {/* <div className="flex justify-center items-center gap-4 md:gap-5.5"> */}
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-5.5">
                 <Button
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"

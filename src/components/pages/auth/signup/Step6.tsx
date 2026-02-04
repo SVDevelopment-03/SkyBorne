@@ -119,13 +119,22 @@ const Step6 = () => {
             <MotionDiv key={m.id} position="left">
               <label
                 htmlFor={m.id}
-                className={`flex items-center gap-4 border-[2.5px] rounded-xl p-4.5 cursor-pointer transition 
+              //   className={`flex items-center gap-4 border-[2.5px] rounded-xl p-4.5 cursor-pointer transition 
+              //   ${
+              //     selected === m.id
+              //       ? "border-[#B95E82] bg-[#FFE8E8]"
+              //       : "border-[#E5E7EB] bg-white"
+              //   }
+              // `}
+                className={`flex items-start sm:items-center gap-3 sm:gap-4 
+                border-[2.5px] rounded-xl 
+                p-3 sm:p-4.5 
+                cursor-pointer transition
                 ${
                   selected === m.id
                     ? "border-[#B95E82] bg-[#FFE8E8]"
                     : "border-[#E5E7EB] bg-white"
-                }
-              `}
+                }`}
               >
                 <RadioGroupItem
                   id={m.id}
@@ -137,13 +146,18 @@ const Step6 = () => {
 
                 <Typography
                   title={m.title}
-                  cssClass="xl:!text-xl xl:!leading-none text-[#0A0A0A]!"
+                  // cssClass="xl:!text-xl xl:!leading-none text-[#0A0A0A]!"
+                  cssClass="text-sm sm:text-base xl:!text-xl xl:!leading-none text-[#0A0A0A]! break-words"
                 />
               </label>
             </MotionDiv>
           ))}
         </RadioGroup>
-        <div className="bg-[#FFE8E8] border border-[#B95E82] h-[61px] max-h-[61px] flex justify-center items-center gap-3 rounded-[10px]">
+        {/* <div className="bg-[#FFE8E8] border border-[#B95E82] h-[61px] max-h-[61px] flex justify-center items-center gap-3 rounded-[10px]"> */}
+        <div className="bg-[#FFE8E8] border border-[#B95E82] 
+          px-3 sm:px-6 
+          py-3 sm:py-4 
+          flex justify-center items-center gap-3 rounded-[10px]">
           <Typography
             title="Setting a goal helps you stay motivated. Change it anytime."
             type="lgBlack"
@@ -152,7 +166,8 @@ const Step6 = () => {
         </div>
         {/* ---------------------- */}
 
-        <div className="flex justify-center items-center gap-4 md:gap-5.5">
+        {/* <div className="flex justify-center items-center gap-4 md:gap-5.5"> */}
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-5.5">
           <Button
             variant={"outlineBlack"}
             onClick={prevStep}

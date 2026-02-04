@@ -120,7 +120,7 @@ const Step4 = () => {
 
   return (
     <div className="flex flex-col gap-8 md:gap-8 h-full">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="flex flex-col gap-5">
           <Typography
             title="Keep Your Skyborne Account Secure"
@@ -134,7 +134,8 @@ const Step4 = () => {
         </div>
         <HomeIcon />
       </div>
-      <div className="bg-[#FFE8E8] border border-[#B95E82] p-4 flex items-start gap-3 rounded-[10px]">
+      {/* <div className="bg-[#FFE8E8] border border-[#B95E82] p-4 flex items-start gap-3 rounded-[10px]"> */}
+      <div className="bg-[#FFE8E8] border border-[#B95E82] p-3 sm:p-4 flex flex-col sm:flex-row items-start gap-3 rounded-[10px]">
         <div className="p-2 bg-[#E1E1E1] w-8 h-8 rounded-full">
           <ShieldIcon />
         </div>
@@ -142,7 +143,7 @@ const Step4 = () => {
           <Typography
             title={`OTP sent to ${userEmail}`}
             type="lgBlack"
-            cssClass="text-base!"
+            cssClass="text-base! break-all sm:break-normal"
           />
           <Typography
             title="Change email"
@@ -172,12 +173,17 @@ const Step4 = () => {
                     autoComplete="one-time-code"
                     onChange={(val) => setFieldValue("otp", val)}
                   >
-                    <InputOTPGroup className="flex items-center gap-1.5">
+                    {/* <InputOTPGroup className="flex items-center gap-1 sm:gap-1.5"> */}
+                    <InputOTPGroup className="flex items-center justify-between w-full max-w-[280px] mx-auto gap-1 sm:justify-start sm:w-auto sm:max-w-none sm:mx-0 sm:gap-1.5">
                       {[0, 1, 2, 3, 4, 5]?.map((i) => (
                         <InputOTPSlot
                           key={i}
                           index={i}
-                          className="bg-[#F3F3F5] border border-[#00000000] rounded-xl size-14.5 text-lg font-satoshi-500"
+                          // className="bg-[#F3F3F5] border border-[#00000000] rounded-xl size-14.5 text-lg font-satoshi-500"
+                          className="bg-[#F3F3F5] border border-[#00000000] rounded-xl 
+                            size-10 sm:size-14.5 
+                            text-base sm:text-lg 
+                            font-satoshi-500"
                         />
                       ))}
                     </InputOTPGroup>
@@ -212,7 +218,8 @@ const Step4 = () => {
                 </div>
               </div>
 
-              <div className="flex justify-center items-center gap-4 md:gap-5.5 pt-[57px]">
+              {/* <div className="flex justify-center items-center gap-4 md:gap-5.5 pt-[57px]"> */}
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-5.5 pt-[40px] sm:pt-[57px]">
                 <Button
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"

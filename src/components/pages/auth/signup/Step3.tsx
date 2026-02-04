@@ -48,12 +48,12 @@ const Step3 = () => {
   };
   return (
     <div className="flex flex-col gap-8 md:gap-14 h-full">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3">
         <div className="flex flex-col gap-5">
           <Typography
             title="Keep Your Skyborne Account Secure"
             type="xxl"
-            cssClass="leading-tight"
+            cssClass="leading-tight text-lg sm:text-xl md:text-xxl"
           />
           <Typography
             title="You can change preferences anytime."
@@ -88,7 +88,7 @@ const Step3 = () => {
                       />
                       <Typography
                         title="We use your phone only for security, booking alerts, and important updates."
-                        cssClass="text-[#6A7282]! my-4"
+                        cssClass="text-[#6A7282]! mt-3 mb-2 sm:my-4"
                         type="regular"
                       />
                       {touched?.phoneNumber && errors?.phoneNumber && (
@@ -101,7 +101,7 @@ const Step3 = () => {
                 </div>
               </div>
 
-              <div className="flex justify-center items-center gap-4 md:gap-5.5 pt-[57px]">
+              <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-5.5 pt-10 sm:pt-[57px]">
                 <Button
                   variant={"outlineBlack"}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"

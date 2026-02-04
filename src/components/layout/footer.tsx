@@ -73,7 +73,7 @@ export default function Footer() {
   });
 
   return (
-    <footer className="bg-[#494949] text-[#FFF7DD] rounded-2xl md:rounded-[30px] pt-7.5 lg:pt-[71px] pb-2 lg:pb-9 px-2 md:px-5 lg:px-[61px] font-satoshi-500">
+    <footer className="bg-[#494949] text-[#FFF7DD] rounded-2xl md:rounded-[30px] pt-7.5 lg:pt-[71px] pb-2 lg:pb-9 px-3 sm:px-4 md:px-5 lg:px-[61px] font-satoshi-500">
       <div className="max-w-full mx-auto">
         {/* Top Grid */}
         <div className="grid md:grid-cols-3 gap-7.5 md:gap-10">
@@ -122,7 +122,7 @@ export default function Footer() {
               SUBSCRIBE TO RECEIVE MORE UPDATES
             </h3>
             <form onSubmit={formik.handleSubmit}>
-              <div className="relative flex items-center w-fit justify-start">
+              <div className="relative flex items-center w-full sm:w-fit justify-start">
                 <input
                   type="email"
                   name="email"
@@ -130,7 +130,7 @@ export default function Footer() {
                   onChange={formik.handleChange}
                   onBlur={formik.handleBlur}
                   value={formik.values.email}
-                  className="bg-transparent border border-gray-400 rounded-full pl-5 pr-16 py-2 md:py-4 w-80 lg:w-96 text-base placeholder:text-[#7F7F7F] text-[#7F7F7F] focus:outline-none"
+                  className="bg-transparent border border-gray-400 rounded-full pl-5 pr-16 py-2 md:py-4 w-full max-w-80 lg:max-w-96 text-base placeholder:text-[#7F7F7F] text-[#7F7F7F] focus:outline-none"
                 />
 
                 {/* Submit button */}
@@ -153,7 +153,7 @@ export default function Footer() {
 
           {/* Social Links + Copyright */}
           {/* <div className="pt-[72px] flex flex-col md:flex-row justify-between items-center text-sm"> */}
-          <div className="md:col-span-2 flex items-center gap-4 mb-4 md:mb-0 max-md:order-2">
+          <div className="md:col-span-2 flex flex-wrap items-center gap-3 sm:gap-4 mb-4 md:mb-0 max-md:order-2">
             {socialLinks?.map((item, idx) => (
               <Link
                 key={idx}
