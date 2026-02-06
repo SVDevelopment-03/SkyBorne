@@ -42,6 +42,9 @@ export interface IMeeting {
   duration: number;
   autoRecording: boolean;
   rotationEnabled: boolean;
+  recurringType?: "weekly" | "monthly" | "custom" | null;
+  recurringDays?: number | null;
+
   isLive: boolean;
   joinUrl: string;
   startUrl: string;
@@ -230,45 +233,44 @@ export const meetingApi = createApi({
           method: "GET",
         }),
         providesTags: (result, error, id) => [{ type: "Meetings", id }],
-      }
+      },
     ),
-  getAllTrainerMeetings: builder.query({
-  query: ({ 
-    search = "", 
-    page = 1,
-    limit = 10,
-    sortBy = "localTime",
-    sortOrder = "asc",
-    service,
-    isLive,
-    isRecurring,
-    startDate,
-    endDate,
-  }) => {
-    const params: any = {
-      search,
-      page,
-      limit,
-      sortBy,
-      sortOrder,
-    };
+    getAllTrainerMeetings: builder.query({
+      query: ({
+        search = "",
+        page = 1,
+        limit = 10,
+        sortBy = "localTime",
+        sortOrder = "asc",
+        service,
+        isLive,
+        isRecurring,
+        startDate,
+        endDate,
+      }) => {
+        const params: any = {
+          search,
+          page,
+          limit,
+          sortBy,
+          sortOrder,
+        };
 
-    // Only add optional params if they're provided
-    if (service) params.service = service;
-    if (isLive !== undefined) params.isLive = isLive;
-    if (isRecurring !== undefined) params.isRecurring = isRecurring;
-    if (startDate) params.startDate = startDate;
-    if (endDate) params.endDate = endDate;
+        // Only add optional params if they're provided
+        if (service) params.service = service;
+        if (isLive !== undefined) params.isLive = isLive;
+        if (isRecurring !== undefined) params.isRecurring = isRecurring;
+        if (startDate) params.startDate = startDate;
+        if (endDate) params.endDate = endDate;
 
-    return {
-      url: "/meetings/getAllTrainerMeetings",
-      method: "GET",
-      params,
-    };
-  },
-  providesTags: ["Meetings"],
-}),
-
+        return {
+          url: "/meetings/getAllTrainerMeetings",
+          method: "GET",
+          params,
+        };
+      },
+      providesTags: ["Meetings"],
+    }),
   }),
 });
 

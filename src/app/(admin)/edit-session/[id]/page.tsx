@@ -62,6 +62,8 @@ interface FormValues {
   trainer: string;
   duration: number;
   autoRecording: boolean;
+  recurringType: "" | "weekly" | "monthly" | "custom";
+  customInterval: number | "";
 }
 
 const validationSchema = Yup.object().shape({
@@ -75,7 +77,28 @@ const validationSchema = Yup.object().shape({
     .required("Duration is required")
     .min(30, "Duration must be at least 30 minutes")
     .max(480, "Duration cannot exceed 8 hours"),
+
   autoRecording: Yup.boolean(),
+
+  recurringType: Yup.string()
+    .nullable()
+    .when("autoRecording", {
+      is: true,
+      then: (schema) => schema.required("Recurring type is required"),
+      otherwise: (schema) => schema.notRequired(),
+    }),
+
+  customInterval: Yup.number()
+    .nullable()
+    .when("recurringType", {
+      is: "custom",
+      then: (schema) =>
+        schema
+          .required("Recurring days are required")
+          .min(1)
+          .max(30),
+      otherwise: (schema) => schema.notRequired(),
+    }),
 });
 
 export default function EditMeeting() {
@@ -316,29 +339,34 @@ export default function EditMeeting() {
         regions: timezoneConversions,
         duration: values.duration,
         startDate: values?.date,
-        autoRecording: values.autoRecording,
+        isRecurring: values.autoRecording,
         localTime: localDateTime.toISOString(),
+        recurringType: values.autoRecording ? values.recurringType : null,
+        recurringDays:
+          values.autoRecording && values.recurringType === "custom"
+            ? values.customInterval
+            : null,
       };
 
       console.log("Sending payload:", payload);
 
-      const data: any = await updateMeeting({ id: meetingId, body: payload });
+      // const data: any = await updateMeeting({ id: meetingId, body: payload });
 
-      if (data?.data?.success) {
-        setButtonState("success");
-        toast.success("Meeting updated successfully!");
+      // if (data?.data?.success) {
+      //   setButtonState("success");
+      //   toast.success("Meeting updated successfully!");
 
-        setTimeout(() => {
-          setShowModal(true);
-          router.push("/schedule-session");
-          setTimeout(() => {
-            setButtonState("default");
-          }, 2000);
-        }, 500);
-      } else {
-        toast.error(data?.data?.message || "Failed to update meeting");
-        setButtonState("default");
-      }
+      //   setTimeout(() => {
+      //     setShowModal(true);
+      //     router.push("/schedule-session");
+      //     setTimeout(() => {
+      //       setButtonState("default");
+      //     }, 2000);
+      //   }, 500);
+      // } else {
+      //   toast.error(data?.data?.message || "Failed to update meeting");
+      //   setButtonState("default");
+      // }
     } catch (error: any) {
       console.error("Error updating meeting:", error);
       toast.error(error.message || "Error updating meeting");
@@ -390,7 +418,10 @@ export default function EditMeeting() {
 
   const meeting = meetingData.data;
 
-  const initialValues: FormValues = {
+  const initialValues: FormValues & {
+    recurringType: "weekly" | "monthly" | "custom" | "";
+    customInterval: number | "";
+  } = {
     service: meeting.service?._id || "",
     date: new Date(meeting.startDate),
     liveRegion: meeting.liveRegion || "",
@@ -398,9 +429,11 @@ export default function EditMeeting() {
     liveTime: meeting.liveTime || "10:00 AM",
     trainer: meeting.trainer?._id || "",
     duration: meeting.duration || 60,
-    autoRecording: meeting.autoRecording || true,
+    autoRecording: meeting.autoRecording ?? true,
+    recurringType: meeting.recurringType || "",
+    customInterval: meeting.recurringDays || "",
   };
-
+  
 
   return (
     <Formik
@@ -539,7 +572,8 @@ export default function EditMeeting() {
 
                 {/* Section 3: Live Region & Time */}
                 <section className="space-y-4">
-                  <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-4 space-y-4">
+                  {/* <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-4 space-y-4"> */}
+                  <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-3 sm:p-4 space-y-4 w-full overflow">
                     <div className="flex items-center gap-2">
                       <Globe className="w-5 h-5 text-[#b95e82]" />
                       <h3 className="text-large text-[#262626]">
@@ -551,8 +585,10 @@ export default function EditMeeting() {
                       regions will receive the recorded version automatically.
                     </p>
 
-                    <div className="grid md:grid-cols-2 gap-4">
-                      {regionOptions && <div>
+                    {/* <div className="grid md:grid-cols-2 gap-4"> */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
+                      {/* {regionOptions && <div> */}
+                      {regionOptions && <div className="w-full min-w-0">
                         <Select
                           label="🌍 Select Region"
                           value={values.liveRegion}
@@ -567,7 +603,7 @@ export default function EditMeeting() {
                         )}
                       </div>}
 
-                      <div className="space-y-2">
+                      <div className="space-y-2 w-full min-w-[170px] sm:min-w-0">
                         <label className="block flex items-center gap-2">
                           <Clock className="w-4 h-4 text-[#b95e82]" />
                           Select Time
@@ -699,18 +735,104 @@ export default function EditMeeting() {
                   </div>
                 </section>
 
-                {/* Section 7: Recording Logic */}
                 <section className="space-y-4">
-                  <h4 className="text-[#262626]">Recording Logic</h4>
-                  <div className="bg-[#f5f5f5] rounded-xl p-4">
+                  <div className="flex items-center">
+                    <h4 className="text-[#262626] mr-4">Recurring Class</h4>
+
                     <Toggle2
                       checked={values.autoRecording}
-                      onChange={(val) => setFieldValue("autoRecording", val)}
-                      label="Automatic recording distribution"
-                      description="The system will share the recording with all non-live regions automatically."
+                      onChange={(val) => {
+                        setFieldValue("autoRecording", val);
+
+                        if (val && !values.recurringType) {
+                          setFieldValue("recurringType", "weekly");
+                        }
+
+                        if (!val) {
+                          setFieldValue("recurringType", "");
+                          setFieldValue("customInterval", "");
+                        }
+                      }}
                     />
                   </div>
                 </section>
+
+                 {values.autoRecording && (
+                  <section className="space-y-6">
+                    {/* Recurring Type */}
+                    <div className="space-y-3">
+                      <h4 className="text-[#262626]">Recurring Type</h4>
+
+                      {/* Responsive container */}
+                      <div className="w-full sm:w-full md:w-[70%] lg:w-1/2">
+                        <div className="grid grid-cols-3 gap-2">
+                          {["weekly", "monthly", "custom"].map((type) => {
+                            const isActive = values.recurringType === type;
+
+                            return (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() => {
+                                  setFieldValue("recurringType", type);
+                                  if (type !== "custom") {
+                                    setFieldValue("customInterval", "");
+                                  }
+                                }}
+                                className={`
+                                  h-[42px]
+                                  px-2
+                                  rounded-md
+                                  border
+                                  flex items-center justify-center
+                                  transition-all duration-200
+                                  text-sm capitalize
+
+                                  ${
+                                    isActive
+                                      ? "bg-[#f7e9ef] border-[#b95e82] text-[#b95e82]"
+                                      : "bg-white border-[#e5e5e5] text-[#525252] hover:bg-[#fafafa]"
+                                  }
+
+                                  font-satoshi font-medium
+                                `}
+                              >
+                                {type}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Recurring Days – ONLY FOR CUSTOM */}
+                    {values.recurringType === "custom" && (
+                      <div className="space-y-3">
+                        <h4 className="text-[#262626]">Recurring Days</h4>
+                        <p className="text-sm text-[#737373]">
+                          This will be configured automatically based on selected recurring type.
+                        </p>
+
+                        <div className="max-w-[160px]">
+                          <input
+                            type="number"
+                            min={1}
+                            max={30}
+                            value={values.customInterval}
+                            onChange={(e) =>
+                              setFieldValue(
+                                "customInterval",
+                                Math.min(30, Math.max(1, Number(e.target.value)))
+                              )
+                            }
+                            placeholder="1–30"
+                            className="w-full px-3 py-2 rounded-md border border-[#e5e5e5] focus:ring-2 focus:ring-[#b95e82]"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </section>
+                )}
 
                 {/* CTA Area */}
                 <section className="flex flex-col sm:flex-row items-center gap-4 pt-4 border-t border-[#e5e5e5]">
