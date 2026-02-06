@@ -94,8 +94,8 @@ export default function UserSessions() {
     const region = getUserRegion();
 
     setTimeout(() => {
-      setUserRegion(region);
-     // setUserRegion({ region: "Gulf", timezone: "Asia/Dubai" });
+      // setUserRegion(region);
+      setUserRegion({ region: "Gulf", timezone: "Asia/Dubai" });
     }, 0);
   }, []);
 
@@ -107,7 +107,6 @@ export default function UserSessions() {
     regionTimeStr?: string,
     mode?: string,
   ) => {
-
     if (!isoString) return "N/A";
 
     try {
@@ -118,35 +117,29 @@ export default function UserSessions() {
         return "Invalid Date";
       }
 
-      // ✅ NEW LOGIC: If region is not live and region time has passed,
-      // show next day's date for recording class
-      if (mode !== "live" && regionTimeStr) {
-        const classDatetime = new Date(isoString);
-        const currentTime = Date.now();
+      // if (mode !== "live" && regionTimeStr) {
+      //   const classDatetime = new Date(isoString);
+      //   const currentTime = Date.now();
 
-        // Parse region time string (e.g., "10:00 AM")
-        const [timeStr, period] = regionTimeStr.split(" ");
-        const [hours, minutes] = timeStr.split(":");
+      //   const [timeStr, period] = regionTimeStr.split(" ");
+      //   const [hours, minutes] = timeStr.split(":");
 
-        let hour = parseInt(hours, 10);
-        const minute = parseInt(minutes, 10);
+      //   let hour = parseInt(hours, 10);
+      //   const minute = parseInt(minutes, 10);
 
-        // Convert to 24-hour format
-        if (period === "PM" && hour !== 12) {
-          hour += 12;
-        } else if (period === "AM" && hour === 12) {
-          hour = 0;
-        }
+      //   if (period === "PM" && hour !== 12) {
+      //     hour += 12;
+      //   } else if (period === "AM" && hour === 12) {
+      //     hour = 0;
+      //   }
 
-        // Create a new date with the region's time for comparison
-        const regionDateTime = new Date(classDatetime);
-        regionDateTime.setHours(hour, minute, 0, 0);
+      //   const regionDateTime = new Date(classDatetime);
+      //   regionDateTime.setHours(hour, minute, 0, 0);
 
-        // If region time is in the past and mode is 'replay', add 1 day to the date
-        if (currentTime > regionDateTime.getTime()) {
-          date = new Date(date.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
-        }
-      }
+      //   if (currentTime > regionDateTime.getTime()) {
+      //     date = new Date(date.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
+      //   }
+      // }
 
       // Use timezone if available, otherwise user's local timezone
       const options = {
@@ -174,7 +167,6 @@ export default function UserSessions() {
     try {
       const date = new Date(isoString);
 
-      // Validate date
       if (isNaN(date.getTime())) {
         return "Invalid Time";
       }
@@ -253,10 +245,10 @@ export default function UserSessions() {
       (r: any) => r.region == userRegion?.region,
     );
 
-    const formattedTime = formatTimeWithTimezone(
-      session?.localTime,
-      userRegion?.timezone,
-    );
+    // const formattedTime = formatTimeWithTimezone(
+    //   session?.localTime,
+    //   userRegion?.timezone,
+    // );
 
     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
     const formattedDate = formatDateWithTimezone(
@@ -335,16 +327,15 @@ export default function UserSessions() {
         userId: user?.id,
         region: userRegion?.region,
       }).unwrap();
-      const {recordUrl, mode } = res?.data;
+      const { recordUrl, mode } = res?.data;
 
       if (!recordUrl) {
         toast.error("Access URL not found");
         return;
       }
-        // 👇 OPEN YOUR VIDEO PLAYER MODAL
-        setVideoUrl(recordUrl);
-        setShowVideoPlayer(true);
-      
+      // 👇 OPEN YOUR VIDEO PLAYER MODAL
+      setVideoUrl(recordUrl);
+      setShowVideoPlayer(true);
     } catch (err: any) {
       console.error("Join meeting error:", err);
       toast.error(
@@ -539,17 +530,18 @@ export default function UserSessions() {
               (r: any) => r.region == userRegion?.region,
             );
 
-            const formattedTime = formatTimeWithTimezone(
-              session?.localTime,
-              userRegion?.timezone,
-            );
+            // const formattedTime = formatTimeWithTimezone(
+            //   session?.localTime,
+            //   userRegion?.timezone,
+            // );
 
             // ✅ Use the enhanced formatDateWithTimezone with recording mode support
             const formattedDate = formatDateWithTimezone(
               session?.localTime,
               userRegion?.timezone,
               regionInfo?.localTime,
-              regionInfo?.mode,
+              "live"
+              // regionInfo?.mode,
             );
 
             // const trainer = session?.trainer?.name ?? "";
@@ -561,6 +553,14 @@ export default function UserSessions() {
             const diffMinutes = diffMs / 1000 / 60;
 
             const isJoinDisabled = diffMinutes > 5;
+
+            const formattedTime = new Date(
+              session?.localTime,
+            ).toLocaleTimeString([], {
+              hour: "numeric",
+              minute: "2-digit",
+              hour12: true,
+            });
 
             return (
               <Card
@@ -602,7 +602,8 @@ export default function UserSessions() {
                     <div className="flex items-center gap-2 text-[#6B6B6B]">
                       <Clock className="w-4 h-4" />
                       <span className="text-sm">
-                        {regionInfo?.localTime} • {session.duration} min
+                        {/* {regionInfo?.localTime} • {session.duration} min */}
+                        {formattedTime} • {session.duration} min
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-[#6B6B6B]">
@@ -736,10 +737,11 @@ export default function UserSessions() {
       {selectedClass && (
         <ZoomSessionFlow
           isOpen={showZoomFlow}
-          isLive={
-            filteredSessions.find((s) => s._id === selectedClass.meetingId)
-              ?.regions?.[0]?.mode === "live"
-          }
+          isLive={true}
+          // isLive={
+          //   filteredSessions.find((s) => s._id === selectedClass.meetingId)
+          //     ?.regions?.[0]?.mode === "live"
+          // }
           joinMeeting={() =>
             handleJoinMeeting(
               filteredSessions.find(

@@ -273,7 +273,8 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         region: region.displayLabel,
         localTime: replayTimeStr,
         timezone: region.timezone,
-        mode: "replay",
+        mode: "live",
+        // mode: "replay",
         date: finalReplayDate.format("YYYY-MM-DD"),
       };
     });

@@ -39,7 +39,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 
 const getCreditsChartOptions = (
   totalCredits: number,
-  usedCredits: number
+  usedCredits: number,
 ): ApexOptions => {
   // Calculate remaining credits
   const remainingCredits = Math.max(0, totalCredits - usedCredits);
@@ -87,11 +87,9 @@ const getCreditsChartOptions = (
                 const remaining = w.globals.series[1]; // 25
 
                 const percent = (completed / (completed + remaining)) * 100;
-                if(isNaN(percent)){
-                  return "No Record"
-
-
-                } 
+                if (isNaN(percent)) {
+                  return "No Record";
+                }
 
                 return percent.toFixed(0) + "% Completed";
               },
@@ -166,8 +164,9 @@ export default function Page() {
     const region = getUserRegion();
 
     setTimeout(() => {
-     setUserRegion(region);
-      // setUserRegion({region:"Gulf",timezone:'Asia/Dubai'});
+      // setUserRegion(region);
+
+      setUserRegion({ region: "Canada / USA", timezone: "America/New_York" });
     }, 0);
   }, []);
 
@@ -184,7 +183,7 @@ export default function Page() {
     data: dashboardData,
     isLoading: tileLoading,
     error: tileerror,
-  } = useGetDashboardStatsQuery({region: userRegion?.region,});
+  } = useGetDashboardStatsQuery({ region: userRegion?.region });
 
   const totalCredits = dashboardData?.data?.totalCredits || 0;
   const classesAttended = dashboardData?.data?.classesAttended || 0;
@@ -235,7 +234,7 @@ export default function Page() {
   const avatarName =
     user?.firstName[0] + (user?.lastName ? user?.lastName[0] : "");
   const fullName = toTitleCase(
-    user?.firstName + " " + (user?.lastName ? user?.lastName : "")
+    user?.firstName + " " + (user?.lastName ? user?.lastName : ""),
   );
   type TimeFilter = "3months" | "6months" | "1year";
 
@@ -247,7 +246,6 @@ export default function Page() {
     regionTimeStr?: string,
     mode?: string,
   ) => {
-
     if (!isoString) return "N/A";
 
     try {
@@ -258,35 +256,29 @@ export default function Page() {
         return "Invalid Date";
       }
 
-      // ✅ NEW LOGIC: If region is not live and region time has passed,
-      // show next day's date for recording class
-      if (mode !== "live" && regionTimeStr) {
-        const classDatetime = new Date(isoString);
-        const currentTime = Date.now();
+      // if (mode !== "live" && regionTimeStr) {
+      //   const classDatetime = new Date(isoString);
+      //   const currentTime = Date.now();
 
-        // Parse region time string (e.g., "10:00 AM")
-        const [timeStr, period] = regionTimeStr.split(" ");
-        const [hours, minutes] = timeStr.split(":");
+      //   const [timeStr, period] = regionTimeStr.split(" ");
+      //   const [hours, minutes] = timeStr.split(":");
 
-        let hour = parseInt(hours, 10);
-        const minute = parseInt(minutes, 10);
+      //   let hour = parseInt(hours, 10);
+      //   const minute = parseInt(minutes, 10);
 
-        // Convert to 24-hour format
-        if (period === "PM" && hour !== 12) {
-          hour += 12;
-        } else if (period === "AM" && hour === 12) {
-          hour = 0;
-        }
+      //   if (period === "PM" && hour !== 12) {
+      //     hour += 12;
+      //   } else if (period === "AM" && hour === 12) {
+      //     hour = 0;
+      //   }
 
-        // Create a new date with the region's time for comparison
-        const regionDateTime = new Date(classDatetime);
-        regionDateTime.setHours(hour, minute, 0, 0);
+      //   const regionDateTime = new Date(classDatetime);
+      //   regionDateTime.setHours(hour, minute, 0, 0);
 
-        // If region time is in the past and mode is 'replay', add 1 day to the date
-        if (currentTime > regionDateTime.getTime()) {
-          date = new Date(date.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
-        }
-      }
+      //   if (currentTime > regionDateTime.getTime()) {
+      //     date = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+      //   }
+      // }
 
       // Use timezone if available, otherwise user's local timezone
       const options = {
@@ -308,7 +300,6 @@ export default function Page() {
   };
 
   const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
-
     if (!isoString) return "N/A";
 
     try {
@@ -378,7 +369,7 @@ export default function Page() {
         ? "-"
         : String(dashboardData?.data?.upcomingSessions || "-"),
       desc2: getNextUpcomingSessionText(
-        dashboardData?.data?.upcomingSessions || 0
+        dashboardData?.data?.upcomingSessions || 0,
       ),
     },
     {
@@ -549,22 +540,32 @@ export default function Page() {
                   !isFetching &&
                   upcomingData?.meetings?.map((meeting: any, index: number) => {
                     const regionInfo = meeting?.regions?.find(
-                      (r: any) => r.region == userRegion?.region
+                      (r: any) => r.region == userRegion?.region,
                     );
 
-                    const formattedTime = formatTimeWithTimezone(
+                    // need to reuse
+                    // const formattedTime = formatTimeWithTimezone(
+                    //   meeting?.localTime,
+                    //   userRegion?.timezone
+                    // );
+
+                    const formattedTime = new Date(
                       meeting?.localTime,
-                      userRegion?.timezone
-                    );
-                    
+                    ).toLocaleTimeString([], {
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    });
+
                     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
                     const formattedDate = formatDateWithTimezone(
                       meeting?.localTime,
                       userRegion?.timezone,
                       regionInfo?.localTime,
-                      regionInfo?.mode,
+                      "live"
+                      // regionInfo?.mode,
                     );
-                    
+
                     const trainer = meeting?.trainer?.name ?? "";
 
                     return (
@@ -572,7 +573,8 @@ export default function Page() {
                         key={index}
                         meetingId={meeting?._id}
                         userId={user?.id}
-                        isLive={regionInfo?.mode === "live"}
+                        isLive={true}
+                        // isLive={regionInfo?.mode === "live"}
                         trainer={trainer}
                         region={userRegion?.region as string}
                         joined={meeting?.joined ?? false}
@@ -580,7 +582,8 @@ export default function Page() {
                         participantsCount={meeting?.participantsCount ?? 0}
                         image="/images/upcoming-ico.jpg"
                         startTime={meeting?.localTime}
-                        time={regionInfo?.localTime} // Use formatted time
+                        time={formattedTime}
+                        // time={regionInfo?.localTime}
                         date={formattedDate} // Use formatted date with recording logic
                         title={meeting?.title ?? "Untitled"}
                         duration={`${meeting?.duration ?? 0} min`}
