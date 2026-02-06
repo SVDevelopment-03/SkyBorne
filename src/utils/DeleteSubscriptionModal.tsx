@@ -34,13 +34,7 @@ const DeleteSubscriptionModal = ({
     try {
       setIsProcessing(true);
 
-      console.log("📤 Sending cancel subscription request to backend:", {
-        subscriptionId,
-      });
-
       const response = await cancelSubscription(subscriptionId).unwrap();
-
-      console.log("📥 Response from backend:", response);
 
       if (response.success) {
         toast.success(response.message || "Subscription cancelled successfully!");

@@ -96,7 +96,6 @@ const Step4 = () => {
       }).unwrap();
       const { data } = res;
       if (res?.success) {
-        console.log("OTP Verified:", res);
         toast.success(res?.message ?? "Otp verified successfully");
         updateStepData("step4", {
           otp: values.otp,

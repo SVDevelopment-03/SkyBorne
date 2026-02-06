@@ -76,10 +76,6 @@ export default function CreateMeetingModal({ open, onClose, adminId }: Props) {
               adminId,
             };
 
-
-            console.log("payload", payload?.start_time,values.start_time);
-            
-
             try {
               const result = await createMeeting(payload).unwrap();
 

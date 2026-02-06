@@ -92,7 +92,6 @@ export default function UserSessions() {
 
   useEffect(() => {
     const region = getUserRegion();
-    console.log("region", region);
 
     setTimeout(() => {
       setUserRegion(region);
@@ -108,12 +107,6 @@ export default function UserSessions() {
     regionTimeStr?: string,
     mode?: string,
   ) => {
-    console.log("🎯 formatDateWithTimezone called:", {
-      isoString,
-      timezone,
-      regionTimeStr,
-      mode,
-    });
 
     if (!isoString) return "N/A";
 
@@ -130,12 +123,6 @@ export default function UserSessions() {
       if (mode !== "live" && regionTimeStr) {
         const classDatetime = new Date(isoString);
         const currentTime = Date.now();
-
-        console.log("📅 Recording Mode Detected:");
-        console.log("  ISO Time:", isoString);
-        console.log("  Region Time String:", regionTimeStr);
-        console.log("  Class DateTime:", classDatetime.toISOString());
-        console.log("  Current Time:", new Date(currentTime).toISOString());
 
         // Parse region time string (e.g., "10:00 AM")
         const [timeStr, period] = regionTimeStr.split(" ");
@@ -155,20 +142,8 @@ export default function UserSessions() {
         const regionDateTime = new Date(classDatetime);
         regionDateTime.setHours(hour, minute, 0, 0);
 
-        console.log(
-          "  Region DateTime (for comparison):",
-          regionDateTime.toISOString(),
-        );
-        console.log(
-          "  Time Difference (ms):",
-          currentTime - regionDateTime.getTime(),
-        );
-
         // If region time is in the past and mode is 'replay', add 1 day to the date
         if (currentTime > regionDateTime.getTime()) {
-          console.log(
-            "📅 Recording class time has passed, showing next day date",
-          );
           date = new Date(date.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
         }
       }
@@ -184,7 +159,6 @@ export default function UserSessions() {
       const formattedDate = date
         .toLocaleDateString("en-GB", options)
         .replace(",", "");
-      console.log("✅ Final Formatted Date:", formattedDate);
 
       return formattedDate;
     } catch (error) {
@@ -194,7 +168,6 @@ export default function UserSessions() {
   };
 
   const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
-    console.log("time", isoString, timezone);
 
     if (!isoString) return "N/A";
 
@@ -578,8 +551,6 @@ export default function UserSessions() {
               regionInfo?.localTime,
               regionInfo?.mode,
             );
-
-            console.log("formatted date:", formattedDate, formattedTime);
 
             // const trainer = session?.trainer?.name ?? "";
 

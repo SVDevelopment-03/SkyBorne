@@ -28,7 +28,6 @@ const PhoneNumberSchema = Yup.object().shape({
 const Step3 = () => {
   const handleSubmit = (values: PhoneNumberFormValues) => {
     const parsed = parsePhoneNumber(values?.phoneNumber);
-    console.log("aaa", parsed);
 
     updateStepData("step3", { phoneNumber: parsed?.number as string });
     nextStep();

@@ -24,7 +24,6 @@ export default function PaymentFailed() {
         setReason(decodeURIComponent(error));
       }, 0);
 
-    console.log("Payment Failed:", { orderRef: ref, error });
   }, [searchParams]);
 
   return (

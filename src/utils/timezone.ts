@@ -49,7 +49,5 @@ export const getUserRegion = (): {
   const timezone = normalizeTimezone(tzGuess);
   const region = mapTimezoneToRegion(timezone);
 
-  console.log("🌍 Detected User Region:", { timezone, region });
-
   return { timezone, region };
 };

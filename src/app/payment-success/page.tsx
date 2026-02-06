@@ -35,7 +35,6 @@ export default function PaymentSuccess() {
 
   useEffect(() => {
     if (hasCalledVerify.current) {
-      console.log("⚠️ Effect already executed, skipping...");
       return;
     }
 
@@ -65,10 +64,7 @@ export default function PaymentSuccess() {
           verifyPayload.paymentIntentId = sessionId;
         }
 
-        console.log("📤 Sending verification request:", verifyPayload);
-
         const response: any = await verifyPayment(verifyPayload).unwrap();
-        console.log("📥 Verification response:", response?.user,  response?.user?.onboardingCompleted );
 
         // ✅ NEW LOGIC: Check user.onboardingCompleted instead of response.success
         if (response?.user?.onboardingCompleted === true) {
@@ -76,12 +72,8 @@ export default function PaymentSuccess() {
           setPaymentData(response);
           setLoading(false);
           setAutoRetrying(false);
-          console.log("✅ Payment verified and subscription activated!");
         } else if (response?.status === "PENDING" && retryCount < 5) {
           // Still processing, retry after 2 seconds
-          console.log(
-            `⏳ Payment still processing... Retry ${retryCount + 1}/5`
-          );
           setAutoRetrying(true);
           setPaymentData(response);
           
@@ -112,7 +104,6 @@ export default function PaymentSuccess() {
         console.error('❌ Error verifying payment:', err);
         
         if (retryCount < 5) {
-          console.log(`⏳ Retrying... Attempt ${retryCount + 1}/5`);
           setAutoRetrying(true);
           
           retryTimeoutRef.current = setTimeout(() => {

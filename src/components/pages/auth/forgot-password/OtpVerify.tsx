@@ -75,7 +75,6 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
       }).unwrap();
       const { data } = res;
       if (res?.success) {
-        console.log("OTP Verified:", res);
         toast.success(res?.message ?? "Otp verified successfully");
 
         setTimeout(() => nextStep(), 500);

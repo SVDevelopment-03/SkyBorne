@@ -43,7 +43,6 @@ const getCreditsChartOptions = (
 ): ApexOptions => {
   // Calculate remaining credits
   const remainingCredits = Math.max(0, totalCredits - usedCredits);
-  console.log("credits", totalCredits, usedCredits, remainingCredits);
 
   const options: ApexOptions = {
     chart: {
@@ -165,7 +164,6 @@ export default function Page() {
 
   useEffect(() => {
     const region = getUserRegion();
-    console.log("region", region);
 
     setTimeout(() => {
      setUserRegion(region);
@@ -224,8 +222,6 @@ export default function Page() {
     return `Expires ${month} ${day}`;
   };
 
-  console.log("dashboard", dashboardData);
-
   const today = format(new Date(), "dd/MM/yyyy");
 
   const { user } = useSelector((state: RootState) => state.auth);
@@ -235,8 +231,6 @@ export default function Page() {
     page,
     limit,
   } as GetMeetingsParams);
-
-  console.log("meeting data", data);
 
   const avatarName =
     user?.firstName[0] + (user?.lastName ? user?.lastName[0] : "");
@@ -253,12 +247,6 @@ export default function Page() {
     regionTimeStr?: string,
     mode?: string,
   ) => {
-    console.log("🎯 formatDateWithTimezone called:", {
-      isoString,
-      timezone,
-      regionTimeStr,
-      mode,
-    });
 
     if (!isoString) return "N/A";
 
@@ -275,12 +263,6 @@ export default function Page() {
       if (mode !== "live" && regionTimeStr) {
         const classDatetime = new Date(isoString);
         const currentTime = Date.now();
-
-        console.log("📅 Recording Mode Detected:");
-        console.log("  ISO Time:", isoString);
-        console.log("  Region Time String:", regionTimeStr);
-        console.log("  Class DateTime:", classDatetime.toISOString());
-        console.log("  Current Time:", new Date(currentTime).toISOString());
 
         // Parse region time string (e.g., "10:00 AM")
         const [timeStr, period] = regionTimeStr.split(" ");
@@ -300,20 +282,8 @@ export default function Page() {
         const regionDateTime = new Date(classDatetime);
         regionDateTime.setHours(hour, minute, 0, 0);
 
-        console.log(
-          "  Region DateTime (for comparison):",
-          regionDateTime.toISOString(),
-        );
-        console.log(
-          "  Time Difference (ms):",
-          currentTime - regionDateTime.getTime(),
-        );
-
         // If region time is in the past and mode is 'replay', add 1 day to the date
         if (currentTime > regionDateTime.getTime()) {
-          console.log(
-            "📅 Recording class time has passed, showing next day date",
-          );
           date = new Date(date.getTime() + 24 * 60 * 60 * 1000); // Add 24 hours
         }
       }
@@ -329,7 +299,6 @@ export default function Page() {
       const formattedDate = date
         .toLocaleDateString("en-GB", options)
         .replace(",", "");
-      console.log("✅ Final Formatted Date:", formattedDate);
 
       return formattedDate;
     } catch (error) {
@@ -339,7 +308,6 @@ export default function Page() {
   };
 
   const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
-    console.log("time", isoString, timezone);
 
     if (!isoString) return "N/A";
 
@@ -396,7 +364,6 @@ export default function Page() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    console.log("dashboard");
 
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STEP_KEY);

@@ -60,8 +60,6 @@ const Login = () => {
           }
         ).then((res) => res.json());
 
-        console.log("user info", userInfo);
-
         const payload = {
           provider: "google",
           email: userInfo.email,
@@ -165,8 +163,6 @@ const Login = () => {
           setCredentials({ user: data?.user, accessToken, refreshToken })
         );
 
-        console.log("user", data?.user);
-        
         toast.success(res?.message || "Login successful!");
         if (data?.user?.role == "admin") {
           router.push("/admin-dashboard");
@@ -179,7 +175,6 @@ const Login = () => {
         }
       }
     } catch (err: any) {
-      console.log("RAW LOGIN ERROR:", err);
 
       const message =
         err?.data?.message ||

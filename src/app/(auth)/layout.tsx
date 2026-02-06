@@ -13,8 +13,6 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const {user} = useGetUser();
-  console.log("user", user);
-  
 
   useEffect(() => {
     const token = typeof window !== "undefined"

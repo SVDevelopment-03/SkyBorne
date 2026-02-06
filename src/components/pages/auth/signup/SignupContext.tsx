@@ -91,7 +91,6 @@ export const SignupProvider = ({ children ,initialStep}: { children: ReactNode,i
     key: K,
     value: SignupFormData[K]
   ) => {
-    console.log("value", value);
 
     setFormData((prev) => ({
       ...prev,

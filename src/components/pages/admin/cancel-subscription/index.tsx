@@ -35,7 +35,6 @@ const CancelSubscriptionPage = () => {
     search: search || undefined,
     country: filterCountry !== "all" ? filterCountry : undefined,
   });
-  console.log("Cancelled Subscriptions Data:", data);
 
   const [cancelSubscription] = useCancelSubscriptionMutation();
 
@@ -133,7 +132,7 @@ const CancelSubscriptionPage = () => {
           <DataTable
             columns={columns(
               async (id: string, currentStatus: "active" | "inactive") => {
-                console.log("Status toggle clicked", id, currentStatus);
+                console.log("Status toggle clicked");
               },
               handleAction
             ) as ColumnDef<CancelSubscriptionRow, unknown>[]}

@@ -84,7 +84,6 @@ export const columns = (
 
       try {
         const parsed = parsePhoneNumber(phoneNumber);
-        console.log("parsed", parsed);
 
         if (parsed) {
           const countryCode = parsed.countryCallingCode;

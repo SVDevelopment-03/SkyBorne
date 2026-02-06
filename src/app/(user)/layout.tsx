@@ -27,8 +27,6 @@ export default function UserLayout({ children }: AuthLayoutProps) {
     user?.firstName + " " + (user?.lastName ? user?.lastName : "")
   );
 
-  console.log("pathname", pathname);
-
   useEffect(() => {
     const token = getAccessToken();
 

@@ -75,8 +75,6 @@ export const columns = (
       cell: ({ row }:any) =>
 
       {
-        console.log(row.original);
-
         return (
           <span className="text-[#666666]">
             {formatDate(row.original.createdAt)}

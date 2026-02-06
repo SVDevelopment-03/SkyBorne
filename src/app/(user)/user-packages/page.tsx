@@ -34,8 +34,6 @@ const Page = () => {
     return billing === "yearly" ? Math.round(basePrice * 12 * 0.95) : basePrice;
   };
 
-  console.log("userrr" , user);
-  
   const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
   const price = getPackagePrice(state.selectedPackage!, billingType);
 

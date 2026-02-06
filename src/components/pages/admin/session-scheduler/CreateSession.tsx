@@ -260,14 +260,14 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
       }
 
       // Debug logging
-      console.log(`${region.displayLabel} (${region.timezone}):`, {
-        classEndTime: classEndTimeInRegion.format("YYYY-MM-DD HH:mm:ss Z"),
-        scheduledReplayTime: scheduledReplayTimeOnDate.format(
-          "YYYY-MM-DD HH:mm:ss Z"
-        ),
-        isBeforeLiveEnds,
-        finalDate: finalReplayDate.format("YYYY-MM-DD"),
-      });
+      // console.log(`${region.displayLabel} (${region.timezone}):`, {
+      //   classEndTime: classEndTimeInRegion.format("YYYY-MM-DD HH:mm:ss Z"),
+      //   scheduledReplayTime: scheduledReplayTimeOnDate.format(
+      //     "YYYY-MM-DD HH:mm:ss Z"
+      //   ),
+      //   isBeforeLiveEnds,
+      //   finalDate: finalReplayDate.format("YYYY-MM-DD"),
+      // });
 
       return {
         region: region.displayLabel,
@@ -321,8 +321,6 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         localTime: localDateTime.toISOString(),
         adminId: user?.id,
       };
-
-      console.log("Sending payload:", payload);
 
       const data: any = await createMeeting(payload);
 

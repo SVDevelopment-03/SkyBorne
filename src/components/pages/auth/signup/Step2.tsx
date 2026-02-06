@@ -84,8 +84,6 @@ const Step2 = () => {
       authProvider: "apple",
     };
 
-    console.log("Apple User:", appleData);
-
     updateStepData("step2", {
       firstName: appleData.firstName,
       lastName: appleData.lastName,
@@ -113,8 +111,6 @@ const Step2 = () => {
         }
       ).then((res) => res.json());
 
-      console.log("Google User:", userInfo);
-
       // Extract needed data
       const googleData = {
         firstName: userInfo.given_name || "",
@@ -124,8 +120,6 @@ const Step2 = () => {
         authProvider: "google",
         googleId: userInfo?.sub,
       };
-
-      console.log("googleData:", googleData);
 
       // Save to Step2 in SignupContext
       updateStepData("step2", {

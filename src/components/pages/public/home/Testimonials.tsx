@@ -43,9 +43,6 @@ const Testimonial = ({ data }: TestimonialProps) => {
 const Testimonials = () => {
   const { data, isLoading, error } = useGetTestimonialsQuery(undefined);
   const UserData: ITestimonial[] = data?.data ?? [];
-  console.log("aa", UserData);
-
-  console.log("testimonials", data);
 
   return (
     <>

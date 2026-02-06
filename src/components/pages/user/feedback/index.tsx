@@ -48,7 +48,6 @@ export default function UserFeedback() {
 
   const { user } = useGetUser();
 
-  console.log('Current User:', user);
   // Fetch active trainers
   const { data: trainersData, isLoading: trainersLoading } = useGetActiveTrainersQuery({
     page: 1,

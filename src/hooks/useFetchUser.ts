@@ -22,7 +22,6 @@ export default function useFetchUser() {
       try {
         const res = await getMe(undefined).unwrap();
 
-        console.log("res", res);
         const userData = { ...res?.user, id: res?.user?._id };
         storage.set(process.env.NEXT_PUBLIC_USER as string, userData);
 
@@ -39,7 +38,6 @@ export default function useFetchUser() {
         //  if (typeof window !== "undefined") {
         //   window.location.href = "/login";
         // }
-        console.log("ME API Error", err);
       }
     };
 

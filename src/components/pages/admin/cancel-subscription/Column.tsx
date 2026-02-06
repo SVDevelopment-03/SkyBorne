@@ -99,8 +99,7 @@ export const columns = (
     id: "action",
     header: "Action",
      cell: ({ row }) => {
-      console.log("row", row.original);
-      
+
       return(
         <div className="flex gap-3">
           <Button

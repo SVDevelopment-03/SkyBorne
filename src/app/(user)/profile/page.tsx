@@ -58,8 +58,6 @@ export default function UserProfile() {
     phone?: string;
   }>({});
 
-  console.log("user data", user);
-
   const [updateError, setUpdateError] = useState<string>("");
   const [updateSuccess, setUpdateSuccess] = useState<string>("");
 
@@ -157,7 +155,6 @@ export default function UserProfile() {
         setIsEditing(false);
         return;
       }
-      console.log("Update payload going to API:", updatePayload);
       await updateProfile(updatePayload).unwrap();
       toast.success("Profile updated successfully!")
       setUpdateSuccess("Profile updated successfully!");

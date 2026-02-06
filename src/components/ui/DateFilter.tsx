@@ -25,7 +25,6 @@ export function DateFilter() {
     : "Filter date";
 
   const handleSelect = (range: DateRange | undefined) => {
-    console.log("Selected range:", range);
 
     setDateRange(range);
 
