@@ -83,7 +83,7 @@ export default function UserSessions() {
     error: fetchError,
     refetch,
   } = useGetAllUserMeetingsQuery({
-    region: "",
+    region: userRegion?.region,
     search: searchQuery,
   });
 

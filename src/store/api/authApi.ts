@@ -84,12 +84,14 @@ export const authApi = createApi({
       providesTags: ["User"],
     }),
 
-    getDashboardStats: builder.query({
-      query: () => ({
-        url: "/dashboardStats",
-        method: "GET",
-      }),
-    }),
+   getDashboardStats: builder.query({
+  query: (params) => ({
+    url: "/dashboardStats",
+    method: "GET",
+    params, // ✅ THIS sends ?region=IN
+  }),
+}),
+
 
     // ✅ NOW CORRECT
     updateProfile: builder.mutation({

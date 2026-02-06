@@ -184,7 +184,7 @@ export default function Page() {
     data: dashboardData,
     isLoading: tileLoading,
     error: tileerror,
-  } = useGetDashboardStatsQuery(undefined);
+  } = useGetDashboardStatsQuery({region: userRegion?.region,});
 
   const totalCredits = dashboardData?.data?.totalCredits || 0;
   const classesAttended = dashboardData?.data?.classesAttended || 0;
