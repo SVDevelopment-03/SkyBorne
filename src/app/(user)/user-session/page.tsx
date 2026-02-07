@@ -327,49 +327,35 @@ const handleJoinMeeting = async (session: Session) => {
   }
 };
 
-
- const handleViewRecording = async (session: Session) => {
-  if (!session._id || !user?.id) {
-    toast.error("Missing meeting or user information");
-    return;
-  }
-
-  try {
-    const res = await joinMeeting({
-      meetingId: session._id,
-      userId: user?.id,
-      region: userRegion?.region,
-    }).unwrap();
-
-    const { recordUrl } = res?.data;
-
-    if (!recordUrl) {
-      toast.error("Recording not found");
+  const handleViewRecording = async (session: Session) => {
+    if (!session._id || !user?.id || !session.liveRegion) {
+      toast.error("Missing meeting or user information");
       return;
     }
+    try {
+      const res = await joinMeeting({
+        meetingId: session._id,
+        userId: user?.id,
+        region: userRegion?.region,
+      }).unwrap();
+      const { recordUrl, mode } = res?.data;
 
-    // ✅ Option 1: Open in new tab (better for mobile)
-    const isMobile = /iPhone|iPad|Android|webOS|BlackBerry/i.test(
-      navigator.userAgent
-    );
+      if (!recordUrl) {
+        toast.error("Access URL not found");
+        return;
+      }
 
-    if (isMobile) {
-      // For mobile: open in new tab or fullscreen
-      window.open(recordUrl, "_blank", "fullscreen=yes");
-      toast.success("Opening recording...");
-    } else {
-      // For desktop: use modal
+      
+      // 👇 OPEN YOUR VIDEO PLAYER MODAL
       setVideoUrl(recordUrl);
       setShowVideoPlayer(true);
+    } catch (err: any) {
+      console.error("Join meeting error:", err);
+      toast.error(
+        err?.data?.message || err?.message || "Failed to join meeting",
+      );
     }
-  } catch (err: any) {
-    console.error("View recording error:", err);
-    toast.error(
-      err?.data?.message || err?.message || "Failed to load recording"
-    );
-  }
-};
-
+  };
 
   if (isLoading) {
     return (
