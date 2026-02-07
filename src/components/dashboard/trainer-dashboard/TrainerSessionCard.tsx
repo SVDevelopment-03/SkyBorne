@@ -64,22 +64,32 @@ const handleJoin = async () => {
     return;
   }
 
+  // Open popup FIRST (synchronously from user interaction)
+  const popup = window.open(
+    "",
+    "zoomMeetingPopup",
+    "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
+  );
+
+  if (!popup) {
+    toast.error("Popup blocked. Please allow popups for this site.");
+    return;
+  }
+
   try {
-    const res = await joinMeeting({ meetingId, userId ,region}).unwrap();
-    const joinUrl =  res?.data?.accessUrl;
+    const res = await joinMeeting({ meetingId, userId, region }).unwrap();
+    const joinUrl = res?.data?.accessUrl;
 
     if (joinUrl) {
+      popup.location.href = joinUrl;
       toast.success("Joining meeting...");
-      window.open(
-        joinUrl,
-        "zoomMeetingPopup",
-        "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
-      );
     } else {
+      popup.close();
       toast.error("Join URL not found");
     }
   } catch (err: any) {
     console.error("Join meeting error:", err);
+    popup?.close();
     toast.error(err?.data?.message || err?.message || "Failed to join meeting");
   }
 };

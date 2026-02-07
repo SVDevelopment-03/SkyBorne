@@ -60,35 +60,48 @@ const SessionCard = ({
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
 
+
+
+// ✅ Better - open popup immediately, then do async work
 const handleJoin = async () => {
   if (!meetingId || !userId || !region) {
     toast.error("Missing meeting or user information");
     return;
   }
 
-  try {
-    const res = await joinMeeting({ meetingId, userId ,region}).unwrap();
-    const { accessUrl:joinUrl, mode } = res?.data;
+  // Open popup FIRST (synchronously)
+  const popup = window.open(
+    "",
+    "zoomMeetingPopup",
+    "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
+  );
 
-      if (!joinUrl) {
+  if (!popup) {
+    toast.error("Popup blocked. Please allow popups for this site.");
+    return;
+  }
+
+  try {
+    const res = await joinMeeting({ meetingId, userId, region }).unwrap();
+    const { accessUrl: joinUrl, mode } = res?.data;
+
+    if (!joinUrl) {
       toast.error("Access URL not found");
+      popup.close();
       return;
     }
 
-    if (mode=='live') {
+    if (mode === 'live') {
+      popup.location.href = joinUrl;
       toast.success("Joining meeting...");
-      window.open(
-        joinUrl,
-        "zoomMeetingPopup",
-        "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes"
-      );
     } else {
-      // 👇 OPEN YOUR VIDEO PLAYER MODAL
+      popup.close();
       setVideoUrl(joinUrl);
       setShowVideoPlayer(true);
     }
   } catch (err: any) {
     console.error("Join meeting error:", err);
+    popup?.close();
     toast.error(err?.data?.message || err?.message || "Failed to join meeting");
   }
 };

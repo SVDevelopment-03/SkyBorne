@@ -278,43 +278,54 @@ export default function UserSessions() {
     toast.success(`You're set for ${session.name}!`);
   };
 
-  const handleJoinMeeting = async (session: Session) => {
-    if (!session._id || !user?.id || !session.liveRegion) {
-      toast.error("Missing meeting or user information");
+const handleJoinMeeting = async (session: Session) => {
+  if (!session._id || !user?.id || !session.liveRegion) {
+    toast.error("Missing meeting or user information");
+    return;
+  }
+
+  // Open popup FIRST (synchronously from user interaction)
+  const popup = window.open(
+    "",
+    "zoomMeetingPopup",
+    "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
+  );
+
+  if (!popup) {
+    toast.error("Popup blocked. Please allow popups for this site.");
+    return;
+  }
+
+  try {
+    const res = await joinMeeting({
+      meetingId: session._id,
+      userId: user?.id,
+      region: userRegion?.region,
+    }).unwrap();
+    const { accessUrl: joinUrl, mode } = res?.data;
+
+    if (!joinUrl) {
+      toast.error("Access URL not found");
+      popup.close();
       return;
     }
-    try {
-      const res = await joinMeeting({
-        meetingId: session._id,
-        userId: user?.id,
-        region: userRegion?.region,
-      }).unwrap();
-      const { accessUrl: joinUrl, mode } = res?.data;
 
-      if (!joinUrl) {
-        toast.error("Access URL not found");
-        return;
-      }
-
-      if (mode == "live") {
-        toast.success("Joining meeting...");
-        window.open(
-          joinUrl,
-          "zoomMeetingPopup",
-          "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
-        );
-      } else {
-        // 👇 OPEN YOUR VIDEO PLAYER MODAL
-        setVideoUrl(joinUrl);
-        setShowVideoPlayer(true);
-      }
-    } catch (err: any) {
-      console.error("Join meeting error:", err);
-      toast.error(
-        err?.data?.message || err?.message || "Failed to join meeting",
-      );
+    if (mode === "live") {
+      popup.location.href = joinUrl;
+      toast.success("Joining meeting...");
+    } else {
+      popup.close();
+      setVideoUrl(joinUrl);
+      setShowVideoPlayer(true);
     }
-  };
+  } catch (err: any) {
+    console.error("Join meeting error:", err);
+    popup?.close();
+    toast.error(
+      err?.data?.message || err?.message || "Failed to join meeting",
+    );
+  }
+};
 
   const handleViewRecording = async (session: Session) => {
     if (!session._id || !user?.id || !session.liveRegion) {

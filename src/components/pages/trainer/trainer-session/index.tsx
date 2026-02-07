@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   MapPin,
   Loader,
   AlertCircle,
+  PlayCircle,
 } from "lucide-react";
 import {
   useGetAllTrainerMeetingsQuery,
@@ -21,7 +22,19 @@ import {
   useLeaveMeetingMutation,
 } from "@/store/api/meetingApi";
 import useGetUser from "@/hooks/useGetUser";
-import CustomPagination from "@/components/ui/CustromPagination"; // Adjust path as needed
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import toast from "react-hot-toast";
+import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow"; 
+import { getUserRegion } from "@/utils/timezone";
+import CustomPagination from "@/components/ui/CustromPagination";
 
 interface Session {
   id: string;
@@ -32,7 +45,7 @@ interface Session {
   localTime: string;
   duration: number;
   type: string;
-  status: "upcoming" | "completed" | "failed" | "hidden";
+  status: "upcoming" | "completed";
   participants: number;
   maxParticipants: number;
   level: string;
@@ -47,6 +60,7 @@ interface Session {
   }>;
   liveRegion: string;
   _id: string;
+  joined?: boolean;
 }
 
 export default function TrainerSessions() {
@@ -54,7 +68,17 @@ export default function TrainerSessions() {
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [showClassModal, setShowClassModal] = useState(false);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [showZoomFlow, setShowZoomFlow] = useState(false);
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [userRegion, setUserRegion] = useState<{
+    timezone: string;
+    region: string;
+  } | null>(null);
 
+  // RTK Query hooks
   const {
     data: meetingsResponse,
     isLoading,
@@ -63,13 +87,86 @@ export default function TrainerSessions() {
   } = useGetAllTrainerMeetingsQuery({
     search: searchQuery,
     page,
-    limit: 10,
+    limit: 50,
     sortBy: "localTime",
     sortOrder: "asc",
   });
 
-  const [joinMeeting] = useJoinMeetingMutation();
+  const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
+  const [leaveMeeting] = useLeaveMeetingMutation();
 
+  useEffect(() => {
+    const region = getUserRegion();
+    setTimeout(() => {
+      setUserRegion({ region: "Gulf", timezone: "Asia/Dubai" });
+    }, 0);
+  }, []);
+
+  // ✅ Helper function to format date with timezone awareness
+  const formatDateWithTimezone = (
+    isoString: string,
+    timezone?: string,
+    regionTimeStr?: string,
+    mode?: string,
+  ) => {
+    if (!isoString) return "N/A";
+
+    try {
+      let date = new Date(isoString);
+
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+
+      const options = {
+        day: "numeric" as const,
+        month: "short" as const,
+        year: "numeric" as const,
+        timeZone: timezone || undefined,
+      };
+
+      const formattedDate = date
+        .toLocaleDateString("en-GB", options)
+        .replace(",", "");
+
+      return formattedDate;
+    } catch (error) {
+      console.error("Date formatting error:", error);
+      return "N/A";
+    }
+  };
+
+  const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
+    if (!isoString) return "N/A";
+
+    try {
+      const date = new Date(isoString);
+
+      if (isNaN(date.getTime())) {
+        return "Invalid Time";
+      }
+
+      const options = {
+        hour: "numeric" as const,
+        minute: "2-digit" as const,
+        hour12: true,
+        timeZone: timezone || undefined,
+      };
+
+      return date.toLocaleTimeString("en-US", options);
+    } catch (error) {
+      console.error("Time formatting error:", error);
+      return "N/A";
+    }
+  };
+
+  const formatDateTimeWithTimezone = (isoString: string, timezone?: string) => {
+    const date = formatDateWithTimezone(isoString, timezone);
+    const time = formatTimeWithTimezone(isoString, timezone);
+    return `${date}, ${time}`;
+  };
+
+  // Transform and filter meetings
   const sessions: Session[] = (meetingsResponse?.data?.meetings || []).map(
     (meeting: any) => ({
       id: meeting._id,
@@ -88,7 +185,12 @@ export default function TrainerSessions() {
       duration: meeting.duration,
       localTime: meeting?.localTime,
       type: "Online",
-      status: meeting.status === "completed" ? "completed" : meeting.status === "failed" ? "failed" : new Date(meeting.localTime) > new Date() ? "upcoming" : "hidden",
+      status:
+        meeting.status === "completed"
+          ? "completed"
+          : new Date(meeting.localTime) > new Date()
+            ? "upcoming"
+            : "completed",
       participants: 0,
       maxParticipants: 20,
       level: "Intermediate",
@@ -98,12 +200,11 @@ export default function TrainerSessions() {
       regions: meeting.regions,
       liveRegion: meeting.liveRegion,
       _id: meeting._id,
-    })
+      joined: meeting.joined || false,
+    }),
   );
 
   const filteredSessions = sessions.filter((session) => {
-    if (session.status === "hidden") return false;
-
     const matchesFilter = filter === "all" || session.status === filter;
     const matchesSearch =
       session.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,33 +214,118 @@ export default function TrainerSessions() {
   });
 
   const upcomingCount = sessions.filter((s) => s.status === "upcoming").length;
-  const completedCount = sessions.filter((s) => s.status === "completed").length;
+  const completedCount = sessions.filter(
+    (s) => s.status === "completed",
+  ).length;
   const pagination = meetingsResponse?.data?.pagination;
 
-  const handleJoinSession = async (session: Session) => {
+  const handleJoinClass = (session: Session) => {
+    const regionInfo = session?.regions?.find(
+      (r: any) => r.region == userRegion?.region,
+    );
+
+    const formattedDate = formatDateWithTimezone(
+      session?.localTime,
+      userRegion?.timezone,
+      regionInfo?.localTime,
+      regionInfo?.mode,
+    );
+
+    const classItem = {
+      meetingId: session._id,
+      userId: user?.id,
+      joined: session.joined,
+      participants: [],
+      participantsCount: 0,
+      image: "/images/upcoming-ico.jpg",
+      time: regionInfo?.localTime,
+      startTime: session?.localTime,
+      date: formattedDate,
+      title: session.name,
+      duration: `${session.duration} min`,
+      trainer: session.trainer,
+    };
+
+    setSelectedClass(classItem);
+    setShowClassModal(true);
+    toast.success(`You're set for ${session.name}!`);
+  };
+
+  const handleJoinMeeting = async (session: Session) => {
+    if (!session._id || !user?.id || !session.liveRegion) {
+      toast.error("Missing meeting or user information");
+      return;
+    }
+
+    // Open popup FIRST (synchronously from user interaction)
+    const popup = window.open(
+      "",
+      "zoomMeetingPopup",
+      "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
+    );
+
+    if (!popup) {
+      toast.error("Popup blocked. Please allow popups for this site.");
+      return;
+    }
+
     try {
-      const result = await joinMeeting({
+      const res = await joinMeeting({
         meetingId: session._id,
         userId: user?.id,
-        region: session.liveRegion || "Global",
+        region: userRegion?.region,
       }).unwrap();
+      const { accessUrl: joinUrl, mode } = res?.data;
 
-      if (result.success) {
-        window.open(result.data.accessUrl, "_blank");
+      if (!joinUrl) {
+        toast.error("Access URL not found");
+        popup.close();
+        return;
+      }
+
+      if (mode === "live") {
+        popup.location.href = joinUrl;
+        toast.success("Joining meeting...");
+      } else {
+        popup.close();
+        setVideoUrl(joinUrl);
+        setShowVideoPlayer(true);
       }
     } catch (err: any) {
-      console.error("Error joining session:", err);
-      alert(err?.data?.message || "Failed to join session");
+      console.error("Join meeting error:", err);
+      popup?.close();
+      toast.error(
+        err?.data?.message || err?.message || "Failed to join meeting",
+      );
     }
   };
 
-//   const handleViewRecording = (session: Session) => {
-//     if (session.recordingUrl) {
-//       window.open(session.recordingUrl, "_blank");
-//     } else {
-//       alert("Recording not yet available");
-//     }
-//   };
+  const handleViewRecording = async (session: Session) => {
+    if (!session._id || !user?.id || !session.liveRegion) {
+      toast.error("Missing meeting or user information");
+      return;
+    }
+    try {
+      const res = await joinMeeting({
+        meetingId: session._id,
+        userId: user?.id,
+        region: userRegion?.region,
+      }).unwrap();
+      const { recordUrl } = res?.data;
+
+      if (!recordUrl) {
+        toast.error("Recording URL not found");
+        return;
+      }
+      setVideoUrl(recordUrl);
+      setShowVideoPlayer(true);
+    } catch (err: any) {
+      console.error("View recording error:", err);
+      toast.error(
+        err?.data?.message || err?.message || "Failed to load recording",
+      );
+    }
+  };
 
   if (isLoading) {
     return (
@@ -170,14 +356,20 @@ export default function TrainerSessions() {
           </p>
         </div>
         <Card className="border-red-200 bg-red-50">
-          <CardContent className="p-6 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+          <CardContent className="p-6 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-600" />
             <div>
               <p className="text-red-800 font-medium">Error loading sessions</p>
-              <p className="text-red-600 text-sm mt-1">
-                Please try again later
+              <p className="text-red-600 text-sm">
+                Please try again later or contact support
               </p>
             </div>
+            <Button
+              onClick={() => refetch()}
+              className="ml-auto bg-red-600 hover:bg-red-700"
+            >
+              Retry
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -255,7 +447,7 @@ export default function TrainerSessions() {
       <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto overflow-x-auto">
+            <div className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
               <Button
                 variant={filter === "all" ? "default" : "outline"}
                 onClick={() => {
@@ -330,11 +522,32 @@ export default function TrainerSessions() {
         <>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredSessions.map((session) => {
+              const regionInfo = session?.regions?.find(
+                (r: any) => r.region == userRegion?.region,
+              );
+
+              const formattedDate = formatDateWithTimezone(
+                session?.localTime,
+                userRegion?.timezone,
+                regionInfo?.localTime,
+                "live",
+              );
+
               const startTime = new Date(session?.localTime as string);
               const now = new Date();
+
               const diffMs = startTime.getTime() - now.getTime();
               const diffMinutes = diffMs / 1000 / 60;
+
               const isJoinDisabled = diffMinutes > 5;
+
+              const formattedTime = new Date(
+                session?.localTime,
+              ).toLocaleTimeString([], {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
+              });
 
               return (
                 <Card
@@ -363,7 +576,7 @@ export default function TrainerSessions() {
                           </Badge>
                         </div>
                         <p className="text-sm text-[#6B6B6B]">
-                          with {session.trainer}
+                          with {session?.trainer}
                         </p>
                       </div>
                     </div>
@@ -371,12 +584,12 @@ export default function TrainerSessions() {
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center gap-2 text-[#6B6B6B]">
                         <Calendar className="w-4 h-4" />
-                        <span className="text-sm">{session.date}</span>
+                        <span className="text-sm">{formattedDate}</span>
                       </div>
                       <div className="flex items-center gap-2 text-[#6B6B6B]">
                         <Clock className="w-4 h-4" />
                         <span className="text-sm">
-                          {session.time} • {session.duration} min
+                          {formattedTime} • {session.duration} min
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-[#6B6B6B]">
@@ -397,24 +610,26 @@ export default function TrainerSessions() {
                     <div className="flex gap-2">
                       {session.status === "upcoming" ? (
                         <Button
-                          className="w-full bg-[#b95e82] hover:bg-[#a04d6f] text-white"
+                          className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
                           style={{ borderRadius: "12px" }}
-                          disabled={isJoinDisabled}
-                          onClick={() => handleJoinSession(session)}
+                          onClick={() => handleJoinClass(session)}
                         >
-                          {isJoinDisabled
-                            ? `Join Now`
-                            : "Join Now"}
+                          {isJoining
+                            ? "Loading..."
+                            : session.joined
+                              ? "Joined"
+                              : "Join Session"}
                         </Button>
                       ) : (
-                        <Button
-                          className="w-full bg-[#b95e82] hover:bg-[#a04d6f] text-white"
-                          style={{ borderRadius: "12px" }}
-                          disabled
-                        //   onClick={() => handleViewRecording(session)}
-                        >
-                          Completed 
-                        </Button>
+                        <>
+                          <Button
+                            className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
+                            style={{ borderRadius: "12px" }}
+                            onClick={() => handleViewRecording(session)}
+                          >
+                            Watch Recording
+                          </Button>
+                        </>
                       )}
                     </div>
                   </CardContent>
@@ -435,6 +650,116 @@ export default function TrainerSessions() {
             </div>
           )}
         </>
+      )}
+
+      {/* Session Details Modal */}
+      <Dialog open={showClassModal} onOpenChange={setShowClassModal}>
+        <DialogContent className="border-[#f0ccc4]">
+          <DialogHeader>
+            <DialogTitle className="text-[#494949]">
+              Session Details
+            </DialogTitle>
+            <DialogDescription>
+              {` You're all set for`} {selectedClass?.title}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-gradient-to-br from-[#fef9f5] to-[#ffe8e8] rounded-xl">
+              <div className="flex items-center gap-3 mb-4">
+                <Avatar className="w-14 h-14">
+                  <AvatarFallback className="bg-gradient-to-br from-[#b95e82] to-[#d97ba3] text-white">
+                    {selectedClass?.trainer
+                      ?.split(" ")
+                      ?.map((n: string) => n[0])
+                      .join("")
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  {selectedClass?.trainer ? (
+                    <p className="text-[#494949]">{selectedClass?.trainer}</p>
+                  ) : (
+                    <p className="text-sm text-[#717182]">Instructor</p>
+                  )}
+                </div>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center gap-2 text-[#717182]">
+                  <Calendar className="w-4 h-4" />
+                  {selectedClass?.date} {selectedClass?.time}
+                </div>
+                <div className="flex items-center gap-2 text-[#717182]">
+                  <Clock className="w-4 h-4" />
+                  {selectedClass?.duration}
+                </div>
+              </div>
+            </div>
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <p className="text-sm text-blue-900">
+                <strong>Reminder:</strong> Please join the session 5 minutes
+                early to set up your space and equipment.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowClassModal(false)}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm! font-medium transition-all shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background text-foreground hover:bg-[#f0ccc4]! hover:border-[#f0ccc4]! hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4! py-2! has-[>svg]:px-3 border-[#e8eeea]"
+            >
+              Close
+            </Button>
+            <Button
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm! font-satoshi-500! transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 h-9 px-4! py-2! has-[>svg]:px-3 bg-gradient-to-r from-[#b95e82] to-[#d97ba3]"
+              onClick={() => {
+                toast.success("Opening session...");
+                setShowClassModal(false);
+                setShowZoomFlow(true);
+              }}
+            >
+              <PlayCircle className="w-4 h-4 mr-2" />
+              Join Session
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Zoom Session Flow */}
+      {selectedClass && (
+        <ZoomSessionFlow
+          isOpen={showZoomFlow}
+          isLive={true}
+          joinMeeting={() =>
+            handleJoinMeeting(
+              filteredSessions.find(
+                (s) => s._id === selectedClass.meetingId,
+              ) as Session,
+            )
+          }
+          onClose={() => setShowZoomFlow(false)}
+          session={selectedClass}
+        />
+      )}
+
+      {/* Video Player Modal */}
+      {showVideoPlayer && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-white w-[90%] max-w-4xl rounded-lg p-4">
+            <button
+              className="mb-3 text-right w-full"
+              onClick={() => setShowVideoPlayer(false)}
+            >
+              Close
+            </button>
+
+            <video
+              src={videoUrl as string}
+              controls
+              autoPlay
+              className="w-full rounded-lg"
+            />
+          </div>
+        </div>
       )}
     </div>
   );
