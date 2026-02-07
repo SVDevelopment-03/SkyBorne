@@ -756,6 +756,8 @@ export default function TrainerSessions() {
               src={videoUrl as string}
               controls
               autoPlay
+              playsInline
+              crossOrigin="anonymous"
               className="w-full rounded-lg"
             />
           </div>
