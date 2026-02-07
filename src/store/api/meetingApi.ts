@@ -42,6 +42,7 @@ export interface IMeeting {
   duration: number;
   autoRecording: boolean;
   rotationEnabled: boolean;
+  isRecurring?: boolean;
   recurringType?: "weekly" | "monthly" | "custom" | null;
   recurringDays?: number | null;
 

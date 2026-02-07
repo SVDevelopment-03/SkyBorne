@@ -113,6 +113,8 @@ export default function EditMeeting() {
       skip: !meetingId,
     });
 
+  console.log("Fetched meeting data:", meetingData);
+
   const { data: trainersData, isLoading: trainersLoading } =
     useGetActiveTrainersQuery({
       page: 1,
@@ -350,23 +352,23 @@ export default function EditMeeting() {
 
       console.log("Sending payload:", payload);
 
-      // const data: any = await updateMeeting({ id: meetingId, body: payload });
+      const data: any = await updateMeeting({ id: meetingId, body: payload });
 
-      // if (data?.data?.success) {
-      //   setButtonState("success");
-      //   toast.success("Meeting updated successfully!");
+      if (data?.data?.success) {
+        setButtonState("success");
+        toast.success("Meeting updated successfully!");
 
-      //   setTimeout(() => {
-      //     setShowModal(true);
-      //     router.push("/schedule-session");
-      //     setTimeout(() => {
-      //       setButtonState("default");
-      //     }, 2000);
-      //   }, 500);
-      // } else {
-      //   toast.error(data?.data?.message || "Failed to update meeting");
-      //   setButtonState("default");
-      // }
+        setTimeout(() => {
+          setShowModal(true);
+          router.push("/schedule-session");
+          setTimeout(() => {
+            setButtonState("default");
+          }, 2000);
+        }, 500);
+      } else {
+        toast.error(data?.data?.message || "Failed to update meeting");
+        setButtonState("default");
+      }
     } catch (error: any) {
       console.error("Error updating meeting:", error);
       toast.error(error.message || "Error updating meeting");
@@ -429,12 +431,19 @@ export default function EditMeeting() {
     liveTime: meeting.liveTime || "10:00 AM",
     trainer: meeting.trainer?._id || "",
     duration: meeting.duration || 60,
-    autoRecording: meeting.autoRecording ?? true,
-    recurringType: meeting.recurringType || "",
-    customInterval: meeting.recurringDays || "",
+
+    autoRecording: meeting?.isRecurring ?? false,
+
+    recurringType: meeting?.isRecurring
+      ? meeting?.recurringType ?? ""
+      : "",
+
+    customInterval:
+      meeting?.isRecurring && meeting?.recurringType === "custom"
+        ? meeting?.recurringDays ?? ""
+        : "",
   };
   
-
   return (
     <Formik
       initialValues={initialValues}
