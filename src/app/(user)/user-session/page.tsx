@@ -556,7 +556,6 @@ const handleJoinMeeting = async (session: Session) => {
             // ✅ Use the enhanced formatDateWithTimezone with recording mode support
             const formattedDate = formatDateWithTimezone(
               session?.localTime,
-              userRegion?.timezone,
               regionInfo?.localTime,
               "live"
               // regionInfo?.mode,
