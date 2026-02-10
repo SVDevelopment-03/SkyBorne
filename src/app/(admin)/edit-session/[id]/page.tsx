@@ -2,7 +2,7 @@
 
 "use client";
 import { useEffect, useState } from "react";
-import { Formik, FormikHelpers } from "formik";
+import { Formik, Form, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { useRouter, useParams } from "next/navigation";
 import { Select } from "@/components/ui/Select2";
@@ -26,15 +26,17 @@ import {
   Calendar as CalendarIcon,
   Loader,
   ArrowLeft,
+  MapPin,
 } from "lucide-react";
 import toast from "react-hot-toast";
-import { useGetActiveTrainersQuery, useGetTrainersQuery } from "@/store/api/trainerApi";
+import { useGetActiveTrainersQuery } from "@/store/api/trainerApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import {
   useUpdateMeetingMutation,
   useGetMeetingByIdQuery,
 } from "@/store/api/meetingApi";
 import { useGetAllActiveRegionsQuery } from "@/store/api/regionApi";
+import { useGetCountriesQuery } from "@/store/api/countryApi";
 import useGetUser from "@/hooks/useGetUser";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
@@ -56,18 +58,27 @@ interface TimezoneConversion {
 interface FormValues {
   service: string;
   title: string;
-  date: Date | undefined;
+  fromDate: Date | undefined;
+  toDate: Date | undefined;
   liveRegion: string;
   liveTime: string;
   trainer: string;
   duration: number;
-  autoRecording: boolean;
+  recurringClass: boolean;
+  recurrenceType: "weekly" | "monthly" | "custom";
+  customDays: number[];
 }
 
 const validationSchema = Yup.object().shape({
   service: Yup.string().required("Service is required"),
   title: Yup.string().required("Title is required"),
-  date: Yup.date().required("Date is required").typeError("Date is required"),
+  fromDate: Yup.date()
+    .required("From date is required")
+    .typeError("From date is required"),
+  toDate: Yup.date()
+    .required("To date is required")
+    .typeError("To date is required")
+    .min(Yup.ref("fromDate"), "To date must be after or equal to from date"),
   liveRegion: Yup.string().required("Live region is required"),
   liveTime: Yup.string().required("Live time is required"),
   trainer: Yup.string().required("Trainer is required"),
@@ -75,8 +86,32 @@ const validationSchema = Yup.object().shape({
     .required("Duration is required")
     .min(30, "Duration must be at least 30 minutes")
     .max(480, "Duration cannot exceed 8 hours"),
-  autoRecording: Yup.boolean(),
+  recurringClass: Yup.boolean(),
+  recurrenceType: Yup.string().when("recurringClass", {
+    is: true,
+    then: (schema) =>
+      schema
+        .required("Recurrence type is required")
+        .oneOf(["weekly", "monthly", "custom"], "Invalid recurrence type"),
+  }),
+  customDays: Yup.array().when("recurrenceType", {
+    is: "custom",
+    then: (schema) =>
+      schema
+        .of(Yup.number())
+        .min(1, "Select at least one day for custom recurrence"),
+  }),
 });
+
+const DAYS_OF_WEEK = [
+  { label: "Mon", value: 1 },
+  { label: "Tue", value: 2 },
+  { label: "Wed", value: 3 },
+  { label: "Thu", value: 4 },
+  { label: "Fri", value: 5 },
+  { label: "Sat", value: 6 },
+  { label: "Sun", value: 7 },
+];
 
 export default function EditMeeting() {
   const router = useRouter();
@@ -102,6 +137,13 @@ export default function EditMeeting() {
 
   const { data: regionsData, isLoading: regionsLoading } =
     useGetAllActiveRegionsQuery();
+
+  const { data: countriesData, isLoading: countriesLoading } =
+    useGetCountriesQuery({
+      page: 1,
+      limit: 1000,
+      search: "",
+    });
 
   // Mutations
   const [updateMeeting] = useUpdateMeetingMutation();
@@ -132,7 +174,9 @@ export default function EditMeeting() {
     "default"
   );
 
-  let timezoneConversions: TimezoneConversion[] = [];
+  let timezoneConversions: any;
+
+  const countries: any = countriesData?.data?.countries || [];
 
   // Build service options from API
   useEffect(() => {
@@ -161,21 +205,18 @@ export default function EditMeeting() {
     if (!regionsLoading && Array.isArray(regionsData?.data)) {
       const regions = regionsData.data;
 
-      // Build region options for dropdown
       const options = regions.map((region: any) => ({
         label: region.displayLabel,
         value: region._id,
       }));
       setRegionOptions(options);
 
-      // Build timezone mapping
       const timezones: Record<string, string> = {};
       regions.forEach((region: any) => {
         timezones[region._id] = region.timezone;
       });
       setRegionTimezones(timezones);
 
-      // Build replay times mapping
       const replayTimes: Record<string, string> = {};
       regions.forEach((region: any) => {
         replayTimes[region._id] = region.replayTime;
@@ -183,6 +224,15 @@ export default function EditMeeting() {
       setFixedReplayTimes(replayTimes);
     }
   }, [regionsData?.data, regionsLoading]);
+
+  // Get countries for selected region
+  const getCountriesForRegion = (regionId: string) => {
+    if (!regionId || !countries.length) return [];
+    const countryData = countries.filter(
+      (country: any) => country.region?._id === regionId
+    );
+    return countryData;
+  };
 
   const convertTimeTo24Hour = (time12h: string): string => {
     const [time, period] = time12h.split(" ");
@@ -209,7 +259,6 @@ export default function EditMeeting() {
     const time24hStr = convertTimeTo24Hour(liveTime);
     const [liveHours, liveMinutes] = time24hStr.split(":").map(Number);
 
-    // Create the live class start time in the live region's timezone
     const liveRegionTz = regionTimezones[liveRegionId];
     const liveDateTime = dayjs.tz(
       new Date(
@@ -222,12 +271,10 @@ export default function EditMeeting() {
       liveRegionTz
     );
 
-    // Calculate when the class ends in the live region
     const classEndTime = liveDateTime.add(duration, "minutes");
 
     return regionsData.data.map((region: any) => {
       if (region._id === liveRegionId) {
-        // Live region shows the live class at the specified time
         return {
           region: region.displayLabel,
           localTime: liveTime,
@@ -237,15 +284,11 @@ export default function EditMeeting() {
         };
       }
 
-      // For replay regions, get when class ends in that region's timezone
       const classEndTimeInRegion = classEndTime.tz(region.timezone);
-
-      // Get the scheduled replay time for this region
       const replayTimeStr = region.replayTime;
       const time24hReplay = convertTimeTo24Hour(replayTimeStr);
       const [replayHours, replayMinutes] = time24hReplay.split(":").map(Number);
 
-      // Create the scheduled replay time on the original date in the region's timezone
       const scheduledReplayTimeOnDate = dayjs.tz(
         new Date(
           date.getFullYear(),
@@ -257,14 +300,12 @@ export default function EditMeeting() {
         region.timezone
       );
 
-      // Check if scheduled replay time is BEFORE or EQUAL to the class end time in that region
       const isBeforeLiveEnds =
         scheduledReplayTimeOnDate.isBefore(classEndTimeInRegion, "minute") ||
         scheduledReplayTimeOnDate.isSame(classEndTimeInRegion, "minute");
 
       let finalReplayDate = dayjs(date);
 
-      // If the scheduled replay time is before or at the time class ends, schedule for next day
       if (isBeforeLiveEnds) {
         finalReplayDate = finalReplayDate.add(1, "day");
       }
@@ -273,8 +314,7 @@ export default function EditMeeting() {
         region: region.displayLabel,
         localTime: replayTimeStr,
         timezone: region.timezone,
-        mode:'live',
-        // mode: "replay",
+        mode: "replay",
         date: finalReplayDate.format("YYYY-MM-DD"),
       };
     });
@@ -285,8 +325,10 @@ export default function EditMeeting() {
     { setSubmitting }: FormikHelpers<FormValues>
   ) => {
     try {
-      if (!values.date) {
-        toast.error("Please select a date");
+      setButtonState("default");
+
+      if (!values.fromDate || !values.toDate) {
+        toast.error("Please select both from and to dates");
         setSubmitting(false);
         return;
       }
@@ -295,18 +337,16 @@ export default function EditMeeting() {
       const [hours, minutes] = time24h?.split(":").map(Number);
 
       const localDateTime = new Date(
-        values.date.getFullYear(),
-        values.date.getMonth(),
-        values.date.getDate(),
+        values.fromDate.getFullYear(),
+        values.fromDate.getMonth(),
+        values.fromDate.getDate(),
         hours,
         minutes
       );
 
-         const liveRegionName = regionOptions?.find(
-      (r) => r.value === values.liveRegion
-    )?.label || values.liveRegion;
-
-    console.log("live region:", liveRegionName);
+      const liveRegionName =
+        regionOptions?.find((r) => r.value === values.liveRegion)?.label ||
+        values.liveRegion;
 
       const payload = {
         service: values.service,
@@ -316,12 +356,16 @@ export default function EditMeeting() {
         title: values?.title,
         regions: timezoneConversions,
         duration: values.duration,
-        startDate: values?.date,
-        autoRecording: values.autoRecording,
+        startDate: values?.fromDate,
+        weeklyEndDate: values?.toDate,
+        recurringClass: values.recurringClass,
+        recurrenceType: values.recurringClass ? values.recurrenceType : null,
+        customDays:
+          values.recurringClass && values.recurrenceType === "custom"
+            ? values.customDays
+            : null,
         localTime: localDateTime.toISOString(),
       };
-
-      console.log("Sending payload:", payload);
 
       const data: any = await updateMeeting({ id: meetingId, body: payload });
 
@@ -348,7 +392,8 @@ export default function EditMeeting() {
       setSubmitting(false);
     }
   };
- // Show loading state while fetching meeting data
+
+  // Show loading state while fetching meeting data
   if (meetingLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -374,9 +419,8 @@ export default function EditMeeting() {
     );
   }
 
-  // Show loading state while fetching form options
   const allDataLoaded =
-    !regionsLoading && !trainersLoading && !servicesLoading;
+    !regionsLoading && !trainersLoading && !servicesLoading && !countriesLoading;
 
   if (!allDataLoaded) {
     return (
@@ -393,15 +437,17 @@ export default function EditMeeting() {
 
   const initialValues: FormValues = {
     service: meeting.service?._id || "",
-    date: new Date(meeting.startDate),
+    fromDate: new Date(meeting.startDate),
+    toDate: meeting.weeklyEndDate ? new Date(meeting.weeklyEndDate) : undefined,
     liveRegion: meeting.liveRegion || "",
     title: meeting.title || "",
     liveTime: meeting.liveTime || "10:00 AM",
     trainer: meeting.trainer?._id || "",
     duration: meeting.duration || 60,
-    autoRecording: meeting.autoRecording || true,
+    recurringClass: meeting.recurringClass || false,
+    recurrenceType: (meeting.recurrenceType as "weekly" | "monthly" | "custom") || "weekly",
+    customDays: meeting.customDays || [],
   };
-
 
   return (
     <Formik
@@ -410,11 +456,17 @@ export default function EditMeeting() {
       onSubmit={handleSubmit}
       enableReinitialize
     >
-      {({ values, errors, touched, isSubmitting, setFieldValue, handleSubmit }) => {
+      {({
+        values,
+        errors,
+        touched,
+        isSubmitting,
+        setFieldValue,
+      }) => {
         timezoneConversions = getTimezoneConversions(
           values.liveRegion,
           values.liveTime,
-          values.date,
+          values.fromDate,
           values.duration
         );
 
@@ -423,16 +475,22 @@ export default function EditMeeting() {
         );
         const serviceName = currentService?.label;
 
+        const regionCountries = getCountriesForRegion(values.liveRegion);
+
         const isFormValid =
           values.service &&
-          values.date &&
+          values.fromDate &&
+          values.toDate &&
           values.liveRegion &&
           values.trainer &&
           values?.title &&
-          values.duration > 0;
+          values.duration > 0 &&
+          (!values.recurringClass ||
+            (values.recurrenceType !== "custom" ||
+              values.customDays.length > 0));
 
         return (
-          <div>
+          <Form>
             <div className="space-y-8 pb-20 lg:pb-0">
               {/* Header with Back Button */}
               <div className="flex items-center gap-4 px-4">
@@ -474,33 +532,39 @@ export default function EditMeeting() {
                   </section>
                 )}
 
-                {/* Section 2: Title & Date */}
+                {/* Section 2: Title & Date Range */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="w-5 h-5 text-[#b95e82]" />
-                    <h3 className="text-large text-[#262626]">Title & Date</h3>
+                    <h3 className="text-large text-[#262626]">
+                      Title & Date Range
+                    </h3>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Title Field */}
-                    <div>
-                      <input
-                        type="text"
-                        name="title"
-                        value={values.title}
-                        onChange={(e) => setFieldValue("title", e.target.value)}
-                        placeholder="Enter session title..."
-                        className="w-full px-4 py-3 bg-white border border-[#E5E5E5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b95e82]"
-                      />
-                      {errors.title && touched.title && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.title}
-                        </p>
-                      )}
-                    </div>
+                  {/* Title Field */}
+                  <div>
+                    <input
+                      type="text"
+                      name="title"
+                      value={values.title}
+                      onChange={(e) => setFieldValue("title", e.target.value)}
+                      placeholder="Enter session title..."
+                      className="w-full px-4 py-3 bg-white border border-[#E5E5E5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b95e82]"
+                    />
+                    {errors.title && touched.title && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errors.title}
+                      </p>
+                    )}
+                  </div>
 
-                    {/* Date Picker */}
+                  {/* Date Range Pickers */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* From Date */}
                     <div>
+                      <label className="block text-sm text-[#525252] mb-2">
+                        From Date
+                      </label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -509,9 +573,9 @@ export default function EditMeeting() {
                             className="w-full max-h-[50px] min-h-[50px] justify-start text-left font-normal bg-white border border-[#E5E5E5]! hover:bg-[#F3F3F5] text-[#262626]"
                           >
                             <CalendarIcon className="mr-2 h-4 w-4 text-[#b95e82]" />
-                            {values.date
-                              ? format(values.date, "PPP")
-                              : "Pick a date"}
+                            {values.fromDate
+                              ? format(values.fromDate, "PPP")
+                              : "Pick from date"}
                           </Button>
                         </PopoverTrigger>
 
@@ -519,8 +583,8 @@ export default function EditMeeting() {
                           <Calendar
                             mode="single"
                             className="rounded-lg"
-                            selected={values.date}
-                            onSelect={(date) => setFieldValue("date", date)}
+                            selected={values.fromDate}
+                            onSelect={(date) => setFieldValue("fromDate", date)}
                             disabled={(date) =>
                               date < new Date(new Date().setHours(0, 0, 0, 0))
                             }
@@ -529,19 +593,150 @@ export default function EditMeeting() {
                         </PopoverContent>
                       </Popover>
 
-                      {errors.date && touched.date && (
+                      {errors.fromDate && touched.fromDate && (
                         <p className="text-red-500 text-sm mt-1">
-                          {errors.date}
+                          {errors.fromDate}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* To Date */}
+                    <div>
+                      <label className="block text-sm text-[#525252] mb-2">
+                        To Date
+                      </label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="themeRect"
+                            type="button"
+                            className="w-full max-h-[50px] min-h-[50px] justify-start text-left font-normal bg-white border border-[#E5E5E5]! hover:bg-[#F3F3F5] text-[#262626]"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4 text-[#b95e82]" />
+                            {values.toDate
+                              ? format(values.toDate, "PPP")
+                              : "Pick to date"}
+                          </Button>
+                        </PopoverTrigger>
+
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            className="rounded-lg"
+                            selected={values.toDate}
+                            onSelect={(date) => setFieldValue("toDate", date)}
+                            disabled={(date) =>
+                              !values.fromDate ||
+                              date < values.fromDate
+                            }
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+
+                      {errors.toDate && touched.toDate && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.toDate}
                         </p>
                       )}
                     </div>
                   </div>
                 </section>
 
-                {/* Section 3: Live Region & Time */}
+                {/* Section 3: Recurring Class Options */}
                 <section className="space-y-4">
-                  {/* <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-4 space-y-4"> */}
-                  <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-3 sm:p-4 space-y-4 w-full overflow">
+                  <div className="bg-[#f5f5f5] rounded-xl p-4">
+                    <Toggle2
+                      checked={values.recurringClass}
+                      onChange={(val) => {
+                        setFieldValue("recurringClass", val);
+                        if (!val) {
+                          setFieldValue("customDays", []);
+                        }
+                      }}
+                      label="Recurring Class"
+                      description="Enable to create recurring class sessions"
+                    />
+
+                    {values.recurringClass && (
+                      <div className="mt-6 space-y-4">
+                        {/* Recurrence Type Selection */}
+                        <div>
+                          <label className="block text-sm text-[#525252] mb-2">
+                            Recurrence Pattern
+                          </label>
+                          <div className="grid grid-cols-3 gap-3">
+                            {["weekly", "monthly", "custom"].map((type) => (
+                              <button
+                                key={type}
+                                type="button"
+                                onClick={() =>
+                                  setFieldValue("recurrenceType", type)
+                                }
+                                className={`px-4 py-3 rounded-lg border-2 transition-all capitalize ${
+                                  values.recurrenceType === type
+                                    ? "border-[#b95e82] bg-[#b95e82]/10 text-[#b95e82]"
+                                    : "border-[#e5e5e5] bg-white text-[#737373] hover:border-[#b95e82]/30"
+                                }`}
+                              >
+                                {type}
+                              </button>
+                            ))}
+                          </div>
+                          {errors.recurrenceType && touched.recurrenceType && (
+                            <p className="text-red-500 text-sm mt-1">
+                              {errors.recurrenceType}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Custom Days Selection */}
+                        {values.recurrenceType === "custom" && (
+                          <div>
+                            <label className="block text-sm text-[#525252] mb-2">
+                              Select Days
+                            </label>
+                            <div className="flex flex-wrap gap-2">
+                              {DAYS_OF_WEEK.map((day) => (
+                                <button
+                                  key={day.value}
+                                  type="button"
+                                  onClick={() => {
+                                    const currentDays = values.customDays || [];
+                                    const newDays = currentDays.includes(
+                                      day.value
+                                    )
+                                      ? currentDays.filter(
+                                          (d) => d !== day.value
+                                        )
+                                      : [...currentDays, day.value];
+                                    setFieldValue("customDays", newDays);
+                                  }}
+                                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
+                                    values.customDays?.includes(day.value)
+                                      ? "border-[#b95e82] bg-[#b95e82] text-white"
+                                      : "border-[#e5e5e5] bg-white text-[#737373] hover:border-[#b95e82]/30"
+                                  }`}
+                                >
+                                  {day.label}
+                                </button>
+                              ))}
+                            </div>
+                            {errors.customDays && touched.customDays && (
+                              <p className="text-red-500 text-sm mt-1">
+                                {errors.customDays}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </section>
+
+                {/* Section 4: Set Live Region & Time */}
+                <section className="space-y-4">
+                  <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-4 space-y-4">
                     <div className="flex items-center gap-2">
                       <Globe className="w-5 h-5 text-[#b95e82]" />
                       <h3 className="text-large text-[#262626]">
@@ -549,19 +744,17 @@ export default function EditMeeting() {
                       </h3>
                     </div>
                     <p className="text-[#737373]">
-                      This will be the live session for this week. All other
-                      regions will receive the recorded version automatically.
+                      This will be the live session. All other regions will
+                      receive the recorded version automatically.
                     </p>
 
-                    {/* <div className="grid md:grid-cols-2 gap-4"> */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 w-full">
-                      {/* {regionOptions && <div> */}
-                      {regionOptions && <div className="w-full min-w-0">
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
                         <Select
                           label="🌍 Select Region"
                           value={values.liveRegion}
                           onChange={(val) => setFieldValue("liveRegion", val)}
-                          options={regionOptions}
+                          options={regionOptions || []}
                           placeholder="Choose region..."
                         />
                         {errors.liveRegion && touched.liveRegion && (
@@ -569,9 +762,31 @@ export default function EditMeeting() {
                             {errors.liveRegion}
                           </p>
                         )}
-                      </div>}
 
-                      <div className="space-y-2 w-full min-w-[170px] sm:min-w-0">
+                        {/* Display Countries for Selected Region */}
+                        {values.liveRegion && regionCountries.length > 0 && (
+                          <div className="mt-3 p-3 bg-white/50 rounded-lg border border-[#e5e5e5]">
+                            <div className="flex items-center gap-2 mb-2">
+                              <MapPin className="w-4 h-4 text-[#b95e82]" />
+                              <span className="text-sm text-[#525252]">
+                                Countries in this region:
+                              </span>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {regionCountries.map((country: any) => (
+                                <span
+                                  key={country._id}
+                                  className="px-2 py-1 bg-white text-xs text-[#737373] rounded border border-[#e5e5e5]"
+                                >
+                                  {country.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
                         <label className="block flex items-center gap-2">
                           <Clock className="w-4 h-4 text-[#b95e82]" />
                           Select Time
@@ -590,7 +805,7 @@ export default function EditMeeting() {
                   </div>
                 </section>
 
-                {/* Section 4: Trainer */}
+                {/* Section 5: Assign Trainer */}
                 {trainerOptions && (
                   <section className="space-y-4">
                     <h4 className="text-[#262626]">Trainer</h4>
@@ -606,7 +821,7 @@ export default function EditMeeting() {
                   </section>
                 )}
 
-                {/* Section 5: Duration */}
+                {/* Section 6: Duration */}
                 <section className="space-y-4">
                   <h4 className="text-[#262626]">Duration (minutes)</h4>
                   <input
@@ -616,6 +831,7 @@ export default function EditMeeting() {
                     onChange={(e) =>
                       setFieldValue("duration", parseInt(e.target.value) || 60)
                     }
+                    onBlur={() => setFieldValue("duration", values.duration)}
                     min="30"
                     max="480"
                     className="w-full px-4 py-3 bg-[#F3F3F5] border border-[#e5e5e5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b95e82]"
@@ -626,7 +842,7 @@ export default function EditMeeting() {
                   )}
                 </section>
 
-                {/* Section 6: Global Time Conversion */}
+                {/* Section 7: Global Time Preview */}
                 <section className="space-y-4">
                   <div>
                     <h3 className="text-large text-[#262626] mb-1">
@@ -649,7 +865,7 @@ export default function EditMeeting() {
                               Local Time
                             </th>
                             <th className="px-4 py-3 text-left text-[#525252]">
-                              Timezone
+                              Format
                             </th>
                             <th className="px-4 py-3 text-left text-[#525252]">
                               Mode
@@ -662,7 +878,7 @@ export default function EditMeeting() {
                               <tr
                                 key={index}
                                 className={`border-b border-[#e5e5e5] last:border-b-0 transition-colors ${
-                                 ( conversion.mode === "live" )
+                                  conversion.mode === "live"
                                     ? "bg-[#e8f5e9]"
                                     : "bg-[#fff9e6]"
                                 }`}
@@ -683,15 +899,27 @@ export default function EditMeeting() {
                                 </td>
                                 <td className="px-4 py-3">
                                   {conversion.mode === "live" ? (
-                                    <Badge type="live">
-                                      <Star className="w-3.5 h-3.5" />
-                                      Live
-                                    </Badge>
+                                    <div className="flex flex-col gap-1 max-w-[100px]">
+                                      <Badge type="live">
+                                        <Star className="w-3.5 h-3.5" />
+                                        Live
+                                      </Badge>
+                                    </div>
                                   ) : (
-                                    <Badge type="replay">
-                                      <RotateCw className="w-3.5 h-3.5" />
-                                      Replay
-                                    </Badge>
+                                    <div className="flex flex-col gap-1 max-w-[100px]">
+                                      <Badge type="replay">
+                                        <RotateCw className="w-3.5 h-3.5" />
+                                        Replay
+                                      </Badge>
+                                      {conversion.date !==
+                                        dayjs(values.fromDate).format(
+                                          "YYYY-MM-DD"
+                                        ) && (
+                                        <span className="text-xs text-[#737373]">
+                                          Next Day
+                                        </span>
+                                      )}
+                                    </div>
                                   )}
                                 </td>
                               </tr>
@@ -700,19 +928,6 @@ export default function EditMeeting() {
                         </tbody>
                       </table>
                     </div>
-                  </div>
-                </section>
-
-                {/* Section 7: Recording Logic */}
-                <section className="space-y-4">
-                  <h4 className="text-[#262626]">Recording Logic</h4>
-                  <div className="bg-[#f5f5f5] rounded-xl p-4">
-                    <Toggle2
-                      checked={values.autoRecording}
-                      onChange={(val) => setFieldValue("autoRecording", val)}
-                      label="Automatic recording distribution"
-                      description="The system will share the recording with all non-live regions automatically."
-                    />
                   </div>
                 </section>
 
@@ -727,8 +942,7 @@ export default function EditMeeting() {
                     Cancel
                   </Button>
                   <button
-                    type="button"
-                    onClick={() => handleSubmit()}
+                    type="submit"
                     disabled={!isFormValid || isSubmitting}
                     className={`flex-1 sm:flex-none px-8 py-3 rounded-lg transition-all duration-300 ${
                       buttonState === "success"
@@ -756,16 +970,18 @@ export default function EditMeeting() {
                   <div className="bg-gradient-to-r from-[#d4849f]/10 to-[#f9d5c7]/10 rounded-xl p-4 space-y-3">
                     <div className="space-y-1">
                       <h4 className="text-[#262626] capitalize">
-                        {serviceName} — Week 1
+                        {serviceName}
                       </h4>
                       <p className="text-[#737373]">
-                        Date:{" "}
-                        {values.date ? format(values.date, "PPP") : "Not set"}
+                        Date Range:{" "}
+                        {values.fromDate && values.toDate
+                          ? `${format(values.fromDate, "PPP")} - ${format(values.toDate, "PPP")}`
+                          : "Not set"}
                       </p>
                       <p className="text-[#737373]">
                         Live Time: {values.liveTime} (
-                        {regionOptions && 
-                          regionOptions.find(
+                        {
+                          regionOptions?.find(
                             (r) => r.value === values.liveRegion
                           )?.label
                         }
@@ -774,6 +990,23 @@ export default function EditMeeting() {
                       <p className="text-[#737373]">
                         Duration: {values.duration} minutes
                       </p>
+                      {values.recurringClass && (
+                        <p className="text-[#737373]">
+                          Recurrence:{" "}
+                          <span className="capitalize">
+                            {values.recurrenceType}
+                          </span>
+                          {values.recurrenceType === "custom" &&
+                            values.customDays.length > 0 &&
+                            ` (${values.customDays
+                              .map(
+                                (d) =>
+                                  DAYS_OF_WEEK.find((day) => day.value === d)
+                                    ?.label
+                              )
+                              .join(", ")})`}
+                        </p>
+                      )}
                       <p className="text-[#737373]">
                         Replay Regions:{" "}
                         {timezoneConversions
@@ -794,7 +1027,7 @@ export default function EditMeeting() {
                 message="Your class has been updated successfully. Changes will reflect immediately."
               />
             </div>
-          </div>
+          </Form>
         );
       }}
     </Formik>

@@ -73,19 +73,20 @@ export default function TrainerSessions() {
   const [showZoomFlow, setShowZoomFlow] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [userRegion, setUserRegion] :any= useState<{
-    timezone: string;
+  const [userRegion, setUserRegion] = useState<{
+    region: string | null;
   } | null>(null);
 
   const { region } = useUserRegionFromStore();
 
-  // RTK Query hooks
+  // RTK Query hooks - ✅ NOW INCLUDES REGION PARAMETER TO MATCH UserSessions
   const {
     data: meetingsResponse,
     isLoading,
     error: fetchError,
     refetch,
   } = useGetAllTrainerMeetingsQuery({
+    region: userRegion?.region,
     search: searchQuery,
     page,
     limit: 50,
@@ -100,69 +101,30 @@ export default function TrainerSessions() {
     setTimeout(() => {
       setUserRegion({ region: region });
     }, 0);
-  }, []);
+  }, [region]);
 
-  // ✅ Helper function to format date with timezone awareness
-  const formatDateWithTimezone = (
-    isoString: string,
-    timezone?: string,
-    regionTimeStr?: string,
-    mode?: string,
-  ) => {
-    if (!isoString) return "N/A";
-
-    try {
-      let date = new Date(isoString);
-
-      if (isNaN(date.getTime())) {
-        return "Invalid Date";
-      }
-
-      const options = {
-        day: "numeric" as const,
-        month: "short" as const,
-        year: "numeric" as const,
-        timeZone: timezone || undefined,
-      };
-
-      const formattedDate = date
-        .toLocaleDateString("en-GB", options)
-        .replace(",", "");
-
-      return formattedDate;
-    } catch (error) {
-      console.error("Date formatting error:", error);
-      return "N/A";
-    }
+  const formatDateWithTimezone = (iso: string, tz?: string) => {
+    if (!iso) return "N/A";
+    return new Date(iso).toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+      timeZone: tz,
+    });
   };
 
-  const formatTimeWithTimezone = (isoString: string, timezone?: string) => {
-    if (!isoString) return "N/A";
-
-    try {
-      const date = new Date(isoString);
-
-      if (isNaN(date.getTime())) {
-        return "Invalid Time";
-      }
-
-      const options = {
-        hour: "numeric" as const,
-        minute: "2-digit" as const,
-        hour12: true,
-        timeZone: timezone || undefined,
-      };
-
-      return date.toLocaleTimeString("en-US", options);
-    } catch (error) {
-      console.error("Time formatting error:", error);
-      return "N/A";
-    }
+  const formatTimeWithTimezone = (iso: string, tz?: string) => {
+    if (!iso) return "N/A";
+    return new Date(iso).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
   };
 
-  const formatDateTimeWithTimezone = (isoString: string, timezone?: string) => {
-    const date = formatDateWithTimezone(isoString, timezone);
-    const time = formatTimeWithTimezone(isoString, timezone);
+  const formatDateTimeWithTimezone = (isoString: string) => {
+    const date = formatDateWithTimezone(isoString);
+    const time = formatTimeWithTimezone(isoString);
     return `${date}, ${time}`;
   };
 
@@ -226,7 +188,6 @@ export default function TrainerSessions() {
 
     const formattedDate = formatDateWithTimezone(
       session?.localTime,
-      userRegion?.timezone,
       regionInfo?.localTime,
       regionInfo?.mode,
     );
@@ -526,12 +487,13 @@ export default function TrainerSessions() {
                 (r: any) => r.region == userRegion?.region,
               );
 
-              const formattedDate = formatDateWithTimezone(
-                session?.localTime,
-                userRegion?.timezone,
-                regionInfo?.localTime,
-                "live",
-              );
+                                  const formattedTime = formatTimeWithTimezone(
+                      session?.localTime,
+                    );
+                    const formattedDate = formatDateWithTimezone(
+                      session?.localTime
+                    );
+
 
               const startTime = new Date(session?.localTime as string);
               const now = new Date();
@@ -541,13 +503,7 @@ export default function TrainerSessions() {
 
               const isJoinDisabled = diffMinutes > 5;
 
-              const formattedTime = new Date(
-                session?.localTime,
-              ).toLocaleTimeString([], {
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              });
+            
 
               return (
                 <Card
