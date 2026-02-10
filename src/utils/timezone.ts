@@ -1,53 +1,45 @@
-import dayjs from "dayjs";
-import utc from "dayjs/plugin/utc";
-import timezonePlugin from "dayjs/plugin/timezone";
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-dayjs.extend(utc);
-dayjs.extend(timezonePlugin);
+import { useSelector } from "react-redux";
+import { useGetCountriesQuery } from "@/store/api/countryApi";
 
 
-const normalizeTimezone = (tz: string): string => {
-  const map: Record<string, string> = {
-    "Asia/Calcutta": "Asia/Kolkata",
+const normalizeCountry = (country: string) => {
+  return country
+    .replace(/\s*\(.*?\)\s*/g, "") // remove parentheses + content
+    .trim()
+    .toLowerCase();
+};
+
+
+/**
+ * Custom hook to get user's region from auth store
+ * Uses country list from CountryManagement API
+ * 
+ * @returns Object with region info, user country, and loading state
+ */
+export const useUserRegionFromStore = () => {
+  
+  // Get user from auth store
+  const user = useSelector((state: any) => state.auth.user);
+  const userCountry = normalizeCountry(user?.country);
+
+  // Fetch countries list (same as CountryManagement)
+  const { data: countriesData, isLoading, isError } = useGetCountriesQuery({
+    page: 1,
+    limit: 1000,
+    search: "",
+  });
+
+  const countries :any= countriesData?.data?.countries || [];
+  console.log("countries", countries);
+  const region = countries?.find((country:any)=>normalizeCountry(country.name)===userCountry)?.region?.name ?? " ";
+
+
+  return {
+    region,
+    userCountry,
+    isLoading,
+    isError,
   };
-  return map[tz] || tz;
-};
-
-const mapTimezoneToRegion = (tz: string): string => {
-  const timezone = normalizeTimezone(tz);
-  const offset = dayjs().tz(timezone).utcOffset(); 
-
-  if (offset === 180 || offset === 240) {
-    return "Gulf";
-  }
-
-  if (timezone.startsWith("Europe/")) {
-    return "UK / Europe";
-  }
-
-  if (timezone.startsWith("America/")) {
-    return "Canada / USA";
-  }
-
-  if (
-    timezone.startsWith("Asia/") ||
-    timezone.startsWith("Australia/") ||
-    timezone.startsWith("Pacific/")
-  ) {
-    return "APAC";
-  }
-
-  return "APAC";
-};
-
-
-export const getUserRegion = (): {
-  timezone: string;
-  region: string;
-} => {
-  const tzGuess = dayjs.tz.guess();
-  const timezone = normalizeTimezone(tzGuess);
-  const region = mapTimezoneToRegion(timezone);
-
-  return { timezone, region };
 };

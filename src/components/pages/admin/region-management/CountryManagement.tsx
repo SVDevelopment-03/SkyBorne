@@ -1,10 +1,16 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   useGetCountriesQuery,
   useUpdateCountryStatusMutation,
   useDeleteCountryMutation,
+  useUpdateCountryMutation,
+  ICountry,
+  IRegion,
 } from "@/store/api/countryApi";
+import { useGetRegionsQuery } from "@/store/api/regionApi";
 import { DataTable } from "@/components/ui/CommonTable";
 import { ColumnDef } from "@tanstack/react-table";
 import { Input2 } from "@/components/ui/input";
@@ -13,13 +19,25 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import toast from "react-hot-toast";
 import { CountryModal } from "./CountryModal";
-import { ICountry } from "@/store/api/countryApi";
 import { Toggle2 } from "@/components/ui/Toggle2";
 import { handleDeleteTrainer } from "@/utils/handleDeleteAlert";
 import CustomPagination from "@/components/ui/CustromPagination";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { log } from "util";
 
 interface CountryRowData extends ICountry {
   actions?: React.ReactNode;
+}
+
+interface RegionOption {
+  label: string;
+  value: string;
 }
 
 const CountryManagement = () => {
@@ -27,6 +45,12 @@ const CountryManagement = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCountry, setSelectedCountry] = useState<ICountry | undefined>(
+    undefined
+  );
+  const [updatingRegionCountryId, setUpdatingRegionCountryId] = useState<
+    string | null
+  >(null);
 
   const { data, isLoading, refetch } = useGetCountriesQuery({
     page,
@@ -34,12 +58,33 @@ const CountryManagement = () => {
     search,
   });
 
+  // Fetch regions for reference
+  const { data: regionsData } = useGetRegionsQuery({
+    page: 1,
+    limit: 1000,
+    search: "",
+  });
+
   const [updateStatus] = useUpdateCountryStatusMutation();
   const [deleteCountry] = useDeleteCountryMutation();
+  const [updateCountry] = useUpdateCountryMutation();
 
   const countries = data?.data?.countries || [];
   const pagination = data?.data?.pagination;
   const totalPages = pagination?.totalPages || 1;
+  const regions = regionsData?.data?.regions || [];
+  console.log("Regions:", regions);
+
+  // Create region options for dropdown
+  const regionOptions: RegionOption[] = useMemo(
+    () => [
+      ...regions.map((r) => ({
+        label: r.name,
+        value: r._id,
+      })),
+    ],
+    [regions]
+  );
 
   const handleStatusToggle = async (
     countryId: string,
@@ -59,18 +104,54 @@ const CountryManagement = () => {
     }
   };
 
-  const handleDelete = async (countryId: string) => {
-    handleDeleteTrainer(countryId, deleteCountry, refetch,"Country");
+  const handleRegionChange = async (countryId: string, regionId: string) => {
+    try {
+      setUpdatingRegionCountryId(countryId);
+      await updateCountry({
+        countryId,
+        body: {
+          region: regionId || null,
+        },
+      }).unwrap();
+      toast.success("Region updated successfully");
+      refetch();
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to update region");
+      console.error("Error updating region:", error);
+    } finally {
+      setUpdatingRegionCountryId(null);
+    }
   };
 
+  const handleDelete = async (countryId: string) => {
+    handleDeleteTrainer(countryId, deleteCountry, refetch, "Country");
+  };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setSelectedCountry(undefined);
+  };
+
+  const handleOpenModal = (country?: ICountry) => {
+    setSelectedCountry(country);
+    setIsModalOpen(true);
   };
 
   const handleSearch = (value: string) => {
     setSearch(value);
     setPage(1);
+  };
+
+  const getRegionName = (regionData: ICountry["region"]): string => {
+    if (!regionData) return "No Region";
+    if (typeof regionData === "string") return regionData;
+    return (regionData as IRegion).name || "Unknown Region";
+  };
+
+  const getRegionValue = (regionData: ICountry["region"]): string => {
+    if (!regionData) return "";
+    if (typeof regionData === "string") return regionData;
+    return (regionData as IRegion)._id || "";
   };
 
   const columns: ColumnDef<CountryRowData>[] = [
@@ -86,6 +167,32 @@ const CountryManagement = () => {
       header: "Code",
       cell: ({ row }) => (
         <span className="font-medium text-[#000000]">{row.original.code}</span>
+      ),
+    },
+    {
+      accessorKey: "region",
+      header: "Region",
+      cell: ({ row }) => (
+        <div className="w-full max-w-[250px]">
+          <Select
+            value={getRegionValue(row.original.region)}
+            onValueChange={(value) =>
+              handleRegionChange(row.original._id, value)
+            }
+            disabled={updatingRegionCountryId === row?.original._id}
+          >
+            <SelectTrigger className="h-10 w-full bg-[#F3F3F5] border-[#b95e82] hover:border-[#b95e82] focus:border-[#b95e82]">
+              <SelectValue placeholder="Select region..." />
+            </SelectTrigger>
+            <SelectContent>
+              {regionOptions?.length > 0 && regionOptions.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       ),
     },
     {
@@ -111,34 +218,13 @@ const CountryManagement = () => {
         </div>
       ),
     },
-    // {
-    //   id: "actions",
-    //   header: "Actions",
-    //   cell: ({ row }) => (
-    //     <div className="flex gap-3">
-    //       <Button
-    //         variant="outlineCancel"
-    //         size="sm"
-    //         onClick={() => handleDelete(row.original._id)}
-    //         className="rounded-lg "
-    //       >
-    //         <Trash2Icon className="w-4 h-4" />
-    //       </Button>
-    //     </div>
-    //   ),
-    // },
   ];
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Breadcrumb */}
-     {/* <div className="flex flex-col items-start gap-2 md:flex-row md:items-center justify-between px-4">
-        <MainListHeading title="Country Management" />
-        <CommonBreadcrump title="Country Management" href="/regions" />
-      </div> */}
       <div className="flex flex-col gap-6 px-3 py-6 md:p-6 bg-white rounded-lg overflow-x-hidden md:overflow-x-visible">
         {/* Search and Create Button */}
-      <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
           <div className="relative w-full md:flex-1 md:max-w-md">
             <Input2
               placeholder="Search by country name..."
@@ -149,15 +235,6 @@ const CountryManagement = () => {
             />
             <SearchIcon />
           </div>
-          {/* <Button
-            variant="themeRegular"
-            className="rounded-[10px] py-3!"
-            onClick={() => {
-              setIsModalOpen(true);
-            }}
-          >
-            Add Country
-          </Button> */}
         </div>
 
         {/* Data Table */}
@@ -170,7 +247,6 @@ const CountryManagement = () => {
         </div>
 
         {/* Pagination Controls */}
-   {/* Pagination Controls */}
         {totalPages > 1 && (
           <div className="relative w-full pt-4">
             <div className="pointer-events-none absolute left-0 top-0 h-full w-6 bg-gradient-to-r from-white to-transparent md:hidden" />
@@ -211,6 +287,8 @@ const CountryManagement = () => {
           "
           >
             <CountryModal
+              country={selectedCountry}
+              regions={regions}
               onCancel={handleCloseModal}
               onSuccess={() => {
                 handleCloseModal();

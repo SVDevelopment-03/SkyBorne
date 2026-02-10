@@ -29,9 +29,10 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
-import { getUserRegion } from "@/utils/timezone";
 import { useGetDashboardStatsQuery } from "@/store/api/authApi";
 import { SearchIcon } from "@/icons/helpIcon";
+import { useUserRegionFromStore } from "@/utils/timezone";
+import { log } from "console";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -132,9 +133,14 @@ interface GetMeetingsParams {
 
 export default function Page() {
   const [userRegion, setUserRegion] = useState<{
-    timezone: string;
-    region: string;
+    region: string | null;
   } | null>(null);
+
+  const { region } = useUserRegionFromStore();
+
+  
+
+
 
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -161,14 +167,15 @@ export default function Page() {
   }, [search]);
 
   useEffect(() => {
-    const region = getUserRegion();
 
     setTimeout(() => {
-      // setUserRegion(region);
+      console.log("user region", region);
+      
+       setUserRegion({region:region});
 
-      setUserRegion({ region: "Canada / USA", timezone: "America/New_York" });
+      // setUserRegion({ region: "Canada / USA", timezone: "America/New_York" });
     }, 0);
-  }, []);
+  }, [region]);
 
   const {
     data: upcomingData,
@@ -285,7 +292,7 @@ export default function Page() {
         day: "numeric" as const,
         month: "short" as const,
         year: "numeric" as const,
-        timeZone: timezone || undefined,
+        timeZone: undefined,
       };
 
       const formattedDate = date
@@ -560,7 +567,7 @@ export default function Page() {
                     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
                     const formattedDate = formatDateWithTimezone(
                       meeting?.localTime,
-                      userRegion?.timezone,
+                      " ",
                       regionInfo?.localTime,
                       "live"
                       // regionInfo?.mode,
@@ -576,7 +583,7 @@ export default function Page() {
                         isLive={true}
                         // isLive={regionInfo?.mode === "live"}
                         trainer={trainer}
-                        region={userRegion?.region as string}
+                        region={region as string}
                         joined={meeting?.joined ?? false}
                         participants={meeting?.participants ?? []}
                         participantsCount={meeting?.participantsCount ?? 0}

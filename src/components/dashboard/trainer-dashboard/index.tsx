@@ -17,6 +17,7 @@ import {
 
 import DashboardTitle from "@/components/dashboard/user-dashboard/DashboardTitle";
 import useGetUser from "@/hooks/useGetUser";
+import { useUserRegionFromStore } from "@/utils/timezone";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -43,7 +44,7 @@ const groupMonthlyToWeekly = (values: number[]) => {
 };
 
 const TrainerDashboard = () => {
-  
+  const { region }= useUserRegionFromStore();
 
   // Fetch all trainer-specific data from RTK Query
   const { data: statsData, isLoading: statsLoading, error: statsError } = useGetTrainerStatsQuery();
@@ -238,10 +239,6 @@ const attendanceChartData = useMemo(() => {
   }, [attendanceData]);
 
 
-  const userRegion = {
-    region: "IN",
-    timezone: "Asia/Kolkata",
-  };
 
   const { user } = useGetUser();
 
@@ -275,7 +272,6 @@ const attendanceChartData = useMemo(() => {
       hour: "numeric",
       minute: "2-digit",
       hour12: true,
-      timeZone: tz,
     });
   };
 
@@ -403,16 +399,14 @@ const attendanceChartData = useMemo(() => {
                   !isFetching &&
                   upcomingData?.meetings?.map((meeting: any, index: number) => {
                     const regionInfo = meeting?.regions?.find(
-                      (r: any) => r.region == userRegion?.region
+                      (r: any) => r.region == region
                     );
 
                     const formattedTime = formatTimeWithTimezone(
                       meeting?.localTime,
-                      userRegion?.timezone
                     );
                     const formattedDate = formatDateWithTimezone(
-                      meeting?.localTime,
-                      userRegion?.timezone
+                      meeting?.localTime
                     );
                     const trainer = meeting?.trainer?.name ?? "";
 
@@ -423,7 +417,7 @@ const attendanceChartData = useMemo(() => {
                         userId={user?.id}
                         isLive={regionInfo?.mode === "live"}
                         trainer={trainer}
-                        region={userRegion?.region as string}
+                        region={region as string}
                         joined={meeting?.joined ?? false}
                         participants={meeting?.participants ?? []}
                         participantsCount={meeting?.participantsCount ?? 0}

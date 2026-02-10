@@ -5,10 +5,23 @@ import { axiosBaseQuery } from "../axiosBaseQuery";
 // Types & Interfaces
 // ============================================
 
+export interface IRegion {
+  _id: string;
+  name: string;
+  code: string;
+  timezone: string;
+  displayLabel?: string;
+  replayTime: string;
+  status: "active" | "inactive";
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ICountry {
   _id: string;
   name: string;
   code: string;
+  region?: IRegion | string | null; // Can be region object, ID, or null
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
@@ -34,6 +47,7 @@ export interface GetCountriesResponse {
 export interface CreateCountryRequest {
   name: string;
   code: string;
+  region?: string | null;
   status?: "active" | "inactive";
 }
 
@@ -46,6 +60,7 @@ export interface CreateCountryResponse {
 export interface UpdateCountryRequest {
   name?: string;
   code?: string;
+  region?: string | null;
   status?: "active" | "inactive";
 }
 

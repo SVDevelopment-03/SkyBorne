@@ -33,8 +33,8 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
 import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow"; 
-import { getUserRegion } from "@/utils/timezone";
 import CustomPagination from "@/components/ui/CustromPagination";
+import { useUserRegionFromStore } from "@/utils/timezone";
 
 interface Session {
   id: string;
@@ -73,10 +73,11 @@ export default function TrainerSessions() {
   const [showZoomFlow, setShowZoomFlow] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [userRegion, setUserRegion] = useState<{
+  const [userRegion, setUserRegion] :any= useState<{
     timezone: string;
-    region: string;
   } | null>(null);
+
+  const { region } = useUserRegionFromStore();
 
   // RTK Query hooks
   const {
@@ -96,9 +97,8 @@ export default function TrainerSessions() {
   const [leaveMeeting] = useLeaveMeetingMutation();
 
   useEffect(() => {
-    const region = getUserRegion();
     setTimeout(() => {
-      setUserRegion({ region: "Gulf", timezone: "Asia/Dubai" });
+      setUserRegion({ region: region });
     }, 0);
   }, []);
 

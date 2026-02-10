@@ -33,7 +33,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
 import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow";
-import { getUserRegion } from "@/utils/timezone";
+import { useUserRegionFromStore } from "@/utils/timezone";
 
 interface Session {
   id: string;
@@ -72,9 +72,10 @@ export default function UserSessions() {
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [userRegion, setUserRegion] = useState<{
-    timezone: string;
-    region: string;
+    region: string | null;
   } | null>(null);
+
+  const { region } = useUserRegionFromStore();
 
   // RTK Query hooks
   const {
@@ -91,19 +92,18 @@ export default function UserSessions() {
   const [leaveMeeting] = useLeaveMeetingMutation();
 
   useEffect(() => {
-    const region = getUserRegion();
+    console.log("User region data:", userRegion);
 
     setTimeout(() => {
-      // setUserRegion(region);
-      setUserRegion({ region: "Gulf", timezone: "Asia/Dubai" });
+      console.log("user region", region);
+       setUserRegion({region:region});
     }, 0);
-  }, []);
+  }, [region]);
 
   // ✅ Helper function to format date with timezone awareness
   // If region is not 'live' and region time has passed, shows next day date for recording
   const formatDateWithTimezone = (
     isoString: string,
-    timezone?: string,
     regionTimeStr?: string,
     mode?: string,
   ) => {
@@ -146,7 +146,6 @@ export default function UserSessions() {
         day: "numeric" as const,
         month: "short" as const,
         year: "numeric" as const,
-        timeZone: timezone || undefined,
       };
 
       const formattedDate = date
@@ -192,18 +191,24 @@ export default function UserSessions() {
     return `${date}, ${time}`;
   };
 
-  // Transform and filter meetings
-  const sessions: Session[] = (meetingsData?.meetings || []).map(
-    (meeting: any) => ({
+// Transform and filter meetings
+const sessions: Session[] = (meetingsData?.meetings || []).map(
+  (meeting: any) => {
+    const meetingTime = new Date(meeting.localTime);
+    const oneHourAfterMeeting = new Date(
+      meetingTime.getTime() + 60 * 60 * 1000
+    );
+
+    return {
       id: meeting._id,
       name: meeting.title,
       trainer: meeting.trainer?.name || "Unknown Trainer",
-      date: new Date(meeting.localTime).toLocaleDateString("en-US", {
+      date: meetingTime.toLocaleDateString("en-US", {
         year: "numeric",
         month: "short",
         day: "numeric",
       }),
-      time: new Date(meeting.localTime).toLocaleTimeString("en-US", {
+      time: meetingTime.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
@@ -211,8 +216,7 @@ export default function UserSessions() {
       duration: meeting.duration,
       localTime: meeting?.localTime,
       type: "Online",
-      status:
-        new Date(meeting.localTime) > new Date() ? "upcoming" : "completed",
+      status: new Date() < oneHourAfterMeeting ? "upcoming" : "completed",
       participants: 0,
       maxParticipants: 20,
       level: "Intermediate",
@@ -223,8 +227,10 @@ export default function UserSessions() {
       liveRegion: meeting.liveRegion,
       _id: meeting._id,
       joined: meeting.joined || false,
-    }),
-  );
+    };
+  }
+);
+
 
   const filteredSessions = sessions.filter((session) => {
     const matchesFilter = filter === "all" || session.status === filter;
@@ -253,7 +259,6 @@ export default function UserSessions() {
     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
     const formattedDate = formatDateWithTimezone(
       session?.localTime,
-      userRegion?.timezone,
       regionInfo?.localTime,
       regionInfo?.mode,
     );
