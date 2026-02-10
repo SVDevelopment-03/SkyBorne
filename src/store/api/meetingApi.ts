@@ -7,10 +7,14 @@ export interface UpdateMeetingPayload {
   liveRegion?: string;
   liveTime?: string;
   startDate?: Date;
+  weeklyEndDate?: Date;
   localTime?: string | Date;
   duration?: number;
   autoRecording?: boolean;
   rotationEnabled?: boolean;
+  recurringClass?: boolean;
+  recurrenceType?: "weekly" | "monthly" | "custom" | null;
+  customDays?: number[] | null;
 }
 
 export interface IMeeting {
@@ -29,10 +33,12 @@ export interface IMeeting {
     localTime: string;
     timezone: string;
     mode: "live" | "replay";
+    date?: string;
   }>;
   liveRegion: string;
   liveTime: string;
   startDate: Date;
+  weeklyEndDate?: Date;
   localTime: Date;
   trainer: {
     _id: string;
@@ -48,6 +54,9 @@ export interface IMeeting {
   recordingUrl: string;
   createdBy: string;
   status: "active" | "inactive";
+  recurringClass?: boolean;
+  recurrenceType?: "weekly" | "monthly" | "custom" | null;
+  customDays?: number[] | null;
 }
 
 export interface GetMeetingsResponse {

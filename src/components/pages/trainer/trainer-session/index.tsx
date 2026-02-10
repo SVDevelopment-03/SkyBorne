@@ -188,7 +188,6 @@ export default function TrainerSessions() {
 
     const formattedDate = formatDateWithTimezone(
       session?.localTime,
-      regionInfo?.localTime,
       regionInfo?.mode,
     );
 
