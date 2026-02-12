@@ -89,9 +89,9 @@ export function DataTable<TData, TValue>({
         <TableBody>
           {isLoadingData ? (
             <tr className="w-full rounded-lg">
-              {columns.map((column) => (
+              {columns.map((column,i) => (
                 <td
-                  key={column.id}
+                  key={i}
                   className="w-full first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg"
                 >
                   <Skeleton className="w-full h-8 p-3" />

@@ -1,11 +1,11 @@
 // app/payment-failed/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 
-export default function PaymentFailed() {
+function PaymentFailedContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [orderRef, setOrderRef] = useState("");
@@ -105,5 +105,20 @@ export default function PaymentFailed() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PaymentFailed() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-pink-100">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <PaymentFailedContent />
+    </Suspense>
   );
 }

@@ -288,7 +288,7 @@ export const {
   useGetAllUserMeetingsQuery,
   useUpdateMeetingMutation,
   useGetAllTrainerMeetingsQuery,
-  useGetTrainerUpcomingMeetingsQuery, // New hook
+  useGetTrainerUpcomingMeetingsQuery,
   useDeleteMeetingMutation,
   useGetMeetingsQuery,
   useGetMonthlyAttendanceQuery,

@@ -1,0 +1,102 @@
+// store/api/invoiceApi.ts
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { axiosBaseQuery } from "../axiosBaseQuery";
+
+interface InvoiceDetails {
+  invoiceId: string;
+  orderRef: string;
+  userName: string;
+  userEmail: string;
+  plan: string;
+  amount: number;
+  currency: string;
+  status: string;
+  paymentMethod: string;
+  billingType: string;
+  date: string;
+  subscriptionEndDate: string;
+}
+
+interface InvoiceDetailsResponse {
+  success: boolean;
+  invoice: InvoiceDetails;
+}
+
+interface UserInvoicesResponse {
+  success: boolean;
+  invoices: Array<{
+    invoiceId: string;
+    orderRef: string;
+    amount: number;
+    currency: string;
+    plan: string;
+    status: string;
+    paymentMethod: string;
+    billingType: string;
+    date: string;
+  }>;
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+interface InvoiceDownloadParams {
+  invoiceId: string;
+}
+
+interface UserInvoicesParams {
+  userId: string;
+  limit?: number;
+  page?: number;
+}
+
+export const invoiceApi = createApi({
+  reducerPath: "invoiceApi",
+  baseQuery: axiosBaseQuery(),
+  tagTypes: ["Invoice"],
+
+  endpoints: (builder) => ({
+    // =======================================
+    // GET INVOICE DETAILS (METADATA)
+    // =======================================
+    getInvoiceDetails: builder.query<InvoiceDetailsResponse, InvoiceDownloadParams>({
+      query: ({ invoiceId }) => ({
+        url: `/invoice/${invoiceId}/details`,
+        method: "GET",
+      }),
+      providesTags: ["Invoice"],
+    }),
+
+    // =======================================
+    // DOWNLOAD INVOICE PDF
+    // =======================================
+    downloadInvoicePDF: builder.mutation<Blob, InvoiceDownloadParams>({
+      query: ({ invoiceId }) => ({
+        url: `/invoice/${invoiceId}/download`,
+        method: "GET",
+        responseType: "blob",
+      }),
+    }),
+
+    // =======================================
+    // GET ALL USER INVOICES
+    // =======================================
+    getUserInvoices: builder.query<UserInvoicesResponse, UserInvoicesParams>({
+      query: ({ userId, limit = 10, page = 1 }) => ({
+        url: `/invoices/user/${userId}`,
+        method: "GET",
+        params: { limit, page },
+      }),
+      providesTags: ["Invoice"],
+    }),
+  }),
+});
+
+export const {
+  useGetInvoiceDetailsQuery,
+  useDownloadInvoicePDFMutation,
+  useGetUserInvoicesQuery,
+} = invoiceApi;

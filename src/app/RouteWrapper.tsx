@@ -40,7 +40,7 @@ const [countryCode, setCountryCode] = React.useState<string | null>(null);
     );
   }, [countryCode, data]);
 
-  if (isLoading || countryCode === null) {
+  if (isLoading ) {
     return null;
   }
 

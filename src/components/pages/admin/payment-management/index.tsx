@@ -19,6 +19,7 @@ import {
   Filter,
   Loader,
   FileDown,
+  Eye,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import {
@@ -26,6 +27,7 @@ import {
   useGetAllPaymentsQuery,
   useExportPaymentsCSVMutation,
 } from "@/store/api/paymentApi";
+import { InvoiceViewerModal } from "./InvoiceViewerModal";
 import MainListHeading from "@/components/ui/MainListHeading";
 import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
 import { SearchIcon } from "@/icons/helpIcon";
@@ -60,6 +62,8 @@ function AdminPayments() {
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterCountry, setFilterCountry] = useState("all");
   const [page, setPage] = useState(1);
+  const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   // RTK Query hooks
   const {
@@ -277,6 +281,31 @@ function AdminPayments() {
         );
       },
     },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.invoiceId ? (
+            <Button
+              onClick={() => {
+                setSelectedInvoiceId(row.original.invoiceId!);
+                setIsInvoiceModalOpen(true);
+              }}
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-[#b95e82] hover:bg-[#b95e82]/10 h-8"
+              title="View Invoice"
+            >
+              <Eye className="w-4 h-4" />
+              <span className="text-xs">View</span>
+            </Button>
+          ) : (
+            <span className="text-xs text-[#929292]">No Invoice</span>
+          )}
+        </div>
+      ),
+    },
   ];
 
   const isLoading = isLoadingHistory || isLoadingStats;
@@ -379,8 +408,6 @@ function AdminPayments() {
         </Card>
       </div>
 
-
-
       {/* Main Content */}
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
         {/* Search, Filters and Export Button */}
@@ -453,7 +480,6 @@ function AdminPayments() {
 
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          // <div className="flex items-center justify-center pt-4">
           <div className="flex items-center justify-center pt-4 w-full overflow-x-auto sm:overflow-visible">
             <div className="min-w-max sm:min-w-0">
               <CustomPagination
@@ -466,6 +492,16 @@ function AdminPayments() {
           </div>
         )}
       </div>
+
+      {/* Invoice Viewer Modal */}
+      <InvoiceViewerModal
+        isOpen={isInvoiceModalOpen}
+        invoiceId={selectedInvoiceId}
+        onClose={() => {
+          setIsInvoiceModalOpen(false);
+          setSelectedInvoiceId(null);
+        }}
+      />
     </div>
   );
 }
