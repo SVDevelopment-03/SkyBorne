@@ -18,6 +18,16 @@ import {
   MessageSquare,
   CircleDollarSign,
   TicketX,
+  ShoppingCart,
+  Package,
+  Users as CustomersIcon,
+  Warehouse,
+  Tag,
+  Truck,
+  CreditCard,
+  BarChart3,
+  ChevronDown,
+  Package2Icon,
 } from "lucide-react";
 
 export const SidebarNav = {
@@ -59,6 +69,12 @@ export const SidebarNav = {
       items: [],
     },
     {
+      title: "Products",
+      url: "/product",
+      icon: Package2Icon,
+      items: [],
+    },
+    {
       title: "Profile",
       url: "/profile",
       icon: ProfileIcon,
@@ -70,7 +86,7 @@ export const SidebarNav = {
       icon: MessageSquare,
       items: [],
     },
-    
+
     // {
     //   title: "Feedback",
     //   url: "/upcoming",
@@ -113,7 +129,7 @@ export const AdminNav = {
       icon: Users,
       items: [],
     },
-     {
+    {
       title: "Cancel Subscription",
       url: "/cancel-subscription",
       icon: TicketX,
@@ -143,6 +159,56 @@ export const AdminNav = {
       icon: MessageSquare,
       items: [],
     },
+    // Ecom Module with collapsible sub-items
+    {
+      title: "Ecom",
+      url: "",
+      icon: ShoppingCart,
+      items: [
+        {
+          title: "Products",
+          url: "/products",
+          icon: Package,
+        },
+        {
+          title: "Customers",
+          url: "/customers",
+          icon: CustomersIcon,
+        },
+        {
+          title: "Orders",
+          url: "/orders",
+          icon: ShoppingCart,
+        },
+        {
+          title: "Inventory",
+          url: "/inventory",
+          icon: Warehouse,
+        },
+        {
+          title: "Discounts",
+          url: "/discounts",
+          icon: Tag,
+        },
+        {
+          title: "Shipping",
+          url: "/shipping",
+          icon: Truck,
+        },
+        {
+          title: "Payments",
+          url: "/payment-list",
+          icon: CreditCard,
+        },
+        {
+          title: "Reports",
+          url: "/reports",
+          icon: BarChart3,
+        },
+      ],
+      isCollapsible: true,
+      collapsibleIcon: ChevronDown,
+    },
     {
       title: "Logout",
       logout: true,
@@ -167,13 +233,13 @@ export const TrainerNav = {
       icon: SessionsIcon,
       items: [],
     },
-     {
+    {
       title: "Earnings",
       url: "/trainer-earnings",
       icon: CircleDollarSign,
       items: [],
     },
-     {
+    {
       title: "Feedback",
       url: "/trainer-feedback",
       icon: MessageSquare,

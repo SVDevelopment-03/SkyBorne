@@ -57,7 +57,7 @@ export default function UserLayout({ children }: AuthLayoutProps) {
       <div className="flex lg:hidden">
         <SidebarDrawer /> 
       </div>
-      <div className="flex flex-col h-dvh overflow-hidden">
+      <div className="flex flex-col min-h-dvh">
         {pathname !== "/dashboard" && (
           <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-end">
             <div className="flex items-center gap-10 text-[#212C26]">
