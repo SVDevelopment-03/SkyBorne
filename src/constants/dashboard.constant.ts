@@ -74,6 +74,12 @@ export const SidebarNav = {
       icon: Package2Icon,
       items: [],
     },
+     {
+      title: "My Orders",
+      url: "/my-orders",
+      icon: Package2Icon,
+      items: [],
+    },
     {
       title: "Profile",
       url: "/profile",

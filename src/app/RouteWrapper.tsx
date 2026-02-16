@@ -40,13 +40,11 @@ const [countryCode, setCountryCode] = React.useState<string | null>(null);
     );
   }, [countryCode, data]);
 
-  if (isLoading ) {
-    return null;
-  }
-
-  if (matchedCountry?.status === "inactive") {
-    return null;
-  }
+const isBlocked =
+  !isLoading &&
+  countryCode &&
+  matchedCountry &&
+  matchedCountry.status === "inactive";
 
 
 
