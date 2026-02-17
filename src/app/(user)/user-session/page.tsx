@@ -86,6 +86,7 @@ export default function UserSessions() {
   } = useGetAllUserMeetingsQuery({
     region: userRegion?.region,
     search: searchQuery,
+    limit:500
   });
 
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();

@@ -120,12 +120,13 @@ export const meetingApi = createApi({
       providesTags: ["Meetings"],
     }),
     getAllUserMeetings: builder.query({
-      query: ({ region, search }) => ({
+      query: ({ region, search,limit=10 }) => ({
         url: "/meetings/all",
         method: "GET",
         params: {
           region,
           search,
+          limit:limit ?? 10
         },
       }),
       providesTags: ["Meetings"],

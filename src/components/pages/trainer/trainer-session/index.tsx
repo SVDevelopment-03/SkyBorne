@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -35,7 +34,6 @@ import toast from "react-hot-toast";
 import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow"; 
 import CustomPagination from "@/components/ui/CustromPagination";
 import { useUserRegionFromStore } from "@/utils/timezone";
-
 interface Session {
   id: string;
   name: string;
@@ -63,6 +61,44 @@ interface Session {
   joined?: boolean;
 }
 
+/**
+ * ✅ Helper function to determine meeting status
+ * Meetings show as "completed" 1 hour AFTER they end
+ * Logic: completion time = localTime + duration + 1 hour buffer
+ */
+const calculateMeetingStatus = (
+  meeting: any,
+  meetingStatus: string,
+): "upcoming" | "completed" => {
+  const now = new Date();
+
+  // First check if meeting has explicit status from Zoom
+  if (meetingStatus === "completed") {
+    return "completed";
+  }
+  if (meetingStatus === "failed") {
+    return "completed"; // Treat failed as completed
+  }
+
+  // For pending meetings, check if meeting end time + 1 hour buffer has passed
+  const meetingTime = new Date(meeting.localTime);
+  const meetingDurationMs = (meeting.duration || 0) * 60 * 1000; // Convert minutes to milliseconds
+  const oneHourMs = 60 * 60 * 1000; // 1 hour in milliseconds
+
+  // Calculate when meeting should be marked as completed
+  // = meeting start time + duration + 1 hour buffer
+  const meetingCompletionTime = new Date(
+    meetingTime.getTime() + meetingDurationMs + oneHourMs,
+  );
+
+  if (now >= meetingCompletionTime) {
+    // Current time has passed meeting end time + 1 hour buffer
+    return "completed";
+  }
+
+  return "upcoming";
+};
+
 export default function TrainerSessions() {
   const { user } = useGetUser();
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
@@ -76,9 +112,7 @@ export default function TrainerSessions() {
   const [userRegion, setUserRegion] = useState<{
     region: string | null;
   } | null>(null);
-
   const { region } = useUserRegionFromStore();
-
   // RTK Query hooks - ✅ NOW INCLUDES REGION PARAMETER TO MATCH UserSessions
   const {
     data: meetingsResponse,
@@ -93,10 +127,8 @@ export default function TrainerSessions() {
     sortBy: "localTime",
     sortOrder: "asc",
   });
-
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
-
   useEffect(() => {
     setTimeout(() => {
       setUserRegion({ region: region });
@@ -109,10 +141,8 @@ export default function TrainerSessions() {
       day: "numeric",
       month: "short",
       year: "numeric",
-      timeZone: tz,
     });
   };
-
   const formatTimeWithTimezone = (iso: string, tz?: string) => {
     if (!iso) return "N/A";
     return new Date(iso).toLocaleTimeString("en-US", {
@@ -121,51 +151,48 @@ export default function TrainerSessions() {
       hour12: true,
     });
   };
-
   const formatDateTimeWithTimezone = (isoString: string) => {
     const date = formatDateWithTimezone(isoString);
     const time = formatTimeWithTimezone(isoString);
     return `${date}, ${time}`;
   };
-
   // Transform and filter meetings
   const sessions: Session[] = (meetingsResponse?.data?.meetings || []).map(
-    (meeting: any) => ({
-      id: meeting._id,
-      name: meeting.title,
-      trainer: meeting.trainer?.name || "Unknown Trainer",
-      date: new Date(meeting.localTime).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-      time: new Date(meeting.localTime).toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
-      duration: meeting.duration,
-      localTime: meeting?.localTime,
-      type: "Online",
-      status:
-        meeting.status === "completed"
-          ? "completed"
-          : new Date(meeting.localTime) > new Date()
-            ? "upcoming"
-            : "completed",
-      participants: 0,
-      maxParticipants: 20,
-      level: "Intermediate",
-      service: meeting.service?.title || "Wellness",
-      joinUrl: meeting.joinUrl,
-      recordingUrl: meeting.recordingUrl,
-      regions: meeting.regions,
-      liveRegion: meeting.liveRegion,
-      _id: meeting._id,
-      joined: meeting.joined || false,
-    }),
-  );
+    (meeting: any) => {
+      // ✅ Use the helper function to calculate status
+      const calculatedStatus = calculateMeetingStatus(meeting, meeting.status);
 
+      return {
+        id: meeting._id,
+        name: meeting.title,
+        trainer: meeting.trainer?.name || "Unknown Trainer",
+        date: new Date(meeting.localTime).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+        time: new Date(meeting.localTime).toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        }),
+        duration: meeting.duration,
+        localTime: meeting?.localTime,
+        type: "Online",
+        status: calculatedStatus, // Use calculated status
+        participants: 0,
+        maxParticipants: 20,
+        level: "Intermediate",
+        service: meeting.service?.title || "Wellness",
+        joinUrl: meeting.joinUrl,
+        recordingUrl: meeting.recordingUrl,
+        regions: meeting.regions,
+        liveRegion: meeting.liveRegion,
+        _id: meeting._id,
+        joined: meeting.joined || false,
+      };
+    },
+  );
   const filteredSessions = sessions.filter((session) => {
     const matchesFilter = filter === "all" || session.status === filter;
     const matchesSearch =
@@ -174,23 +201,19 @@ export default function TrainerSessions() {
       session.service.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesFilter && matchesSearch;
   });
-
   const upcomingCount = sessions.filter((s) => s.status === "upcoming").length;
   const completedCount = sessions.filter(
     (s) => s.status === "completed",
   ).length;
   const pagination = meetingsResponse?.data?.pagination;
-
   const handleJoinClass = (session: Session) => {
     const regionInfo = session?.regions?.find(
       (r: any) => r.region == userRegion?.region,
     );
-
     const formattedDate = formatDateWithTimezone(
       session?.localTime,
-      regionInfo?.mode,
+      "live",
     );
-
     const classItem = {
       meetingId: session._id,
       userId: user?.id,
@@ -205,30 +228,25 @@ export default function TrainerSessions() {
       duration: `${session.duration} min`,
       trainer: session.trainer,
     };
-
     setSelectedClass(classItem);
     setShowClassModal(true);
     toast.success(`You're set for ${session.name}!`);
   };
-
   const handleJoinMeeting = async (session: Session) => {
     if (!session._id || !user?.id || !session.liveRegion) {
       toast.error("Missing meeting or user information");
       return;
     }
-
     // Open popup FIRST (synchronously from user interaction)
     const popup = window.open(
       "",
       "zoomMeetingPopup",
       "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
     );
-
     if (!popup) {
       toast.error("Popup blocked. Please allow popups for this site.");
       return;
     }
-
     try {
       const res = await joinMeeting({
         meetingId: session._id,
@@ -236,13 +254,11 @@ export default function TrainerSessions() {
         region: userRegion?.region,
       }).unwrap();
       const { accessUrl: joinUrl, mode } = res?.data;
-
       if (!joinUrl) {
         toast.error("Access URL not found");
         popup.close();
         return;
       }
-
       if (mode === "live") {
         popup.location.href = joinUrl;
         toast.success("Joining meeting...");
@@ -259,7 +275,6 @@ export default function TrainerSessions() {
       );
     }
   };
-
   const handleViewRecording = async (session: Session) => {
     if (!session._id || !user?.id || !session.liveRegion) {
       toast.error("Missing meeting or user information");
@@ -272,7 +287,6 @@ export default function TrainerSessions() {
         region: userRegion?.region,
       }).unwrap();
       const { recordUrl } = res?.data;
-
       if (!recordUrl) {
         toast.error("Recording URL not found");
         return;
@@ -286,7 +300,6 @@ export default function TrainerSessions() {
       );
     }
   };
-
   if (isLoading) {
     return (
       <div className="p-4 lg:p-8 space-y-6">
@@ -305,7 +318,6 @@ export default function TrainerSessions() {
       </div>
     );
   }
-
   if (fetchError) {
     return (
       <div className="p-4 lg:p-8 space-y-6">
@@ -335,7 +347,6 @@ export default function TrainerSessions() {
       </div>
     );
   }
-
   return (
     <div className="p-4 lg:p-8 space-y-6 overflow-auto">
       {/* Header */}
@@ -345,7 +356,6 @@ export default function TrainerSessions() {
           View and manage all your yoga and wellness sessions
         </p>
       </div>
-
       {/* Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
@@ -365,7 +375,6 @@ export default function TrainerSessions() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -383,7 +392,6 @@ export default function TrainerSessions() {
             </div>
           </CardContent>
         </Card>
-
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -402,7 +410,6 @@ export default function TrainerSessions() {
           </CardContent>
         </Card>
       </div>
-
       {/* Filter and Search */}
       <Card className="border-[#e5e5e5]" style={{ borderRadius: "20px" }}>
         <CardContent className="p-6">
@@ -466,7 +473,6 @@ export default function TrainerSessions() {
           </div>
         </CardContent>
       </Card>
-
       {/* Sessions List */}
       {filteredSessions.length === 0 ? (
         <Card className="border-[#e5e5e5]" style={{ borderRadius: "24px" }}>
@@ -485,25 +491,18 @@ export default function TrainerSessions() {
               const regionInfo = session?.regions?.find(
                 (r: any) => r.region == userRegion?.region,
               );
-
-                                  const formattedTime = formatTimeWithTimezone(
-                      session?.localTime,
-                    );
-                    const formattedDate = formatDateWithTimezone(
-                      session?.localTime
-                    );
-
-
+              const formattedTime = formatTimeWithTimezone(
+                session?.localTime,
+              );
+              const formattedDate = formatDateWithTimezone(
+                session?.localTime
+              );
               const startTime = new Date(session?.localTime as string);
               const now = new Date();
-
               const diffMs = startTime.getTime() - now.getTime();
               const diffMinutes = diffMs / 1000 / 60;
-
               const isJoinDisabled = diffMinutes > 5;
-
             
-
               return (
                 <Card
                   key={session.id}
@@ -535,7 +534,6 @@ export default function TrainerSessions() {
                         </p>
                       </div>
                     </div>
-
                     <div className="space-y-3 mb-4">
                       <div className="flex items-center gap-2 text-[#6B6B6B]">
                         <Calendar className="w-4 h-4" />
@@ -552,7 +550,6 @@ export default function TrainerSessions() {
                         <span className="text-sm">{session.type}</span>
                       </div>
                     </div>
-
                     <div className="flex items-center gap-2 mb-4">
                       <Badge
                         className="bg-[#b95e82]/10 text-[#b95e82] py-1!"
@@ -561,7 +558,6 @@ export default function TrainerSessions() {
                         {session.service}
                       </Badge>
                     </div>
-
                     <div className="flex gap-2">
                       {session.status === "upcoming" ? (
                         <Button
@@ -592,7 +588,6 @@ export default function TrainerSessions() {
               );
             })}
           </div>
-
           {/* Pagination */}
           {pagination && pagination.totalPages > 1 && (
             <div className="flex items-center justify-center pt-4">
@@ -606,7 +601,6 @@ export default function TrainerSessions() {
           )}
         </>
       )}
-
       {/* Session Details Modal */}
       <Dialog open={showClassModal} onOpenChange={setShowClassModal}>
         <DialogContent className="border-[#f0ccc4]">
@@ -615,7 +609,7 @@ export default function TrainerSessions() {
               Session Details
             </DialogTitle>
             <DialogDescription>
-              {` You're all set for`} {selectedClass?.title}
+              You're all set for {selectedClass?.title}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -678,7 +672,6 @@ export default function TrainerSessions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Zoom Session Flow */}
       {selectedClass && (
         <ZoomSessionFlow
@@ -695,7 +688,6 @@ export default function TrainerSessions() {
           session={selectedClass}
         />
       )}
-
       {/* Video Player Modal */}
       {showVideoPlayer && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
@@ -706,7 +698,6 @@ export default function TrainerSessions() {
             >
               Close
             </button>
-
             <video
               src={videoUrl as string}
               controls

@@ -28,6 +28,8 @@ import {
   BarChart3,
   ChevronDown,
   Package2Icon,
+  Boxes,
+  Receipt,
 } from "lucide-react";
 
 export const SidebarNav = {
@@ -77,7 +79,7 @@ export const SidebarNav = {
      {
       title: "My Orders",
       url: "/my-orders",
-      icon: Package2Icon,
+      icon: ShoppingCart,
       items: [],
     },
     {
