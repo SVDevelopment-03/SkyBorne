@@ -32,8 +32,8 @@ export const useUserRegionFromStore = () => {
   });
 
   const countries :any= countriesData?.data?.countries || [];
-  console.log("countries", countries);
   const region = countries?.find((country:any)=>normalizeCountry(country.name)===userCountry)?.region?.name ?? " ";
+  console.log("region", region);
 
 
   return {

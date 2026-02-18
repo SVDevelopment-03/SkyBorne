@@ -76,12 +76,19 @@ export const SidebarNav = {
       icon: Package2Icon,
       items: [],
     },
-     {
+    {
       title: "My Orders",
       url: "/my-orders",
+      icon: Truck,
+      items: [],
+    },
+    {
+      title: "Checkout",
+      url: "/checkout",
       icon: ShoppingCart,
       items: [],
     },
+
     {
       title: "Profile",
       url: "/profile",

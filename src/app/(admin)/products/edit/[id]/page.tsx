@@ -1,10 +1,15 @@
-import { ProductForm } from '@/components/Ecompages/ProductForm'
-import React from 'react'
+// app/products/edit/[productId]/page.tsx
 
-const page = () => {
-  return (
-   <ProductForm/>
-  )
+import EditProductForm from "@/components/Ecompages/EditProductForm";
+
+export default async function EditProductPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  
+  const  data = await params;
+  console.log("product data", data);
+  
+  return <EditProductForm productId={data?.id} />;
 }
-
-export default page

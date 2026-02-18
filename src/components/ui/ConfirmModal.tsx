@@ -28,7 +28,7 @@ export function ConfirmModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white-500 z-50 bg-opacity-50">
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-6">
         <h3 className="text-xl font-bold text-[#333] mb-2">{title}</h3>
         <p className="text-[#707070] mb-6">{message}</p>

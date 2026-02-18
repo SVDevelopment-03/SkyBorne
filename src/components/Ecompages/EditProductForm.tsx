@@ -2,33 +2,36 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Upload, CheckCircle, ToggleLeft, ToggleRight } from "lucide-react";
-import { useCreateProductMutation } from "@/store/api/productApi";
+import { ArrowLeft, Upload } from "lucide-react";
+import {
+  useGetProductByIdQuery,
+  useUpdateProductMutation,
+} from "@/store/api/productApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import toast from "react-hot-toast";
-import { Toggle2 } from "../ui/Toggle2";
+import { Toggle2 } from "@/components/ui/Toggle2";
 
 interface FormErrors {
   title?: string;
   category?: string;
   price?: string;
-  stock?: string;
   image?: string;
 }
-  const InputError = ({ msg }: { msg?: string }) =>
-    msg ? <p className="text-red-500 text-xs mt-1">{msg}</p> : null;
 
-export function ProductForm() {
+const InputError = ({ msg }: { msg?: string }) =>
+  msg ? <p className="text-red-500 text-xs mt-1">{msg}</p> : null;
+
+interface EditProductFormProps {
+  productId: string;
+}
+
+export function EditProductForm({ productId }: EditProductFormProps) {
   const router = useRouter();
-  const [addProduct, { isLoading }] = useCreateProductMutation();
+  const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
   const { data: serviceData, isLoading: servicesLoading } = useGetServicesQuery(undefined);
-
-  console.log("servicew data ", serviceData);
-  
-
-
+  const { data: productData, isLoading: productLoading } = useGetProductByIdQuery(productId);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageBase64, setImageBase64] = useState<string | null>(null);
@@ -39,14 +42,28 @@ export function ProductForm() {
     description: "",
     category: "",
     price: 1,
-    stock: 1,
     status: "inactive" as "active" | "inactive",
   });
+
+  // Populate form when product data loads
+  useEffect(() => {
+    if (productData) {
+      const p = (productData as any)?.data ?? productData;
+      setFormData({
+        title: p.name ?? "",
+        description: p.description ?? "",
+        category: p.category?._id ?? p.category ?? "",
+        price: p.price ?? 1,
+        status: p.status ?? "inactive",
+      });
+      if (p.image) setImagePreview(p.image);
+    }
+  }, [productData]);
 
   // ========================
   // VALIDATION
   // ========================
-  const validate = (requireImage = false): boolean => {
+  const validate = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.title.trim()) {
@@ -58,12 +75,6 @@ export function ProductForm() {
     if (!formData.price || formData.price < 1) {
       newErrors.price = "Price must be at least $1";
     }
-    if (formData.stock < 0) {
-      newErrors.stock = "Stock cannot be negative";
-    }
-    if (requireImage && !imageBase64) {
-      newErrors.image = "Please upload a product image";
-    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -72,43 +83,39 @@ export function ProductForm() {
   // ========================
   // SUBMIT
   // ========================
-  const handleSubmit = async (action: "draft" | "publish") => {
-    const requireImage = action === "publish";
-    if (!validate(requireImage)) return;
+  const handleSubmit = async () => {
+    if (!validate()) return;
 
     try {
-      const payload = {
+      const payload: any = {
+        productId,
         name: formData.title,
         description: formData.description,
         category: formData.category,
-        status: action === "publish" ? "active" : "inactive",
+        status: formData.status,
         price: formData.price,
-        stock: formData.stock,
-        imageBase64,
       };
 
-      await addProduct(payload as any).unwrap();
+      // Only include imageBase64 if a new image was selected
+      if (imageBase64) {
+        payload.imageBase64 = imageBase64;
+      }
 
-      toast.success(
-        action === "publish"
-          ? "Product published successfully"
-          : "Product saved as draft"
-      );
+      await updateProduct(payload).unwrap();
+      toast.success("Product updated successfully");
       router.push("/products");
     } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to save product");
-      console.error("ADD PRODUCT ERROR:", error);
+      toast.error(error?.data?.message || "Failed to update product");
+      console.error("UPDATE PRODUCT ERROR:", error);
     }
   };
 
-  const handleChange = (
-    e: any  ) => {
+  const handleChange = (e: any) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "price" || name === "stock" ? Number(value) : value,
+      [name]: name === "price" ? Number(value) : value,
     }));
-    // Clear error on change
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
@@ -116,29 +123,23 @@ export function ProductForm() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    if (!file) {
-      setImagePreview(null);
-      setImageBase64(null);
-      return;
-    }
+    if (!file) return;
 
     const reader = new FileReader();
     reader.onload = () => {
       setImagePreview(reader.result as string);
       setImageBase64(reader.result as string);
-      setErrors((prev) => ({ ...prev, image: undefined }));
     };
     reader.readAsDataURL(file);
   };
 
-  const toggleStatus = () => {
-    setFormData((prev) => ({
-      ...prev,
-      status: prev.status === "active" ? "inactive" : "active",
-    }));
-  };
-
-
+  if (productLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B95E82]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -150,7 +151,7 @@ export function ProductForm() {
         >
           <ArrowLeft className="w-6 h-6 text-[#707070]" />
         </button>
-        <h1 className="text-3xl font-bold text-[#333]">Add New Product</h1>
+        <h1 className="text-3xl font-bold text-[#333]">Edit Product</h1>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -250,30 +251,6 @@ export function ProductForm() {
 
         {/* RIGHT COLUMN */}
         <div className="col-span-2 lg:col-span-1 space-y-6">
-          {/* Inventory */}
-          {/* <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-            <h2 className="text-lg font-bold text-[#333]">Inventory</h2>
-
-            <div>
-              <label className="block text-sm font-medium text-[#707070] mb-2">
-                Stock Quantity <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] ${
-                  errors.stock ? "border-red-400" : "border-gray-200"
-                }`}
-                placeholder="0"
-                min={0}
-                step={1}
-              />
-              <InputError msg={errors.stock} />
-            </div>
-          </div> */}
-
           {/* Product Image */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-lg font-bold text-[#333]">Product Image</h2>
@@ -308,23 +285,23 @@ export function ProductForm() {
           </div>
 
           {/* Status Toggle */}
-<div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-  <Toggle2
-    checked={formData.status === "active"}
-    onChange={(val) =>
-      setFormData((prev) => ({
-        ...prev,
-        status: val ? "active" : "inactive",
-      }))
-    }
-    label="Product Status"
-    description={
-      formData.status === "active"
-        ? "Product is visible to user"
-        : "Product is hidden from the user"
-    }
-  />
-</div>
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+            <Toggle2
+              checked={formData.status === "active"}
+              onChange={(val) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  status: val ? "active" : "inactive",
+                }))
+              }
+              label="Product Status"
+              description={
+                formData.status === "active"
+                  ? "Product is visible to user"
+                  : "Product is hidden from the user"
+              }
+            />
+          </div>
         </div>
 
         {/* Action Buttons */}
@@ -336,24 +313,18 @@ export function ProductForm() {
           >
             Cancel
           </button>
-          {/* <button
-            type="button"
-            onClick={() => handleSubmit("draft")}
-            disabled={isLoading}
-            className="px-6 py-3 bg-gray-200 text-[#707070] rounded-xl hover:bg-gray-300 transition-colors disabled:opacity-50"
-          >
-            Save as Draft
-          </button> */}
           <button
             type="button"
-            onClick={() => handleSubmit("publish")}
-            disabled={isLoading}
+            onClick={handleSubmit}
+            disabled={isUpdating}
             className="px-6 py-3 bg-[#B95E82] text-white rounded-xl hover:bg-[#A04D6F] transition-colors disabled:opacity-50"
           >
-            {isLoading ? "Publishing..." : "Publish Product"}
+            {isUpdating ? "Saving..." : "Update Product"}
           </button>
         </div>
       </div>
     </div>
   );
 }
+
+export default EditProductForm;

@@ -1,30 +1,39 @@
-import { Product } from '../data/products';
 import Link from 'next/link';
 import { ImageWithFallback } from './ImageWithFallback';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-interface ProductCardProps {
-  product: Product;
-  imageUrl: string;
+interface BackendProduct {
+  _id: string;
+  name: string;
+  description?: string;
+  price: number;
+  image: string;
+  category?: { _id: string; title: string } | string;
+  status: string;
+  createdAt?: string;
 }
 
-export function ProductCard({ product, imageUrl }: ProductCardProps) {
+interface ProductCardProps {
+  product: BackendProduct;
+}
+
+export function ProductCard({ product }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Link href={`/product/${product.id}`}>
+    <Link href={`/product/${product._id}`} className="h-full">
       <div
-        className={`bg-card rounded-3xl overflow-hidden transition-all duration-300 ${
+        className={`bg-card rounded-3xl overflow-hidden transition-all duration-300 h-full flex flex-col ${
           isHovered ? 'shadow-xl -translate-y-2' : 'shadow-md'
         }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         {/* Image */}
-        <div className="aspect-[4/3] overflow-hidden bg-background/30">
+        <div className="aspect-[4/3] overflow-hidden bg-background/30 flex-shrink-0">
           <ImageWithFallback
-            src={imageUrl}
+            src={product.image}
             alt={product.name}
             className="w-full h-full object-cover transition-transform duration-500"
             style={{
@@ -34,14 +43,14 @@ export function ProductCard({ product, imageUrl }: ProductCardProps) {
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          <h3 className="text-xl mb-2">{product.name}</h3>
-          <p className="text-sm text-foreground/70 mb-4">{product.description}</p>
+        <div className="p-6 flex flex-col flex-1">
+          <h3 className="text-xl mb-2 line-clamp-1">{product.name}</h3>
+          <p className="text-sm text-foreground/70 mb-4 line-clamp-2 flex-1">{product.description}</p>
           
           <div className="flex items-center justify-between">
             <p className="text-2xl font-serif text-primary">${product.price}</p>
             <Button
-            variant={"theme"}
+              variant={"theme"}
               onClick={(e) => {
                 e.preventDefault();
                 // Add to cart logic would go here

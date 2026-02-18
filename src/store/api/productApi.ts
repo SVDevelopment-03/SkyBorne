@@ -3,18 +3,11 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
 
-/**
- * =========================
- * Types / Interfaces
- * =========================
- */
-
-export type ProductStatus = "Published" | "Draft";
+export type ProductStatus = "active" | "inactive";
 
 export interface Product {
   _id: string;
   name: string;
-  sku: string;
   category: string;
   price: number;
   stock?: number;
@@ -27,13 +20,18 @@ export interface Product {
 
 export interface CreateProductPayload {
   name: string;
-  sku: string;
   category: string;
   price: number;
   stock?: number;
   status?: ProductStatus;
   image: string;
   description?: string;
+}
+
+export interface GetPublishedProductsParams {
+  search?: string;
+  categoryId?: string;
+  sortBy?: "newest" | "price-low" | "price-high";
 }
 
 export interface UpdateProductPayload extends Partial<CreateProductPayload> {
@@ -44,12 +42,12 @@ export interface UpdateProductStatusPayload {
   productId: string;
   status: ProductStatus;
 }
-
-/**
- * =========================
- * Product API
- * =========================
- */
+export interface GetProductsParams {
+  search?: string;
+  status?: string;
+  page?: number;
+  limit?: number;
+}
 
 export const productApi = createApi({
   reducerPath: "productApi",
@@ -57,32 +55,20 @@ export const productApi = createApi({
   tagTypes: ["Product"],
 
   endpoints: (builder) => ({
-    /**
-     * =========================
-     * GET
-     * =========================
-     */
-
-    // Get all products
-    getProducts: builder.query<Product[], void>({
-      query: ({page,
-    limit}:any) => ({
+    // ✅ Fix the return type to match actual API response
+    // Update query type
+    getProducts: builder.query<
+      { data: { products: Product[]; pagination: any } },
+      GetProductsParams
+    >({
+      query: (params = {}) => ({
         url: "/products",
         method: "GET",
+        params, // ← sends as ?search=...&status=...
       }),
       providesTags: ["Product"],
     }),
 
-    // Get published products
-    getPublishedProducts: builder.query<Product[], void>({
-      query: () => ({
-        url: "/products/published",
-        method: "GET",
-      }),
-      providesTags: ["Product"],
-    }),
-
-    // Get product by ID
     getProductById: builder.query<Product, string>({
       query: (productId) => ({
         url: `/products/${productId}`,
@@ -93,7 +79,6 @@ export const productApi = createApi({
       ],
     }),
 
-    // Get products by category
     getProductsByCategory: builder.query<Product[], string>({
       query: (categoryId) => ({
         url: `/products/category/${categoryId}`,
@@ -102,16 +87,6 @@ export const productApi = createApi({
       providesTags: ["Product"],
     }),
 
-    // Get product by SKU
-    getProductBySku: builder.query<Product, string>({
-      query: (sku) => ({
-        url: `/products/sku/${sku}`,
-        method: "GET",
-      }),
-      providesTags: ["Product"],
-    }),
-
-    // Get products by status
     getProductsByStatus: builder.query<Product[], ProductStatus>({
       query: (status) => ({
         url: `/products/status/${status}`,
@@ -120,14 +95,7 @@ export const productApi = createApi({
       providesTags: ["Product"],
     }),
 
-    /**
-     * =========================
-     * POST
-     * =========================
-     */
-
-    // Create product
-    createProduct: builder.mutation<Product, FormData>({
+    createProduct: builder.mutation<Product, FormData | CreateProductPayload>({
       query: (payload) => ({
         url: "/create-product",
         method: "POST",
@@ -136,13 +104,6 @@ export const productApi = createApi({
       invalidatesTags: ["Product"],
     }),
 
-    /**
-     * =========================
-     * PUT / PATCH
-     * =========================
-     */
-
-    // Update full product
     updateProduct: builder.mutation<Product, UpdateProductPayload>({
       query: ({ productId, ...body }) => ({
         url: `/update-product/${productId}`,
@@ -154,11 +115,7 @@ export const productApi = createApi({
       ],
     }),
 
-    // Update product status only
-    updateProductStatus: builder.mutation<
-      Product,
-      UpdateProductStatusPayload
-    >({
+    updateProductStatus: builder.mutation<Product, UpdateProductStatusPayload>({
       query: ({ productId, status }) => ({
         url: `/update-product-status/${productId}`,
         method: "PATCH",
@@ -169,13 +126,6 @@ export const productApi = createApi({
       ],
     }),
 
-    /**
-     * =========================
-     * DELETE
-     * =========================
-     */
-
-    // Delete product
     deleteProduct: builder.mutation<{ success: boolean }, string>({
       query: (productId) => ({
         url: `/delete-product/${productId}`,
@@ -183,28 +133,25 @@ export const productApi = createApi({
       }),
       invalidatesTags: ["Product"],
     }),
+    // Inside endpoints builder:
+getPublishedProducts: builder.query<{ data: Product[] }, GetPublishedProductsParams>({
+  query: (params = {}) => ({
+    url: "/products/published",
+    method: "GET",
+    params,
+  }),
+  providesTags: ["Product"],
+}),
 
-    getUploadUrl: builder.query<{ uploadUrl: string }, { fileName: string; fileType: string }>({
-      query: ({ fileName, fileType }) => ({
-        url: `product-image-upload-url?fileName=${fileName}&fileType=${fileType}`,
-        method: "GET",
-      }),
-    }),
+
   }),
 });
 
-/**
- * =========================
- * Hooks
- * =========================
- */
-
 export const {
   useGetProductsQuery,
-  useGetPublishedProductsQuery,
   useGetProductByIdQuery,
+  useGetPublishedProductsQuery,
   useGetProductsByCategoryQuery,
-  useGetProductBySkuQuery,
   useGetProductsByStatusQuery,
   useCreateProductMutation,
   useUpdateProductMutation,

@@ -2,28 +2,59 @@
 
 "use client"
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { getProductById, getRelatedProducts } from '../data/products';
-import { imageMap } from './imageMap';
 import { ImageWithFallback } from './ImageWithFallback';
 import { Minus, Plus, Star, ChevronLeft } from 'lucide-react';
-import { ProductCard } from './ProductCard';
+import { useGetProductByIdQuery } from '@/store/api/productApi';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const id = params.id;
-  const product = id ? getProductById(id) : undefined;
-  const relatedProducts = id ? getRelatedProducts(id) : [];
-  
+  const { id } = params;
+
+  const { data, isLoading, isError } = useGetProductByIdQuery(id);
+  const product = (data as any)?.data ?? data;
+
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'shipping' | 'reviews'>('description');
 
-  if (!product) {
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="h-5 w-32 bg-muted rounded animate-pulse" />
+        </div>
+        <section className="max-w-7xl mx-auto px-6 pb-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <div className="space-y-4">
+              <div className="aspect-square bg-muted rounded-3xl animate-pulse" />
+              <div className="grid grid-cols-4 gap-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="aspect-square bg-muted rounded-2xl animate-pulse" />
+                ))}
+              </div>
+            </div>
+            <div className="space-y-6">
+              <div className="h-6 w-24 bg-muted rounded-full animate-pulse" />
+              <div className="h-12 w-3/4 bg-muted rounded animate-pulse" />
+              <div className="h-8 w-20 bg-muted rounded animate-pulse" />
+              <div className="space-y-2">
+                <div className="h-4 bg-muted rounded animate-pulse" />
+                <div className="h-4 bg-muted rounded animate-pulse" />
+                <div className="h-4 w-2/3 bg-muted rounded animate-pulse" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+
+  if (isError || !product) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-6 py-20 text-center">
           <h2 className="text-3xl mb-4">Product not found</h2>
-          <Link href="/" className="text-primary hover:underline">
+          <Link href="/product" className="text-primary hover:underline">
             Return to shop
           </Link>
         </div>
@@ -31,7 +62,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     );
   }
 
-  const imageUrl = imageMap[product.image];
+  const categoryLabel =
+    typeof product.category === 'object' && product.category !== null
+      ? product.category.title ?? product.category.name ?? ''
+      : '';
 
   return (
     <div className="min-h-screen">
@@ -47,46 +81,49 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       {/* Product Detail */}
       <section className="max-w-7xl mx-auto px-6 pb-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-          {/* Left: Image Gallery */}
+
+          {/* Left: Image */}
           <div className="space-y-4">
             <div className="bg-card rounded-3xl overflow-hidden shadow-lg">
               <div className="aspect-square">
                 <ImageWithFallback
-                  src={imageUrl}
+                  src={product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
               </div>
             </div>
-            
-            {/* Thumbnail images - showing same image for demo */}
-            <div className="grid grid-cols-4 gap-4">
+
+            {/* Thumbnail strip — same image repeated */}
+            {/* <div className="grid grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="bg-card rounded-2xl overflow-hidden shadow-md cursor-pointer hover:ring-2 hover:ring-primary transition-all">
                   <div className="aspect-square">
                     <ImageWithFallback
-                      src={imageUrl}
+                      src={product.image}
                       alt={`${product.name} ${i}`}
                       className="w-full h-full object-cover"
                     />
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* Right: Product Info */}
           <div className="space-y-8">
             <div>
-              <span className="inline-block px-4 py-1.5 bg-secondary/20 text-secondary-foreground rounded-full text-sm mb-4">
-                {product.category}
-              </span>
+              {categoryLabel && (
+                <span className="inline-block px-4 py-1.5 bg-secondary/20 text-secondary-foreground rounded-full text-sm mb-4">
+                  {categoryLabel}
+                </span>
+              )}
               <h1 className="text-4xl md:text-5xl mb-4">{product.name}</h1>
               <p className="text-3xl text-primary font-serif">${product.price}</p>
             </div>
 
             <p className="text-lg text-foreground/80 leading-relaxed">
-              {product.longDescription}
+              {product.description}
             </p>
 
             {/* Quantity Selector */}
@@ -116,7 +153,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               <button className="w-full py-4 px-8 bg-card hover:bg-card/80 text-foreground rounded-full transition-all shadow-md hover:shadow-lg border border-border">
                 Add to Cart
               </button>
-              <button 
+              <button
                 className="w-full py-4 px-8 rounded-full transition-all shadow-md hover:shadow-lg"
                 style={{
                   background: 'linear-gradient(135deg, #B95E82 0%, #F39F9F 100%)',
@@ -131,15 +168,12 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       </section>
 
       {/* Tabbed Section */}
-      <section className="max-w-7xl mx-auto px-6 pb-16">
+      {/* <section className="max-w-7xl mx-auto px-6 pb-16">
         <div className="bg-card rounded-3xl shadow-lg overflow-hidden">
-          {/* Tabs */}
           <div className="flex border-b border-border">
             {[
               { key: 'description', label: 'Description' },
-              { key: 'specs', label: 'Specifications' },
               { key: 'shipping', label: 'Shipping Info' },
-              { key: 'reviews', label: 'Reviews' }
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -155,31 +189,19 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             ))}
           </div>
 
-          {/* Tab Content */}
           <div className="p-8">
             {activeTab === 'description' && (
               <div className="prose max-w-none">
                 <p className="text-foreground/80 leading-relaxed">
-                  {product.longDescription}
+                  {product.description || 'No description available.'}
                 </p>
               </div>
-            )}
-
-            {activeTab === 'specs' && (
-              <ul className="space-y-3">
-                {product.specifications.map((spec, index) => (
-                  <li key={index} className="flex items-start gap-3">
-                    <span className="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></span>
-                    <span className="text-foreground/80">{spec}</span>
-                  </li>
-                ))}
-              </ul>
             )}
 
             {activeTab === 'shipping' && (
               <div>
                 <p className="text-foreground/80 leading-relaxed mb-4">
-                  {product.shippingInfo}
+                  We ship worldwide with care and speed.
                 </p>
                 <div className="bg-background rounded-2xl p-6 mt-6">
                   <h4 className="font-medium mb-3">Shipping Options:</h4>
@@ -191,49 +213,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 </div>
               </div>
             )}
-
-            {activeTab === 'reviews' && (
-              <div className="space-y-6">
-                {product.reviews.map((review) => (
-                  <div key={review.id} className="border-b border-border pb-6 last:border-0">
-                    <div className="flex items-center gap-4 mb-3">
-                      <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-4 h-4 ${
-                              i < review.rating ? 'fill-primary text-primary' : 'text-foreground/20'
-                            }`}
-                          />
-                        ))}
-                      </div>
-                      <span className="font-medium">{review.author}</span>
-                      <span className="text-sm text-foreground/50">{review.date}</span>
-                    </div>
-                    <p className="text-foreground/80">{review.comment}</p>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
-      </section>
-
-      {/* Related Products */}
-      {/* {relatedProducts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 pb-20">
-          <h2 className="text-3xl mb-8">Pairs Well With</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {relatedProducts.map((relatedProduct) => (
-              <ProductCard
-                key={relatedProduct.id}
-                product={relatedProduct}
-                imageUrl={imageMap[relatedProduct.image]}
-              />
-            ))}
-          </div>
-        </section>
-      )} */}
+      </section> */}
     </div>
   );
 }
