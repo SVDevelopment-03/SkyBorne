@@ -1,7 +1,9 @@
 "use client"
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { ArrowLeft, Upload, CheckCircle } from 'lucide-react';
+import { useCreateProductMutation } from "@/store/api/productApi";
+import toast from "react-hot-toast";
 
 export function ProductForm() {
   const router = useRouter();
@@ -9,28 +11,100 @@ export function ProductForm() {
   const id = searchParams.get('id');
   const isEdit = Boolean(id);
 
+  const [addProduct, { isLoading }] = useCreateProductMutation();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageUploaded, setImageUploaded] = useState(false);
+  const [imagePreview, setImagePreview] = useState<string | null>(null); // Preview URL
+  const [imageBase64, setImageBase64] = useState<string | null>(null);   // Base64 string
+
   const [formData, setFormData] = useState({
-    name: '',
-    slug: '',
-    category: '',
-    description: '',
-    price: '',
-    salePrice: '',
-    sku: '',
-    stock: '',
-    weight: '',
-    published: false
+    title: "",
+    slug: "",
+    description: "",
+    category: "",
+    price: 0,
+    salePrice: 0,
+    sku: "",
+    stock: 0,
+    weight: 0,
+    image: "",
+    status: "Draft" as "Draft" | "Published",
   });
 
-  const handleSubmit = (e: React.FormEvent, action: 'draft' | 'publish') => {
+  const handleSubmit = async (
+    e: React.FormEvent,
+    action: "draft" | "publish"
+  ) => {
     e.preventDefault();
-    console.log('Saving product:', { ...formData, published: action === 'publish' });
-    router.push('/products');
+
+    // if (!formData.title || !formData.category || !formData.sku || !formData.price || !imageBase64) {
+    //   toast.error("Required fields missing");
+    //   return;
+    // }
+
+    try {
+     const payload = {
+        name: formData.title,
+        slug: formData.slug,
+        description: formData.description,
+        category: formData.category,
+        sku: formData.sku,
+        status: action === "publish" ? "Published" : "Draft",
+        price: formData.price,
+        salePrice: formData.salePrice,
+        stock: formData.stock,
+        weight: formData.weight,
+        imageBase64, // base64 string
+      };
+      
+      if (!imageBase64 && action === "publish") {
+        toast.error("Please select product image");
+        return;
+      }
+
+      // console.log("Submitting payload with FormData:", payload);
+      // for (let pair of payload.entries()) {
+      //   console.log(pair[0], ":", pair[1]);
+      // }
+
+      await addProduct(payload as any).unwrap(); // Redux query / mutation
+
+      toast.success(
+        action === "publish"
+          ? "Product published successfully"
+          : "Product saved as draft"
+      );
+
+      router.push("/products");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to save product");
+      console.error("ADD PRODUCT ERROR:", error);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0] || null;
+    setImageFile(file);
+    setImageUploaded(false);
+
+    if (!file) {
+      setImagePreview(null);
+      setImageBase64(null);
+      return;
+    }
+
+    // Preview URL
+    const reader = new FileReader();
+    reader.onload = () => {
+      setImagePreview(reader.result as string); // Preview ke liye
+      setImageBase64(reader.result as string);  // Backend me base64 ke liye
+    };
+    reader.readAsDataURL(file);
   };
 
   return (
@@ -56,8 +130,8 @@ export function ProductForm() {
               <label className="block text-sm font-medium text-[#707070] mb-2">Product Name *</label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="title"
+                value={formData.title}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] focus:border-transparent"
                 placeholder="Enter product name"
@@ -85,10 +159,10 @@ export function ProductForm() {
                 className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] focus:border-transparent"
               >
                 <option value="">Select category</option>
-                <option value="Essential Oils">Essential Oils</option>
-                <option value="Wellness Equipment">Wellness Equipment</option>
-                <option value="Wellness Products">Wellness Products</option>
-                <option value="Accessories">Accessories</option>
+                <option value="64f1a2b3c4d5e6f7a8b9c0d1">Essential Oils</option>
+                <option value="64f1a2b3c4d5e6f7a8b9c0d1">Wellness Equipment</option>
+                <option value="64f1a2b3c4d5e6f7a8b9c0d1">Wellness Products</option>
+                <option value="64f1a2b3c4d5e6f7a8b9c0d1">Accessories</option>
               </select>
             </div>
 
@@ -188,22 +262,34 @@ export function ProductForm() {
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
             <h2 className="text-lg font-bold text-[#333] mb-4">Product Images</h2>
-            
-            <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#B95E82] transition-colors cursor-pointer">
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-sm text-[#707070] mb-1">Click to upload or drag and drop</p>
-              <p className="text-xs text-gray-400">PNG, JPG up to 10MB</p>
-            </div>
+              <input
+                type="file"
+                accept="image/*"
+                hidden
+                id="imageUpload"
+                onChange={handleImageChange}
+              />
+
+              <label htmlFor="imageUpload">
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center cursor-pointer">
+                  {imagePreview ? (
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-32 h-32 mx-auto object-cover rounded-lg"
+                    />
+                  ) : imageUploaded ? (
+                    <CheckCircle className="w-12 h-12 mx-auto text-green-500 animate-bounce" />
+                  ) : (
+                    <Upload className="w-12 h-12 mx-auto" />
+                  )}
+                  <p>{imagePreview ? "Preview" : imageUploaded ? "Image uploaded!" : "Click to upload image"}</p>
+                </div>
+              </label>
           </div>
 
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.published}
-                onChange={(e) => setFormData(prev => ({ ...prev, published: e.target.checked }))}
-                className="w-5 h-5 rounded border-gray-300 text-[#B95E82] focus:ring-[#B95E82]"
-              />
               <div>
                 <p className="font-medium text-[#333]">Publish Product</p>
                 <p className="text-sm text-[#707070]">Make this product visible in the store</p>
