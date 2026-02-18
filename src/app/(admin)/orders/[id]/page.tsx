@@ -1,10 +1,8 @@
 import OrderDetailPage from '@/components/Ecompages/OrderDetail'
 import React from 'react'
 
-const page = () => {
-  return (
-   <OrderDetailPage params={{ id: '123' }} />
-  )
+const Page = ({ params }: { params: { id: string } }) => {
+  return <OrderDetailPage params={params} />
 }
 
-export default page
+export default Page
