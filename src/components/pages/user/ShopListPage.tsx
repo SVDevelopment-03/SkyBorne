@@ -7,7 +7,9 @@ import { ChevronDown, Search } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import { useGetPublishedProductsQuery } from "@/store/api/productApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
-import { useDebounce } from "@/hooks/useDebounce"; // or inline debounce below
+import { useDebounce } from "@/hooks/useDebounce";
+import { useAddToCartMutation } from "@/store/api/cartApi";
+import { toast } from "sonner";
 
 export default function ShopListingPage() {
   const [category, setCategory] = useState<string>("");
@@ -15,17 +17,25 @@ export default function ShopListingPage() {
   const [search, setSearch] = useState<string>("");
   const [searchInput, setSearchInput] = useState<string>("");
 
-  // Debounce search so we don't fire on every keystroke
-  // If you don't have a useDebounce hook, use the inline version below
+  // Track per-product loading state
+  const [addingProductId, setAddingProductId] = useState<string | null>(null);
+
   const debouncedSearch = useDebounce(searchInput, 400);
 
-  const { data: productsData, isLoading: productsLoading, isFetching } = useGetPublishedProductsQuery({
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    isFetching,
+  } = useGetPublishedProductsQuery({
     search: debouncedSearch || undefined,
     categoryId: category || undefined,
     sortBy: sortBy as "newest" | "price-low" | "price-high",
   });
 
-  const { data: servicesData, isLoading: servicesLoading } = useGetServicesQuery(undefined);
+  const { data: servicesData, isLoading: servicesLoading } =
+    useGetServicesQuery(undefined);
+
+  const [addToCart] = useAddToCartMutation();
 
   const products = useMemo(() => {
     const raw = (productsData as any)?.data ?? [];
@@ -49,6 +59,18 @@ export default function ShopListingPage() {
     setSortBy("newest");
   };
 
+  const handleAddToCart = async (productId: string) => {
+    setAddingProductId(productId);
+    try {
+      await addToCart({ productId, quantity: 1 }).unwrap();
+      toast.success("Added to cart!");
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to add to cart");
+    } finally {
+      setAddingProductId(null);
+    }
+  };
+
   const hasActiveFilters = !!category || !!searchInput || sortBy !== "newest";
 
   return (
@@ -58,11 +80,14 @@ export default function ShopListingPage() {
         <div
           className="py-24 px-6"
           style={{
-            background: "linear-gradient(135deg, #FFF7DD 0%, #FFE4CC 50%, #FFC29B 100%)",
+            background:
+              "linear-gradient(135deg, #FFF7DD 0%, #FFE4CC 50%, #FFC29B 100%)",
           }}
         >
           <div className="max-w-7xl mx-auto text-center">
-            <h1 className="text-5xl md:text-6xl mb-6">Curated Wellness Essentials</h1>
+            <h1 className="text-5xl md:text-6xl mb-6">
+              Curated Wellness Essentials
+            </h1>
             <p className="text-xl text-foreground/80 max-w-2xl mx-auto">
               Support your daily ritual with thoughtfully selected tools.
             </p>
@@ -169,9 +194,18 @@ export default function ShopListingPage() {
               )}
             </div>
           ) : (
-            <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-opacity duration-200 ${isFetching ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+            <div
+              className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 transition-opacity duration-200 ${
+                isFetching ? "opacity-60 pointer-events-none" : "opacity-100"
+              }`}
+            >
               {products.map((product: any) => (
-                <ProductCard key={product._id} product={product} />
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                  isAddingToCart={addingProductId === product._id}
+                />
               ))}
             </div>
           )}

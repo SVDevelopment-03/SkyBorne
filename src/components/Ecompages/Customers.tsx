@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useState } from 'react';
@@ -81,7 +83,7 @@ export default function CustomersPage() {
             />
           </div>
 
-          <select
+          {/* <select
             value={limit}
             onChange={(e) => {
               setLimit(Number(e.target.value));
@@ -93,7 +95,7 @@ export default function CustomersPage() {
             <option value="10">10 per page</option>
             <option value="20">20 per page</option>
             <option value="50">50 per page</option>
-          </select>
+          </select> */}
         </div>
 
         {/* Loading State */}
@@ -136,12 +138,10 @@ export default function CustomersPage() {
                       <th className="px-6 py-3 text-left text-xs font-semibold text-[#707070] uppercase tracking-wider">
                         Total Spent
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-[#707070] uppercase tracking-wider">
-                        Last Order
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-[#707070] uppercase tracking-wider">
+                   
+                      {/* <th className="px-6 py-3 text-left text-xs font-semibold text-[#707070] uppercase tracking-wider">
                         Actions
-                      </th>
+                      </th> */}
                     </tr>
                   </thead>
 
@@ -169,11 +169,9 @@ export default function CustomersPage() {
                           {formatCurrency(customer.totalSpent || 0)}
                         </td>
 
-                        <td className="px-6 py-4 text-sm text-[#707070]">
-                          {formatDate(customer.lastOrderAt)}
-                        </td>
+                        
 
-                        <td className="px-6 py-4">
+                        {/* <td className="px-6 py-4">
                           <Link
                             href={`/customers/${customer._id}`}
                             className="inline-flex items-center gap-1 text-[#B95E82] hover:text-[#A04D6F] transition-colors"
@@ -181,7 +179,7 @@ export default function CustomersPage() {
                             <Eye className="w-4 h-4" />
                             <span className="text-sm font-medium">View</span>
                           </Link>
-                        </td>
+                        </td> */}
                       </tr>
                     ))}
                   </tbody>

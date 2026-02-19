@@ -1,7 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Package } from 'lucide-react';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
 import {
@@ -12,13 +14,13 @@ import {
 } from '@/store/api/orderApi';
 import { skipToken } from '@reduxjs/toolkit/query/react';
 
-export default function OrderDetailPage({ params }: { params?: { id?: string } }) {
+export default function OrderDetailPage() {
   const router = useRouter();
 
-  // prefer route params, otherwise fallback to last path segment
-  const orderId =
-    params?.id ||
-    (typeof window !== 'undefined' ? window.location.pathname.split('/').filter(Boolean).pop() : undefined);
+ const params = useParams();
+  const orderId = params?.id as string;
+
+  console.log("Order ID:", orderId);
 
   const { data: orderResp, isLoading, isError, error } = useGetOrderByIdQuery(orderId ?? skipToken);
   const [updateOrderStatus, { isLoading: updating }] = useUpdateOrderStatusMutation();
@@ -232,29 +234,10 @@ export default function OrderDetailPage({ params }: { params?: { id?: string } }
             </div>
           </div>
 
-          {/* Refund Button */}
-          {order.paymentStatus === 'Paid' && (
-            <button
-              onClick={() => setShowRefundModal(true)}
-              disabled={isSubmitting || refunding}
-              className="w-full px-6 py-3 border-2 border-red-600 text-red-600 rounded-xl hover:bg-red-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {refunding ? 'Processing...' : 'Issue Refund'}
-            </button>
-          )}
         </div>
       </div>
 
-      <ConfirmModal
-        isOpen={showRefundModal}
-        title="Issue Refund"
-        message={`Are you sure you want to refund $${((order.totalAmount/100) || order.totalAmount).toFixed(2)} to ${order.shippingAddress?.fullName || 'customer'}?`}
-        confirmText="Confirm Refund"
-        cancelText="Cancel"
-        onConfirm={handleRefund}
-        onCancel={() => setShowRefundModal(false)}
-        variant="danger"
-      />
+     
     </div>
   );
 }

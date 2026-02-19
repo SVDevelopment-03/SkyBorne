@@ -1,10 +1,9 @@
-import Payments  from '@/components/Ecompages/Payments'
+import CartPage from '@/components/pages/user/Cartpage'
 import React from 'react'
 
 const page = () => {
   return (
-    <Payments/>
-
+    <CartPage/>
   )
 }
 

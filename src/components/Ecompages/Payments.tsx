@@ -1,127 +1,310 @@
-"use client"
-import { CheckCircle, XCircle, Key, Webhook } from 'lucide-react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+"use client";
 
-export function Payments() {
-  const stripeStatus = {
-    connected: true,
-    liveMode: true,
-    apiKeyConfigured: true,
-    webhookConfigured: true,
-    accountId: 'acct_1MK8xZ2eZvKYlo2C',
-    lastUpdated: '2026-02-11'
+import { useState } from "react";
+import { Search, CreditCard, ExternalLink, Receipt } from "lucide-react";
+import CustomPagination from "@/components/ui/CustromPagination";
+import {
+  useGetAllPaymentsQuery,
+  type EcomPayment,
+  type EcomPaymentStatus,
+  type PopulatedUser,
+} from "@/store/api/EcompaymentApi";
+
+// ── Status Badge ───────────────────────────────────────────────────
+const STATUS_STYLES: Record<EcomPaymentStatus, { pill: string; dot: string }> = {
+  succeeded: { pill: "bg-green-50 text-green-700 border-green-200",  dot: "bg-green-500" },
+  pending:   { pill: "bg-yellow-50 text-yellow-700 border-yellow-200", dot: "bg-yellow-400" },
+  failed:    { pill: "bg-red-50 text-red-700 border-red-200",         dot: "bg-red-500" },
+  cancelled: { pill: "bg-gray-100 text-gray-600 border-gray-200",    dot: "bg-gray-400" },
+  refunded:  { pill: "bg-blue-50 text-blue-700 border-blue-200",     dot: "bg-blue-500" },
+};
+
+function StatusBadge({ status }: { status: EcomPaymentStatus }) {
+  const styles = STATUS_STYLES[status] ?? STATUS_STYLES.cancelled;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border capitalize ${styles.pill}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${styles.dot}`} />
+      {status}
+    </span>
+  );
+}
+
+// ── Avatar Initials ────────────────────────────────────────────────
+function Avatar({ name }: { name: string }) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+  return (
+    <div className="w-8 h-8 rounded-full bg-[#B95E82]/15 flex items-center justify-center flex-shrink-0">
+      <span className="text-[10px] font-bold text-[#B95E82]">{initials}</span>
+    </div>
+  );
+}
+
+// ── Main Component ─────────────────────────────────────────────────
+export default function EcomPayments() {
+  const [page, setPage] = useState(1);
+  const limit = 10;
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  // Debounce search → send to backend like Products does
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchInput(val);
+    setPage(1);
+    clearTimeout((window as any).__paymentSearchTimer);
+    (window as any).__paymentSearchTimer = setTimeout(() => setDebouncedSearch(val), 400);
   };
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-[#333]">Payment Settings</h1>
+  const { data, isLoading, isFetching } = useGetAllPaymentsQuery({
+    page,
+    limit,
+    search: debouncedSearch,
+    status: statusFilter,
+  });
 
-      <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-[#635BFF] rounded-xl flex items-center justify-center">
-              <svg viewBox="0 0 60 25" xmlns="http://www.w3.org/2000/svg" className="h-8">
-                <path fill="#FFF" d="M59.64 14.28h-8.06c.19 1.93 1.6 2.55 3.2 2.55 1.64 0 2.96-.37 4.05-.95v3.32a8.33 8.33 0 0 1-4.56 1.1c-4.01 0-6.83-2.5-6.83-7.48 0-4.19 2.39-7.52 6.3-7.52 3.92 0 5.96 3.28 5.96 7.5 0 .4-.04 1.26-.06 1.48zm-5.92-5.62c-1.03 0-2.17.73-2.17 2.58h4.25c0-1.85-1.07-2.58-2.08-2.58zM40.95 20.3c-1.44 0-2.32-.6-2.9-1.04l-.02 4.63-4.12.87V5.57h3.76l.08 1.02a4.7 4.7 0 0 1 3.23-1.29c2.9 0 5.62 2.6 5.62 7.4 0 5.23-2.7 7.6-5.65 7.6zM40 8.95c-.95 0-1.54.34-1.97.81l.02 6.12c.4.44.98.78 1.95.78 1.52 0 2.54-1.65 2.54-3.87 0-2.15-1.04-3.84-2.54-3.84zM28.24 5.57h4.13v14.44h-4.13V5.57zm0-4.7L32.37 0v3.36l-4.13.88V.88zm-4.32 9.35v9.79H19.8V5.57h3.7l.12 1.22c1-1.77 3.07-1.41 3.62-1.22v3.79c-.52-.17-2.29-.43-3.32.86zm-8.55 4.72c0 2.43 2.6 1.68 3.12 1.46v3.36c-.55.3-1.54.54-2.89.54a4.15 4.15 0 0 1-4.27-4.24l.01-13.17 4.02-.86v3.54h3.14V9.1h-3.13v5.85zm-4.91.7c0 2.97-2.31 4.66-5.73 4.66a11.2 11.2 0 0 1-4.46-.93v-3.93c1.38.75 3.1 1.31 4.46 1.31.92 0 1.53-.24 1.53-1C6.26 13.77 0 14.51 0 9.95 0 7.04 2.28 5.3 5.62 5.3c1.36 0 2.72.2 4.09.75v3.88a9.23 9.23 0 0 0-4.1-1.06c-.86 0-1.44.25-1.44.9 0 1.85 6.29.97 6.29 5.88z"/>
-              </svg>
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-[#333]">Stripe Payment Gateway</h2>
-              <p className="text-sm text-[#707070]">Process payments securely with Stripe</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-green-50 text-green-700 rounded-xl border border-green-200">
-            <CheckCircle className="w-5 h-5" />
-            <span className="font-medium">Connected</span>
-          </div>
-        </div>
+  const payments: EcomPayment[] = (data as any)?.data ?? [];
+  const totalPages: number = (data as any)?.pagination?.totalPages ?? 1;
+  const total: number = (data as any)?.pagination?.total ?? 0;
 
-        <div className="grid grid-cols-2 gap-6 mb-6">
-          <div className="p-4 bg-gray-50 rounded-xl">
-            <div className="flex items-center gap-3 mb-2">
-              <Key className="w-5 h-5 text-[#707070]" />
-              <h3 className="font-bold text-[#333]">API Key Status</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              {stripeStatus.apiKeyConfigured ? (
-                <>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-green-700 font-medium">Configured</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="w-5 h-5 text-red-600" />
-                  <span className="text-sm text-red-700 font-medium">Not Configured</span>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="p-4 bg-gray-50 rounded-xl">
-            <div className="flex items-center gap-3 mb-2">
-              <Webhook className="w-5 h-5 text-[#707070]" />
-              <h3 className="font-bold text-[#333]">Webhook Status</h3>
-            </div>
-            <div className="flex items-center gap-2">
-              {stripeStatus.webhookConfigured ? (
-                <>
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-sm text-green-700 font-medium">Active</span>
-                </>
-              ) : (
-                <>
-                  <XCircle className="w-5 h-5 text-red-600" />
-                  <span className="text-sm text-red-700 font-medium">Not Active</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3 mb-6 p-4 bg-gray-50 rounded-xl">
-          <div className="flex justify-between">
-            <span className="text-[#707070]">Account ID</span>
-            <span className="font-mono text-sm text-[#333]">{stripeStatus.accountId}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-[#707070]">Last Updated</span>
-            <span className="text-[#333]">{stripeStatus.lastUpdated}</span>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-          <div>
-            <h3 className="font-bold text-[#333] mb-1">Payment Mode</h3>
-            <p className="text-sm text-[#707070]">Toggle between test and live payment processing</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className={`text-sm font-medium ${!stripeStatus.liveMode ? 'text-[#707070]' : 'text-gray-400'}`}>
-              Test Mode
-            </span>
-            <button
-              className={`relative w-14 h-7 rounded-full transition-colors ${
-                stripeStatus.liveMode ? 'bg-green-500' : 'bg-gray-300'
-              }`}
-            >
-              <div
-                className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform ${
-                  stripeStatus.liveMode ? 'translate-x-7' : 'translate-x-0'
-                }`}
-              />
-            </button>
-            <span className={`text-sm font-medium ${stripeStatus.liveMode ? 'text-[#707070]' : 'text-gray-400'}`}>
-              Live Mode
-            </span>
-          </div>
-        </div>
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#B95E82]" />
       </div>
+    );
+  }
 
-      <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6">
-        <h3 className="font-bold text-blue-900 mb-2">Payment Gateway Information</h3>
-        <ul className="text-sm text-blue-800 space-y-1">
-          <li>• All payments are processed securely through Stripe</li>
-          <li>• Test mode allows you to test transactions without processing real payments</li>
-          <li>• Webhooks automatically update order statuses when payments are completed</li>
-          <li>• Refunds can be issued directly from the order detail page</li>
-        </ul>
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 px-3 py-6 md:p-6 bg-white rounded-lg overflow-x-hidden">
+
+        {/* Header */}
+        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-[#222]">Payments</h1>
+            <p className="text-sm text-gray-400 mt-0.5">
+              {total > 0 ? `${total} transaction${total !== 1 ? "s" : ""}` : "No transactions yet"}
+            </p>
+          </div>
+
+          {/* Summary chips */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {(["succeeded", "pending", "failed"] as EcomPaymentStatus[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => { setStatusFilter(statusFilter === s ? "" : s); setPage(1); }}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  statusFilter === s
+                    ? STATUS_STYLES[s].pill + " ring-2 ring-offset-1 ring-[#B95E82]/30"
+                    : "bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_STYLES[s].dot}`} />
+                {s.charAt(0).toUpperCase() + s.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Search + Filter row */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+          <div className="relative w-full sm:flex-1 sm:max-w-md">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <input
+              value={searchInput}
+              onChange={handleSearchChange}
+              placeholder="Search by order ref, name or email..."
+              className="w-full pl-10 pr-4 py-2.5 bg-[#F2F0ED80] border border-[#DCE5E0] rounded-[10px] text-sm text-gray-700 placeholder:text-[#929292] focus:outline-none focus:ring-2 focus:ring-[#B95E82]/20 focus:border-[#B95E82] transition-colors h-11"
+            />
+            {isFetching && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <div className="w-3.5 h-3.5 rounded-full border-2 border-[#B95E82] border-t-transparent animate-spin" />
+              </div>
+            )}
+          </div>
+
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="h-11 px-4 bg-[#F2F0ED80] border border-[#DCE5E0] rounded-[10px] text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#B95E82]/20 focus:border-[#B95E82] transition-colors"
+          >
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="succeeded">Succeeded</option>
+            <option value="failed">Failed</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="refunded">Refunded</option>
+          </select>
+
+          {(debouncedSearch || statusFilter) && (
+            <button
+              onClick={() => { setSearchInput(""); setDebouncedSearch(""); setStatusFilter(""); setPage(1); }}
+              className="h-11 px-4 text-sm text-gray-500 border border-gray-200 rounded-[10px] hover:bg-gray-50 transition-colors whitespace-nowrap"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+
+        {/* Table */}
+        <div className={`w-full overflow-x-auto transition-opacity duration-150 ${isFetching ? "opacity-60 pointer-events-none" : "opacity-100"}`}>
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/70">
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[#929292] uppercase tracking-wider">Order Ref</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[#929292] uppercase tracking-wider">Customer</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[#929292] uppercase tracking-wider">Amount</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[#929292] uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[#929292] uppercase tracking-wider">Payment Intent</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[#929292] uppercase tracking-wider">Date</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[#929292] uppercase tracking-wider">Receipt</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {payments.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-20 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-gray-300" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-gray-400">No payments found</p>
+                        <p className="text-xs text-gray-300 mt-0.5">
+                          {debouncedSearch || statusFilter ? "Try adjusting your search or filters" : "Transactions will appear here"}
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                payments.map((payment) => {
+                  const user = typeof payment.userId === "object" ? (payment.userId as PopulatedUser) : null;
+                  const fullName = user ? `${user.firstName} ${user.lastName}` : null;
+
+                  return (
+                    <tr key={payment._id} className="hover:bg-gray-50/60 transition-colors group">
+
+                      {/* Order Ref */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-[#B95E82]/10 flex items-center justify-center flex-shrink-0 group-hover:bg-[#B95E82]/15 transition-colors">
+                            <Receipt className="w-3.5 h-3.5 text-[#B95E82]" />
+                          </div>
+                          <span className="font-mono text-xs font-semibold text-[#333] tracking-tight">
+                            {payment.orderRef}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Customer */}
+                      <td className="px-4 py-3.5">
+                        {fullName ? (
+                          <div className="flex items-center gap-2.5">
+                            <Avatar name={fullName} />
+                            <div>
+                              <p className="font-medium text-[#111] text-sm leading-tight">{fullName}</p>
+                              <p className="text-xs text-gray-400 leading-tight mt-0.5">{user!.email}</p>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
+                      </td>
+
+                      {/* Amount */}
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-baseline gap-1">
+                          <span className="font-bold text-[#111]">
+                            ${payment.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[10px] text-gray-400 uppercase font-medium">{payment.currency}</span>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-4 py-3.5">
+                        <StatusBadge status={payment.status} />
+                      </td>
+
+                      {/* Payment Intent */}
+                      <td className="px-4 py-3.5 max-w-[170px]">
+                        <span
+                          className="font-mono text-xs text-gray-400 truncate block max-w-[150px]"
+                          title={payment.stripePaymentIntentId}
+                        >
+                          {payment.stripePaymentIntentId}
+                        </span>
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-4 py-3.5 whitespace-nowrap">
+                        <div>
+                          <p className="text-sm text-[#333]">
+                            {new Date(payment.createdAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            {new Date(payment.createdAt).toLocaleTimeString("en-US", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </p>
+                        </div>
+                      </td>
+
+                      {/* Receipt */}
+                      <td className="px-4 py-3.5">
+                        {payment.receiptUrl ? (
+                          <a
+                            href={payment.receiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[#B95E82] bg-[#B95E82]/8 rounded-lg hover:bg-[#B95E82]/15 transition-colors"
+                            title="View Receipt"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View
+                          </a>
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="relative w-full pt-4">
+            <div className="pointer-events-none absolute left-0 top-0 h-full w-6 bg-gradient-to-r from-white to-transparent md:hidden" />
+            <div className="pointer-events-none absolute right-0 top-0 h-full w-6 bg-gradient-to-l from-white to-transparent md:hidden" />
+            <div className="overflow-x-auto md:overflow-visible px-6">
+              <div className="min-w-max md:min-w-0 flex justify-center">
+                <CustomPagination
+                  totalPages={totalPages}
+                  currentPage={page}
+                  onPageChange={setPage}
+                  visiblePages={3}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ImageWithFallback } from './ImageWithFallback';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface BackendProduct {
   _id: string;
@@ -16,9 +17,11 @@ interface BackendProduct {
 
 interface ProductCardProps {
   product: BackendProduct;
+  onAddToCart?: (productId: string) => void;
+  isAddingToCart?: boolean;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, onAddToCart, isAddingToCart = false }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -46,18 +49,27 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="p-6 flex flex-col flex-1">
           <h3 className="text-xl mb-2 line-clamp-1">{product.name}</h3>
           <p className="text-sm text-foreground/70 mb-4 line-clamp-2 flex-1">{product.description}</p>
-          
+
           <div className="flex items-center justify-between">
             <p className="text-2xl font-serif text-primary">${product.price}</p>
             <Button
-              variant={"theme"}
+              variant="theme"
+              disabled={isAddingToCart}
               onClick={(e) => {
                 e.preventDefault();
-                // Add to cart logic would go here
+                e.stopPropagation();
+                onAddToCart?.(product._id);
               }}
-              className="px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md"
+              className="px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-70"
             >
-              Add to Cart
+              {isAddingToCart ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Adding…
+                </>
+              ) : (
+                'Add to Cart'
+              )}
             </Button>
           </div>
         </div>

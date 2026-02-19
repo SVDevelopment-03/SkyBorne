@@ -71,6 +71,12 @@ export const SidebarNav = {
       items: [],
     },
     {
+      title: "Cart",
+      url: "/cart",
+      icon: PaymentsIcon,
+      items: [],
+    },
+    {
       title: "Products",
       url: "/product",
       icon: Package2Icon,
@@ -195,30 +201,11 @@ export const AdminNav = {
           url: "/orders",
           icon: ShoppingCart,
         },
-        {
-          title: "Inventory",
-          url: "/inventory",
-          icon: Warehouse,
-        },
-        {
-          title: "Discounts",
-          url: "/discounts",
-          icon: Tag,
-        },
-        {
-          title: "Shipping",
-          url: "/shipping",
-          icon: Truck,
-        },
+       
         {
           title: "Payments",
           url: "/payment-list",
           icon: CreditCard,
-        },
-        {
-          title: "Reports",
-          url: "/reports",
-          icon: BarChart3,
         },
       ],
       isCollapsible: true,

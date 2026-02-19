@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { ArrowLeft, Mail, Phone, MapPin, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
@@ -20,20 +22,19 @@ interface Order {
   status?: 'Processing' | 'Delivered' | 'Shipped' | 'Pending';
 }
 
-export default function CustomerProfilePage({
-  params,
-}: {
-  params?: { id?: string };
-}) {
+export default function CustomerProfilePage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params?.id as string;
+
+  console.log("ID:", id);
+
+
+  console.log("params", params?.id);
+  
 
   // Accept admin route param or fallback to last path segment
-  const customerId =
-    params?.id ||
-    (typeof window !== 'undefined'
-      ? window.location.pathname.split('/').filter(Boolean).pop()
-      : undefined);
-
+  const customerId :any= params?.id 
   // Determine which query to call:
   // - if there's a customerId (admin view), call getCustomerById
   // - otherwise call getMyCustomerProfile
@@ -42,7 +43,7 @@ export default function CustomerProfilePage({
     isLoading: isLoadingById,
     isError: isErrorById,
     error: errorById,
-  } = useGetCustomerByIdQuery(customerId ?? skipToken);
+  } = useGetCustomerByIdQuery(customerId );
 
   const {
     data: myCustomerResp,

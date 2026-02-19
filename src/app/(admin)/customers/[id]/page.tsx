@@ -3,7 +3,7 @@ import React from 'react'
 
 const page = ({ params }: { params: { id: string } }) => {
   return (
-    <CustomerProfilePage  params={params} />
+    <CustomerProfilePage />
   )
 }
 
