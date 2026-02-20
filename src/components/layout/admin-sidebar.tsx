@@ -102,7 +102,7 @@ const AdminSidebar = () => {
             </div>
           </Link>
         </div>
-        <div className="flex flex-col justify-center gap-2.5 md:gap-4 max-h-[730px] overflow-y-auto [scrollbar-width:none]">
+        <div className="flex flex-col justify-center gap-2.5 md:gap-4">
           {AdminNav.navMain.map((item, i) => (
             <div className="" key={item?.title} onClick={() => setSelected(i)}>
               {!item?.logout && !item?.isCollapsible && (
