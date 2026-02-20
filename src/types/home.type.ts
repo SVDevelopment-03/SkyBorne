@@ -97,6 +97,10 @@ export interface IPlan {
   description: string;
   features: string[];
   services?: string[];
+  serviceClassCounts?: Array<{
+    service: string;
+    classCountPerMonth: number;
+  }>;
   classCountPerMonth?: number;
   image: string;
   price: string;

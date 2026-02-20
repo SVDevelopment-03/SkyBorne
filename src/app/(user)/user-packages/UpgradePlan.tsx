@@ -82,29 +82,50 @@ const normalizePlanKey = (plan: IPlan): string => {
   const services = (plan.services || []).map((service) =>
     service.toLowerCase().trim(),
   );
-  const count = Number(plan.classCountPerMonth || 0);
+  const serviceClassCountMap = new Map(
+    (plan.serviceClassCounts || []).map((entry) => [
+      String(entry.service || "").toLowerCase().trim(),
+      Number(entry.classCountPerMonth || 0),
+    ]),
+  );
+  const yogaCount = Array.from(serviceClassCountMap.entries()).reduce(
+    (sum, [service, count]) => (service.includes("yoga") ? sum + count : sum),
+    0,
+  );
+  const zumbaCount = Array.from(serviceClassCountMap.entries()).reduce(
+    (sum, [service, count]) => (service.includes("zumba") ? sum + count : sum),
+    0,
+  );
+  const count = Number(plan.classCountPerMonth || yogaCount + zumbaCount || 0);
 
-  if (count === 2 && services.length === 1 && services.includes("yoga")) {
+  if ((count === 2 && services.length === 1 && services.includes("yoga")) || yogaCount === 2) {
     return "gold-yoga";
   }
-  if (count === 2 && services.length === 1 && services.includes("zumba")) {
+  if ((count === 2 && services.length === 1 && services.includes("zumba")) || zumbaCount === 2) {
     return "gold-zumba";
   }
   if (
-    count === 2 &&
-    services.includes("yoga") &&
-    services.includes("zumba")
+    (count === 2 &&
+      services.includes("yoga") &&
+      services.includes("zumba")) ||
+    (yogaCount === 1 && zumbaCount === 1)
   ) {
     return "gold-mixed";
   }
   if (
-    count === 4 &&
-    services.includes("yoga") &&
-    services.includes("zumba")
+    (count === 4 &&
+      services.includes("yoga") &&
+      services.includes("zumba")) ||
+    (yogaCount === 2 && zumbaCount === 2)
   ) {
     return "diamond";
   }
-  if (count === 5) {
+  if (
+    count === 5 ||
+    (yogaCount === 2 &&
+      zumbaCount === 2 &&
+      Number(plan.classCountPerMonth || 0) === 5)
+  ) {
     return "platinum";
   }
 
@@ -149,13 +170,69 @@ const getPaymentPlanRef = (plan: IPlan, normalizedKey: string): string => {
 };
 
 const getClassesText = (plan: IPlan, billingType: "monthly" | "yearly") => {
-  const count = Number(plan.classCountPerMonth || 0);
+  const serviceCounts = Array.isArray(plan.serviceClassCounts)
+    ? plan.serviceClassCounts.filter(
+        (entry) => String(entry.service || "").trim().length > 0,
+      )
+    : [];
+  const count =
+    Number(plan.classCountPerMonth || 0) ||
+    serviceCounts.reduce(
+      (sum, entry) => sum + Number(entry.classCountPerMonth || 0),
+      0,
+    );
+
+  const serviceSummary = serviceCounts
+    .map((entry) => {
+      const service = String(entry.service || "").trim();
+      const serviceCount = Math.max(0, Number(entry.classCountPerMonth || 0));
+      if (!service) return "";
+      return billingType === "yearly"
+        ? `${serviceCount * 12} ${service}`
+        : `${serviceCount} ${service}`;
+    })
+    .filter(Boolean)
+    .join(" + ");
+
   const services = (plan.services || []).join(" + ");
-  if (count <= 0) return "Custom classes";
+  if (serviceSummary) return serviceSummary;
+  if (count <= 0) return "0 Classes";
   if (billingType === "yearly") {
     return `${count * 12} Classes per Year`;
   }
   return services ? `${count} Classes (${services})` : `${count} Classes`;
+};
+
+const getServiceClassLines = (
+  plan: IPlan,
+  billingType: "monthly" | "yearly",
+): string[] => {
+  const serviceClassCounts = Array.isArray(plan.serviceClassCounts)
+    ? plan.serviceClassCounts
+        .filter(
+          (entry) =>
+            String(entry.service || "").trim().length > 0 &&
+            Number(entry.classCountPerMonth || 0) >= 0,
+        )
+        .map((entry) => ({
+          service: String(entry.service).trim(),
+          classCountPerMonth: Math.floor(Number(entry.classCountPerMonth || 0)),
+        }))
+    : [];
+
+  if (serviceClassCounts.length > 0) {
+    return serviceClassCounts.map((entry) => {
+      const displayCount =
+        billingType === "yearly"
+          ? entry.classCountPerMonth * 12
+          : entry.classCountPerMonth;
+      return `${displayCount} ${entry.service} Classes`;
+    });
+  }
+
+  return (plan.services || [])
+    .filter((service) => String(service || "").trim().length > 0)
+    .map((service) => `0 ${String(service).trim()} Classes`);
 };
 
 const getCustomPlanIcon = (monthlyPrice: number): string => {
@@ -760,16 +837,16 @@ export function UpgradePlan({
                   )}
                 </div>
 
-                {plan.services && plan.services.length > 0 && (
+                {getServiceClassLines(plan, billingType).length > 0 && (
                   <div className="bg-[#fcf6ef] rounded-2xl p-5 mb-6">
                     <ul className="space-y-3">
-                      {plan.services.map((service) => (
+                      {getServiceClassLines(plan, billingType).map((line) => (
                         <li
                           className="flex items-start gap-3"
-                          key={`${plan._id}-${service}`}
+                          key={`${plan._id}-${line}`}
                         >
                           <Check className="w-5 h-5 text-[#b97d9f] shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-800">{service}</span>
+                          <span className="text-sm text-gray-800">{line}</span>
                         </li>
                       ))}
                     </ul>

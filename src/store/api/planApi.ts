@@ -5,6 +5,10 @@ export interface IAdminPlan {
   _id: string;
   name: string;
   services: string[];
+  serviceClassCounts?: Array<{
+    service: string;
+    classCountPerMonth: number;
+  }>;
   price: number;
   classCountPerMonth: number;
   description?: string;
@@ -20,7 +24,11 @@ export interface PlanPayload {
   name: string;
   services: string[];
   price: number;
-  classCountPerMonth: number;
+  classCountPerMonth?: number;
+  serviceClassCounts?: Array<{
+    service: string;
+    classCountPerMonth: number;
+  }>;
   description?: string;
   features?: string[];
   image?: string;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import toast from "react-hot-toast";
@@ -29,6 +29,13 @@ interface PlanFormProps {
   initialPlan?: IAdminPlan | null;
 }
 
+interface PlanFormValues {
+  name: string;
+  services: string[];
+  price: string;
+  serviceClassCounts: Record<string, string>;
+}
+
 const resolveServiceByKeyword = (
   serviceOptions: string[],
   keyword: "yoga" | "zumba" | "special",
@@ -44,7 +51,7 @@ const resolveFallbackServices = (
   serviceOptions: string[],
 ): string[] => {
   const existingServices = Array.isArray(plan?.services)
-    ? plan!.services.filter((service) => String(service || "").trim().length > 0)
+    ? plan.services.filter((service) => String(service || "").trim().length > 0)
     : [];
   if (existingServices.length > 0) {
     return existingServices;
@@ -84,6 +91,69 @@ const resolveFallbackClassCount = (plan: IAdminPlan | null | undefined): number 
   return 0;
 };
 
+const distributeCountByServices = (
+  services: string[],
+  totalCount: number,
+): Record<string, string> => {
+  if (!Array.isArray(services) || services.length === 0) {
+    return {};
+  }
+
+  const validTotal = Math.max(0, Math.floor(Number(totalCount) || 0));
+  const base = Math.floor(validTotal / services.length);
+  let remainder = validTotal % services.length;
+
+  const result: Record<string, string> = {};
+  services.forEach((service) => {
+    const value = base + (remainder > 0 ? 1 : 0);
+    if (remainder > 0) remainder -= 1;
+    result[service] = String(value);
+  });
+
+  return result;
+};
+
+const buildInitialServiceClassCounts = (
+  plan: IAdminPlan | null | undefined,
+  services: string[],
+): Record<string, string> => {
+  const fromPlan = Array.isArray(plan?.serviceClassCounts)
+    ? plan.serviceClassCounts
+    : [];
+
+  if (fromPlan.length > 0) {
+    const map: Record<string, string> = {};
+    services.forEach((service) => {
+      const matched = fromPlan.find(
+        (entry) =>
+          String(entry.service || "").trim().toLowerCase() ===
+          String(service || "").trim().toLowerCase(),
+      );
+      map[service] = String(Number(matched?.classCountPerMonth || 0));
+    });
+    return map;
+  }
+
+  return distributeCountByServices(services, resolveFallbackClassCount(plan));
+};
+
+const sumServiceCounts = (
+  services: string[],
+  serviceClassCounts: Record<string, string>,
+): number =>
+  services.reduce((sum, service) => {
+    const count = Number(serviceClassCounts?.[service] ?? 0);
+    return sum + (Number.isFinite(count) && count > 0 ? Math.floor(count) : 0);
+  }, 0);
+
+const formatServiceName = (value: string): string =>
+  String(value || "")
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
 const validationSchema = Yup.object({
   name: Yup.string().trim().required("Plan name is required"),
   services: Yup.array().of(Yup.string()).min(1, "Select at least one service"),
@@ -91,14 +161,11 @@ const validationSchema = Yup.object({
     .typeError("Price must be a number")
     .min(0, "Price cannot be less than 0")
     .required("Price is required"),
-  classCountPerMonth: Yup.number()
-    .typeError("Class count/month must be a number")
-    .min(0, "Class count/month cannot be less than 0")
-    .required("Class count/month is required"),
 });
 
 export default function PlanForm({ initialPlan }: PlanFormProps) {
   const router = useRouter();
+  const [serviceCountError, setServiceCountError] = useState("");
   const [createPlan, { isLoading: isCreating }] = useCreatePlanMutation();
   const [updatePlan, { isLoading: isUpdating }] = useUpdatePlanMutation();
   const { data: serviceData, isLoading: isServicesLoading } =
@@ -115,12 +182,12 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
     [initialPlan, serviceOptions],
   );
 
-  const initialClassCount = useMemo(
-    () => resolveFallbackClassCount(initialPlan),
-    [initialPlan],
+  const initialServiceClassCounts = useMemo(
+    () => buildInitialServiceClassCounts(initialPlan, initialServices),
+    [initialPlan, initialServices],
   );
 
-  const formik = useFormik({
+  const formik = useFormik<PlanFormValues>({
     initialValues: {
       name: initialPlan?.name || "",
       services: initialServices,
@@ -128,17 +195,46 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
         initialPlan?.price !== undefined && initialPlan?.price !== null
           ? String(initialPlan.price)
           : "0",
-      classCountPerMonth: String(initialClassCount),
+      serviceClassCounts: initialServiceClassCounts,
     },
     validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
       try {
+        const normalizedServiceClassCounts = values.services.map((service) => {
+          const classCount = Number(values.serviceClassCounts?.[service] ?? 0);
+          return {
+            service,
+            classCountPerMonth: Number.isFinite(classCount)
+              ? Math.max(0, Math.floor(classCount))
+              : NaN,
+          };
+        });
+
+        const hasInvalidClassCount = normalizedServiceClassCounts.some(
+          (entry) => !Number.isFinite(entry.classCountPerMonth),
+        );
+
+        if (hasInvalidClassCount) {
+          setServiceCountError(
+            "Each selected service must have a valid class count/month",
+          );
+          return;
+        }
+
+        setServiceCountError("");
+
+        const totalClassesPerMonth = normalizedServiceClassCounts.reduce(
+          (sum, entry) => sum + entry.classCountPerMonth,
+          0,
+        );
+
         const payload: PlanPayload = {
           name: values.name.trim(),
           services: values.services,
           price: Number(values.price),
-          classCountPerMonth: Number(values.classCountPerMonth),
+          serviceClassCounts: normalizedServiceClassCounts,
+          classCountPerMonth: totalClassesPerMonth,
         };
 
         if (isEditMode && initialPlan?._id) {
@@ -171,6 +267,10 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
 
   const isLoading = isCreating || isUpdating;
   const selectedServices = formik.values.services;
+  const totalMonthlyClasses = useMemo(
+    () => sumServiceCounts(selectedServices, formik.values.serviceClassCounts),
+    [selectedServices, formik.values.serviceClassCounts],
+  );
 
   return (
     <div className="bg-white rounded-lg p-6 md:p-8">
@@ -211,95 +311,115 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="classCountPerMonth">Class Count/Month*</Label>
-            <Input2
-              id="classCountPerMonth"
-              type="number"
-              min={0}
-              name="classCountPerMonth"
-              value={formik.values.classCountPerMonth}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              placeholder="0"
-              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
-            />
-            {formik.touched.classCountPerMonth &&
-              formik.errors.classCountPerMonth && (
-                <p className="text-sm text-red-600">
-                  {formik.errors.classCountPerMonth}
-                </p>
-              )}
-          </div>
+        <div className="flex flex-col gap-3">
+          <Label>Services*</Label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="w-full bg-[#F2F0ED80] border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] rounded-[10px] px-4 py-3 text-left text-[#494949] flex items-center justify-between"
+              >
+                <span className="truncate">
+                  {selectedServices.length > 0
+                    ? selectedServices.join(", ")
+                    : isServicesLoading
+                      ? "Loading services..."
+                      : "Select services"}
+                </span>
+                <ChevronDown className="w-4 h-4 text-[#717182]" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-72 overflow-y-auto">
+              {serviceOptions.length > 0 ? (
+                serviceOptions.map((serviceName) => (
+                  <DropdownMenuItem
+                    key={serviceName}
+                    className="flex items-center gap-2 cursor-pointer"
+                    onSelect={(e) => e.preventDefault()}
+                    onClick={() => {
+                      const shouldAdd = !selectedServices.includes(serviceName);
+                      const nextServices = shouldAdd
+                        ? Array.from(new Set([...selectedServices, serviceName]))
+                        : selectedServices.filter(
+                            (service) => service !== serviceName,
+                          );
 
-          <div className="flex flex-col gap-3">
-            <Label>Services*</Label>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="w-full bg-[#F2F0ED80] border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] rounded-[10px] px-4 py-3 text-left text-[#494949] flex items-center justify-between"
-                >
-                  <span className="truncate">
-                    {selectedServices.length > 0
-                      ? selectedServices.join(", ")
-                      : isServicesLoading
-                        ? "Loading services..."
-                        : "Select services"}
-                  </span>
-                  <ChevronDown className="w-4 h-4 text-[#717182]" />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] max-h-72 overflow-y-auto">
-                {serviceOptions.length > 0 ? (
-                  serviceOptions.map((serviceName) => (
-                    <DropdownMenuItem
-                      key={serviceName}
-                      className="flex items-center gap-2 cursor-pointer"
-                      onSelect={(e) => e.preventDefault()}
-                      onClick={() => {
-                        const shouldAdd = !selectedServices.includes(serviceName);
-                        const nextServices = shouldAdd
-                          ? Array.from(new Set([...selectedServices, serviceName]))
-                          : selectedServices.filter(
-                              (service) => service !== serviceName,
-                            );
-                        formik.setFieldValue("services", nextServices);
-                      }}
-                    >
-                      <Checkbox
-                        checked={selectedServices.includes(serviceName)}
-                        className="data-[state=checked]:bg-[#B95E82] data-[state=checked]:border-[#B95E82]"
-                      />
-                      {serviceName}
-                    </DropdownMenuItem>
-                  ))
-                ) : (
-                  <div className="px-2 py-1.5 text-sm text-[#717182]">
-                    No services found
-                  </div>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                      const nextServiceClassCounts = {
+                        ...formik.values.serviceClassCounts,
+                      };
 
-            {selectedServices.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {selectedServices.map((service) => (
-                  <span
-                    key={service}
-                    className="inline-flex items-center gap-1 rounded-full bg-[#FFE8E8] text-[#B95E82] px-3 py-1 text-xs font-medium"
+                      if (shouldAdd) {
+                        nextServiceClassCounts[serviceName] =
+                          nextServiceClassCounts[serviceName] ?? "0";
+                      } else {
+                        delete nextServiceClassCounts[serviceName];
+                      }
+
+                      formik.setFieldValue("services", nextServices);
+                      formik.setFieldValue(
+                        "serviceClassCounts",
+                        nextServiceClassCounts,
+                      );
+                    }}
                   >
-                    <Check className="w-3 h-3" />
-                    {service}
+                    <Checkbox
+                      checked={selectedServices.includes(serviceName)}
+                      className="data-[state=checked]:bg-[#B95E82] data-[state=checked]:border-[#B95E82]"
+                    />
+                    {serviceName}
+                  </DropdownMenuItem>
+                ))
+              ) : (
+                <div className="px-2 py-1.5 text-sm text-[#717182]">
+                  No services found
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {selectedServices.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 rounded-[10px] border border-[#E5E5E5] p-4">
+              {selectedServices.map((service) => (
+                <div key={service} className="flex flex-col gap-2">
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-[#494949]">
+                    <Check className="w-3.5 h-3.5 text-[#B95E82]" />
+                    {formatServiceName(service)}
                   </span>
-                ))}
-              </div>
-            )}
-            {formik.touched.services && formik.errors.services && (
-              <p className="text-sm text-red-600">{formik.errors.services}</p>
-            )}
-          </div>
+                  <div>
+                    <Input2
+                      type="number"
+                      min={0}
+                      value={formik.values.serviceClassCounts?.[service] ?? "0"}
+                      onChange={(e) => {
+                        setServiceCountError("");
+                        formik.setFieldValue("serviceClassCounts", {
+                          ...formik.values.serviceClassCounts,
+                          [service]: e.target.value,
+                        });
+                      }}
+                      placeholder="0"
+                      className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
+                    />
+                    <p className="mt-1 text-xs text-[#717182]">
+                      {formatServiceName(service)} classes / month
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {formik.touched.services && formik.errors.services && (
+            <p className="text-sm text-red-600">{formik.errors.services}</p>
+          )}
+          {serviceCountError && (
+            <p className="text-sm text-red-600">{serviceCountError}</p>
+          )}
+        </div>
+
+        <div className="rounded-[10px] border border-[#E5E5E5] bg-[#FBFAF9] px-4 py-3">
+          <p className="text-sm text-[#717182]">Total classes per month</p>
+          <p className="text-xl font-semibold text-[#1A1A1A]">{totalMonthlyClasses}</p>
         </div>
 
         <div className="flex flex-col-reverse md:flex-row md:justify-end gap-3 pt-4 border-t border-[#E5E5E5]">

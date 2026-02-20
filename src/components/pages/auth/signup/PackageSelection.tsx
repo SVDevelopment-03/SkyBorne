@@ -158,6 +158,38 @@ const getClassesText = (plan: IPlan, billingType: "monthly" | "yearly") => {
   return services ? `${count} Classes (${services})` : `${count} Classes`;
 };
 
+const getServiceClassLines = (
+  plan: IPlan,
+  billingType: "monthly" | "yearly",
+): string[] => {
+  const serviceClassCounts = Array.isArray(plan.serviceClassCounts)
+    ? plan.serviceClassCounts
+        .filter(
+          (entry) =>
+            String(entry.service || "").trim().length > 0 &&
+            Number(entry.classCountPerMonth || 0) >= 0,
+        )
+        .map((entry) => ({
+          service: String(entry.service).trim(),
+          classCountPerMonth: Math.floor(Number(entry.classCountPerMonth || 0)),
+        }))
+    : [];
+
+  if (serviceClassCounts.length > 0) {
+    return serviceClassCounts.map((entry) => {
+      const displayCount =
+        billingType === "yearly"
+          ? entry.classCountPerMonth * 12
+          : entry.classCountPerMonth;
+      return `${displayCount} ${entry.service} Classes`;
+    });
+  }
+
+  return (plan.services || [])
+    .filter((service) => String(service || "").trim().length > 0)
+    .map((service) => `${String(service).trim()} Classes`);
+};
+
 const getCustomPlanIcon = (monthlyPrice: number): string => {
   if (monthlyPrice >= 90 && monthlyPrice <= 110) return "🟡";
   if (monthlyPrice >= 190 && monthlyPrice <= 210) return "💎";
@@ -760,16 +792,16 @@ export function PackageSelection({
                   )}
                 </div>
 
-                {plan.services && plan.services.length > 0 && (
+                {getServiceClassLines(plan, billingType).length > 0 && (
                   <div className="bg-[#fcf6ef] rounded-2xl p-5 mb-6">
                     <ul className="space-y-3">
-                      {plan.services.map((service) => (
+                      {getServiceClassLines(plan, billingType).map((line) => (
                         <li
                           className="flex items-start gap-3"
-                          key={`${plan._id}-${service}`}
+                          key={`${plan._id}-${line}`}
                         >
                           <Check className="w-5 h-5 text-[#b97d9f] shrink-0 mt-0.5" />
-                          <span className="text-sm text-gray-800">{service}</span>
+                          <span className="text-sm text-gray-800">{line}</span>
                         </li>
                       ))}
                     </ul>
