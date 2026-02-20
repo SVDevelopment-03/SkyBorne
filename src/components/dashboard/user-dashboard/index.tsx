@@ -2,7 +2,7 @@
 
 "use client";
 import Sidebar from "@/components/layout/sidebar";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import DashboardBanner from "./DashboardBanner";
 import { Typography } from "@/components/ui/heading";
 import {
@@ -30,6 +30,7 @@ import { RootState } from "@/store";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
 import { useGetDashboardStatsQuery } from "@/store/api/authApi";
+import { useGetPlansQuery } from "@/store/api/publicApi";
 import { SearchIcon } from "@/icons/helpIcon";
 import { useUserRegionFromStore } from "@/utils/timezone";
 import { log } from "console";
@@ -191,6 +192,9 @@ export default function Page() {
     isLoading: tileLoading,
     error: tileerror,
   } = useGetDashboardStatsQuery({ region: userRegion?.region });
+  const { data: plansData } = useGetPlansQuery(undefined);
+
+  const plans = useMemo(() => plansData?.data || [], [plansData]);
 
   const totalCredits = dashboardData?.data?.totalCredits || 0;
   const classesAttended = dashboardData?.data?.classesAttended || 0;
@@ -228,6 +232,47 @@ export default function Page() {
     return `Expires ${month} ${day}`;
   };
 
+  const getCurrentPlanDisplayName = (): string => {
+    const apiDisplayName = String(
+      dashboardData?.data?.currentPlan?.displayName || "",
+    ).trim();
+    if (apiDisplayName && apiDisplayName.toLowerCase() !== "no plan") {
+      return apiDisplayName;
+    }
+
+    const rawPlan = String(
+      dashboardData?.data?.currentPlan?.plan || user?.plan || "",
+    ).trim();
+    if (!rawPlan) return "No Plan";
+
+    const fixedPlanMap: Record<string, string> = {
+      "gold-yoga": "Gold Package",
+      "gold-zumba": "Gold Package",
+      "gold-mixed": "Gold Package",
+      diamond: "Diamond Package",
+      platinum: "Platinum Package",
+    };
+
+    const normalizedRaw = rawPlan.toLowerCase();
+    if (fixedPlanMap[normalizedRaw]) return fixedPlanMap[normalizedRaw];
+
+    const match = plans.find((plan: any) => {
+      const keys = [
+        String(plan?.uuid || "").toLowerCase(),
+        String(plan?.planId || "").toLowerCase(),
+        String(plan?._id || "").toLowerCase(),
+        String(plan?.name || "").toLowerCase().trim(),
+      ].filter(Boolean);
+      return keys.includes(normalizedRaw);
+    });
+
+    if (match?.name) {
+      return toTitleCase(String(match.name));
+    }
+
+    return "Custom Plan";
+  };
+
   const today = format(new Date(), "dd/MM/yyyy");
 
   const { user } = useSelector((state: RootState) => state.auth);
@@ -256,7 +301,7 @@ export default function Page() {
     if (!isoString) return "N/A";
 
     try {
-      let date = new Date(isoString);
+      const date = new Date(isoString);
 
       // Validate date
       if (isNaN(date.getTime())) {
@@ -374,9 +419,9 @@ export default function Page() {
       desc: "Upcoming Session",
       title: tileLoading
         ? "-"
-        : String(dashboardData?.data?.upcomingSessions || "-"),
+        : String(dashboardData?.data?.upcomingSessions ?? 0),
       desc2: getNextUpcomingSessionText(
-        dashboardData?.data?.upcomingSessions || 0,
+        dashboardData?.data?.upcomingSessions ?? 0,
       ),
     },
     {
@@ -400,9 +445,7 @@ export default function Page() {
     {
       icon: <PlanIcon />,
       desc: "Current Plan",
-      title: tileLoading
-        ? "-"
-        : dashboardData?.data?.currentPlan?.displayName || "No Plan",
+      title: tileLoading ? "-" : getCurrentPlanDisplayName(),
       desc2: getPlanExpiryText(dashboardData?.data?.currentPlan?.plan),
     },
   ];

@@ -10,35 +10,29 @@ import { Payment } from "@/components/pages/auth/signup/Payment";
 import { Confirmation } from "@/components/pages/auth/signup/Confirmation";
 import { useCreatePaymentOrderMutation } from "@/store/api/paymentApi";
 import toast from "react-hot-toast";
+import { SelectedPlanMeta, UpgradePlan } from "@/app/(user)/user-packages/UpgradePlan";
 
 export interface CheckoutState {
-  selectedPackage: PackageType | null;
+  selectedPackage: string | null;
   autoRenew: boolean;
 }
 
 const Page = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [billingType, setBillingType] = useState<"monthly" | "yearly">("monthly");
+  const [selectedPlanData, setSelectedPlanData] =
+    useState<SelectedPlanMeta | null>(null);
   const [state, setState] = useState<CheckoutState>({
     selectedPackage: null,
     autoRenew: false,
   });
   const { user } = useGetUser();
-  
-  const getPackagePrice = (pkg: PackageType, billing: "monthly" | "yearly" = "monthly"): number => {
-    const monthlyPrices = {
-      "gold-yoga": 100,
-      "gold-zumba": 100,
-      "gold-mixed": 100,
-      diamond: 200,
-      platinum: 300,
-    };
-    const basePrice = monthlyPrices[pkg];
-    return billing === "yearly" ? Math.round(basePrice * 12 * 0.95) : basePrice;
-  };
 
   const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
-  const price = getPackagePrice(state.selectedPackage!, billingType);
+  const price =
+    billingType === "yearly"
+      ? selectedPlanData?.yearlyPrice || 0
+      : selectedPlanData?.monthlyPrice || 0;
 
   const handlePaymentTransaction = async () => {
     try {
@@ -46,7 +40,7 @@ const Page = () => {
         amount: price,
         currency: "USD",
         userId: user?.id,
-        plan: state.selectedPackage,
+        plan: selectedPlanData?.planKey || state.selectedPackage,
         billingType: billingType,
       }).unwrap();
 
@@ -69,7 +63,7 @@ const Page = () => {
     setCurrentStep(step);
   };
 
-  const handlePackageSelect = (packageType: PackageType) => {
+  const handlePackageSelect = (packageType: string) => {
     updateState({ selectedPackage: packageType });
     goToStep(2);
   };
@@ -88,6 +82,7 @@ const Page = () => {
       {currentStep === 1 && (
         <PackageSelection
           onSelect={handlePackageSelect}
+          onSelectPlanData={setSelectedPlanData}
           currentPlan={user?.plan}
           expiryDate={user?.subscription?.endDate}
           subscription={user?.subscription}
@@ -98,7 +93,8 @@ const Page = () => {
       )}
       {currentStep === 2 && (
         <ReviewConfirm
-          selectedPackage={state.selectedPackage!}
+          selectedPackage={state.selectedPackage || ""}
+          selectedPlanData={selectedPlanData}
           onConfirm={handleReviewConfirm}
           isLoading={isLoading}
           onBack={() => goToStep(1)}
@@ -108,7 +104,7 @@ const Page = () => {
 
       {currentStep === 3 && (
         <Payment
-          selectedPackage={state.selectedPackage!}
+          selectedPackage={state.selectedPackage as unknown as PackageType}
           onPayment={handlePayment}
           onBack={() => goToStep(2)}
           billingType={billingType}
@@ -121,7 +117,5 @@ const Page = () => {
 };
 
 export default Page;
-
-
 
 

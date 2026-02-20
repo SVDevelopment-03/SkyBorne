@@ -1,5 +1,6 @@
 import {
   DashboardIcon,
+  PlanIcon,
   PackagesIcon,
   SessionsIcon,
   PaymentsIcon,
@@ -167,6 +168,12 @@ export const AdminNav = {
       url: "/services",
       icon: Layers,
       items: [],
+    },
+    {
+      title: "Plan Management",
+      url: "/plans",
+      icon: PlanIcon,
+      items: ["/create-plan", "/edit-plan"],
     },
     {
       title: "Payment Management",

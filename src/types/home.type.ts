@@ -91,10 +91,13 @@ export interface ServiceType {
 
 export interface IPlan {
   _id: string;
-  planId: string; // UUID you added
+  planId?: string; // legacy UUID alias
+  uuid?: string;
   name: string;
   description: string;
   features: string[];
+  services?: string[];
+  classCountPerMonth?: number;
   image: string;
   price: string;
   isActive: boolean;

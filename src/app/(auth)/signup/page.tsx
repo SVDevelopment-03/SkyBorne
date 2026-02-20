@@ -1,10 +1,10 @@
 import Signup from "@/components/pages/auth/signup";
 
 interface SignupPageProps {
-  searchParams: {
+  searchParams: Promise<{
     step?: string;
     [key: string]: string | string[] | undefined; // allow additional params safely
-  };
+  }>;
 }
 
 const Page =async ({ searchParams }: SignupPageProps) => {

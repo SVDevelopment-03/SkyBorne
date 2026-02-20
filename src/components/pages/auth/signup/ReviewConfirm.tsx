@@ -1,15 +1,28 @@
 import { PackageType } from "./PackageSelection";
 import { ChevronLeft, Check, Loader2 } from "lucide-react";
 
+interface SelectedPlanMeta {
+  planKey: string;
+  planName: string;
+  monthlyPrice: number;
+  yearlyPrice: number;
+  classesTextMonthly: string;
+  classesTextYearly: string;
+}
+
 interface ReviewConfirmProps {
-  selectedPackage: PackageType;
+  selectedPackage: PackageType | string;
+  selectedPlanData?: SelectedPlanMeta | null;
   onConfirm: () => void;
   onBack: () => void;
   isLoading?: boolean;
   billingType?: "monthly" | "yearly";
 }
 
-const getClassesInfo = (pkg: PackageType, billingType: "monthly" | "yearly" = "monthly"): string => {
+const getClassesInfo = (
+  pkg: string,
+  billingType: "monthly" | "yearly" = "monthly",
+): string => {
   const classInfo = {
     "gold-yoga": billingType === "monthly" ? "2 Yoga" : "24 Yoga",
     "gold-zumba": billingType === "monthly" ? "2 Zumba" : "24 Zumba",
@@ -17,10 +30,13 @@ const getClassesInfo = (pkg: PackageType, billingType: "monthly" | "yearly" = "m
     diamond: billingType === "monthly" ? "2 Yoga + 2 Zumba" : "24 Yoga + 24 Zumba",
     platinum: billingType === "monthly" ? "2 Yoga + 2 Zumba + 1 Specialized" : "24 Yoga + 24 Zumba + 12 Specialized",
   };
-  return classInfo[pkg];
+  return classInfo[pkg as keyof typeof classInfo] || "Custom classes";
 };
 
-const getPackageInfo = (pkg: PackageType, billingType: "monthly" | "yearly" = "monthly") => {
+const getPackageInfo = (
+  pkg: string,
+  billingType: "monthly" | "yearly" = "monthly",
+) => {
   const monthlyPrices = {
     "gold-yoga": {
       name: "Gold Package",
@@ -44,7 +60,9 @@ const getPackageInfo = (pkg: PackageType, billingType: "monthly" | "yearly" = "m
     },
   };
 
-  const baseInfo = monthlyPrices[pkg];
+  const baseInfo =
+    monthlyPrices[pkg as keyof typeof monthlyPrices] ||
+    monthlyPrices["gold-yoga"];
   const yearlyPrice = Math.round(baseInfo.monthlyPrice * 12 * 0.95);
 
   return {
@@ -58,12 +76,27 @@ const getPackageInfo = (pkg: PackageType, billingType: "monthly" | "yearly" = "m
 
 export function ReviewConfirm({
   selectedPackage,
+  selectedPlanData,
   onConfirm,
   onBack,
   isLoading,
   billingType = "monthly",
 }: ReviewConfirmProps) {
-  const packageInfo = getPackageInfo(selectedPackage, billingType);
+  const packageInfo = selectedPlanData
+    ? {
+        name: selectedPlanData.planName,
+        price:
+          billingType === "yearly"
+            ? selectedPlanData.yearlyPrice
+            : selectedPlanData.monthlyPrice,
+        billingCycle: billingType === "yearly" ? "Yearly" : "Monthly",
+        classes:
+          billingType === "yearly"
+            ? selectedPlanData.classesTextYearly
+            : selectedPlanData.classesTextMonthly,
+        discount: billingType === "yearly" ? "Save 5%" : null,
+      }
+    : getPackageInfo(selectedPackage, billingType);
 
   return (
     <div className="animate-fade-in">

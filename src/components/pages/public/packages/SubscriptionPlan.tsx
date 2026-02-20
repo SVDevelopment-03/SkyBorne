@@ -6,12 +6,27 @@ import { IPlan } from "@/types/home.type";
 import { SkeletonSubscription, Subscription } from "../home/Subscription";
 import { useEffect, useState } from "react";
 
+const ALLOWED_PACKAGE_PRICES = [100, 200, 300];
+
+const toNumericPrice = (value: unknown): number => {
+  if (typeof value === "number") return value;
+  const parsed = Number(String(value ?? "").replace(/[^0-9.]/g, ""));
+  return Number.isFinite(parsed) ? parsed : NaN;
+};
+
 const SubscriptionPlans = () => {
   const [hydrated, setHydrated] = useState(false);
   const [isSelected, setIsSelected] = useState(1);
   const [isYearly, setIsYearly] = useState(false);
   const { data, isLoading, error } = useGetPlansQuery(undefined);
-  const plans: IPlan[] = data?.data || [];
+  const plans: IPlan[] = (data?.data || [])
+    .filter((plan: IPlan) =>
+      ALLOWED_PACKAGE_PRICES.includes(toNumericPrice(plan?.price)),
+    )
+    .sort(
+      (a: IPlan, b: IPlan) =>
+        toNumericPrice(a?.price) - toNumericPrice(b?.price),
+    );
 
   useEffect(() => {
     setTimeout(() => {

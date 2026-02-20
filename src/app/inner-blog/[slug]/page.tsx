@@ -34,7 +34,7 @@ const yogaDetails = [
   },
 ];
 
-export const blogs = [
+const blogs = [
   {
     slug: "1",
     title: "Finding Calm in Busy Times",

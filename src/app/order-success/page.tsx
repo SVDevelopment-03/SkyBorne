@@ -1,12 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle, Package, Loader2, XCircle } from "lucide-react";
 import { useGetSessionDetailsQuery } from "@/store/api/EcompaymentApi"; 
 
-export default function OrderSuccessPage() {
+export const dynamic = "force-dynamic";
+
+function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId") ?? "";
 
@@ -120,5 +123,19 @@ export default function OrderSuccessPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function OrderSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <OrderSuccessContent />
+    </Suspense>
   );
 }

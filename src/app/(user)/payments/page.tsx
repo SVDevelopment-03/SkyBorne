@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useGetPaymentHistoryQuery, useGetPaymentStatsQuery } from '@/store/api/paymentApi';
+import { useGetPlansQuery } from '@/store/api/publicApi';
 import { useSelector } from 'react-redux';
 import useGetUser from '@/hooks/useGetUser';
 // import { handleDeleteTrainer } from '@/utils/handleDeleteAlert';
@@ -43,6 +44,29 @@ export interface Payment {
   paymentMethod?: string;
 }
 
+const FIXED_PLAN_NAME_MAP: Record<string, string> = {
+  "gold-yoga": "Gold Package",
+  "gold-zumba": "Gold Package",
+  "gold-mixed": "Gold Package",
+  diamond: "Diamond Package",
+  platinum: "Platinum Package",
+};
+
+const slugify = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+
+const toTitleCase = (value: string) =>
+  value
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+
 function UserPayments() {
     // const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -56,6 +80,7 @@ function UserPayments() {
 
 
   // RTK Query hooks
+  const { data: plansData } = useGetPlansQuery(undefined);
   const { data: paymentHistoryData, isLoading: isLoadingHistory } = useGetPaymentHistoryQuery(userId, {
     skip: !userId,
   });
@@ -66,6 +91,7 @@ function UserPayments() {
   // Parse data from API responses
   const payments = useMemo(() => paymentHistoryData?.payments || [], [paymentHistoryData]);
   const stats = useMemo(() => paymentStatsData?.stats || {}, [paymentStatsData]);
+  const plans = useMemo(() => plansData?.data || [], [plansData]);
   
   // Get subscription from user object
   const subscription = useMemo(() => user?.subscription || {}, [user]);
@@ -102,10 +128,42 @@ function UserPayments() {
   // Format plan name utility
   const formatPlanName = (planName: string) => {
     if (!planName) return '';
-    return planName
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+
+    const raw = String(planName).trim();
+    const normalized = raw.toLowerCase();
+
+    if (FIXED_PLAN_NAME_MAP[normalized]) {
+      return FIXED_PLAN_NAME_MAP[normalized];
+    }
+
+    const matchedPlan = plans.find((plan: any) => {
+      const keys = [
+        String(plan?.uuid || "").toLowerCase(),
+        String(plan?.planId || "").toLowerCase(),
+        String(plan?._id || "").toLowerCase(),
+        String(plan?.name || "").trim().toLowerCase(),
+        slugify(String(plan?.name || "")),
+      ].filter(Boolean);
+
+      return keys.includes(normalized);
+    });
+
+    if (matchedPlan?.name) {
+      return toTitleCase(String(matchedPlan.name));
+    }
+
+    const looksLikeId =
+      /^[0-9a-f]{24}$/i.test(raw) ||
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        raw,
+      ) ||
+      (/[0-9a-f]{8,}/i.test(raw) && /\d/.test(raw) && raw.length > 20);
+
+    if (looksLikeId) {
+      return "Custom Plan";
+    }
+
+    return toTitleCase(raw.replace(/-/g, " "));
   };
 
   // Define table columns
