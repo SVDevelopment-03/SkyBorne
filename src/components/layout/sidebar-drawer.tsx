@@ -43,14 +43,14 @@ export default function SidebarDrawer() {
         </DrawerTrigger>
 
         {/* -------- Drawer Content -------- */}
-        <DrawerContent className="h-full p-0">
-          <DrawerHeader>
+        <DrawerContent className="h-[100dvh] p-0">
+          <DrawerHeader className="sr-only">
             <VisuallyHidden>
-              <DrawerTitle>Admin Menu</DrawerTitle>
+              <DrawerTitle>User Menu</DrawerTitle>
             </VisuallyHidden>
           </DrawerHeader>
-          <div className="flex flex-col bg-white overflow-y-auto h-full [scrollbar-width:none] pb-3.5">
-            <div className="flex flex-col gap-13.5 p-5 bg-white">
+          <div className="h-full overflow-y-auto bg-white [scrollbar-width:none]">
+            <div className="flex min-h-full flex-col gap-13.5 p-5 pb-3.5 bg-white">
               <div
                 className={`flex items-center gap-1 rounded-[300px] max-w-[97px] md:max-w-[154px]`}
               >
@@ -76,7 +76,7 @@ export default function SidebarDrawer() {
                   </div>
                 </Link>
               </div>
-              <div className="flex flex-col justify-center gap-2.5 md:gap-4">
+              <div className="flex flex-col justify-start gap-2.5 md:gap-4">
                 {SidebarNav.navMain.map((item) => (
                   <div className="" key={item?.title}>
                     {!item?.logout && (
@@ -127,7 +127,7 @@ export default function SidebarDrawer() {
                 ))}
               </div>
             </div>
-            <div className="px-4 mt-auto ">
+            <div className="px-4 mt-auto">
               <div className="h-px bg-[#DCE5E0] my-6"></div>
               <div className="rounded-[14px] bg-[#FBFAF9] p-4 flex flex-col items-end gap-7.5">
                 <div className="flex items-start gap-3">

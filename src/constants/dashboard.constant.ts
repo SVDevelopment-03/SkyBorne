@@ -20,6 +20,7 @@ import {
   CircleDollarSign,
   TicketX,
   ShoppingCart,
+  ShoppingBag,
   Package,
   Users as CustomersIcon,
   Warehouse,
@@ -74,7 +75,7 @@ export const SidebarNav = {
     {
       title: "Cart",
       url: "/cart",
-      icon: PaymentsIcon,
+      icon: ShoppingBag,
       items: [],
     },
     {
