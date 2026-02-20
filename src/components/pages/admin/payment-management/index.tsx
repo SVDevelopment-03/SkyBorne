@@ -27,6 +27,7 @@ import {
   useGetAllPaymentsQuery,
   useExportPaymentsCSVMutation,
 } from "@/store/api/paymentApi";
+import { useGetAdminEcomPaymentStatsQuery } from "@/store/api/EcompaymentApi";
 import { InvoiceViewerModal } from "./InvoiceViewerModal";
 import MainListHeading from "@/components/ui/MainListHeading";
 import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
@@ -79,6 +80,8 @@ function AdminPayments() {
 
   const { data: paymentStatsData, isLoading: isLoadingStats } =
     useGetAdminPaymentStatsQuery(undefined);
+  const { data: ecomStatsData, isLoading: isLoadingEcomStats } =
+    useGetAdminEcomPaymentStatsQuery();
 
   const [exportCSV, { isLoading: isExporting }] = useExportPaymentsCSVMutation();
 
@@ -89,6 +92,15 @@ function AdminPayments() {
   const stats = useMemo(
     () => paymentStatsData?.stats || {},
     [paymentStatsData],
+  );
+  const ecomStats = useMemo(
+    () =>
+      ecomStatsData?.stats || {
+        totalRevenue: 0,
+        thisMonth: 0,
+        totalTransactions: 0,
+      },
+    [ecomStatsData],
   );
 
   // Get country options
@@ -330,10 +342,10 @@ function AdminPayments() {
               <div>
                 <p className="text-base text-[#6B6B6B] mb-1">Total Revenue</p>
                 <p className="text-2xl text-[#1A1A1A] font-semibold">
-                  {isLoadingStats ? (
+                  {isLoadingEcomStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    formatCurrency(stats?.totalRevenue || 0)
+                    formatCurrency(ecomStats?.totalRevenue || 0)
                   )}
                 </p>
               </div>
@@ -351,10 +363,10 @@ function AdminPayments() {
               <div>
                 <p className="text-base text-[#6B6B6B] mb-1">This Month</p>
                 <p className="text-2xl font-semibold text-[#1A1A1A]">
-                  {isLoadingStats ? (
+                  {isLoadingEcomStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    formatCurrency(stats?.thisMonth || 0)
+                    formatCurrency(ecomStats?.thisMonth || 0)
                   )}
                 </p>
               </div>
@@ -372,10 +384,10 @@ function AdminPayments() {
               <div>
                 <p className="text-base text-[#6B6B6B] mb-1">Total Transactions</p>
                 <p className="text-2xl font-semibold text-[#1A1A1A]">
-                  {isLoadingStats ? (
+                  {isLoadingEcomStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    stats?.completedCount || 0
+                    ecomStats?.totalTransactions || 0
                   )}
                 </p>
               </div>

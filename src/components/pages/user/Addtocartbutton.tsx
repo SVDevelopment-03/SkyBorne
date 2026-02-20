@@ -4,7 +4,8 @@
 import { useState } from "react";
 import { ShoppingCart, Check, Loader2 } from "lucide-react";
 import { useAddToCartMutation } from "@/store/api/cartApi";
-import { toast } from "sonner"; // or your toast library
+import toast from "react-hot-toast";
+import { Button } from "@/components/ui/button";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -24,7 +25,7 @@ export function AddToCartButton({
     try {
       await addToCart({ productId, quantity }).unwrap();
       setAdded(true);
-      toast.success("Added to cart!");
+      toast.success("Product added to cart");
       setTimeout(() => setAdded(false), 2000);
     } catch (err: any) {
       toast.error(err?.data?.message ?? "Failed to add to cart");
@@ -32,10 +33,12 @@ export function AddToCartButton({
   };
 
   return (
-    <button
+    <Button
+      variant="theme"
+      type="button"
       onClick={handleAddToCart}
       disabled={isLoading || added}
-      className={`w-full py-4 px-8 bg-card hover:bg-card/80 text-foreground rounded-full transition-all shadow-md hover:shadow-lg border border-border flex items-center justify-center gap-2 disabled:opacity-70 ${className}`}
+      className={`w-full sm:w-auto px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70 ${className}`}
     >
       {isLoading ? (
         <Loader2 className="w-5 h-5 animate-spin" />
@@ -45,6 +48,6 @@ export function AddToCartButton({
         <ShoppingCart className="w-5 h-5" />
       )}
       {isLoading ? "Adding..." : added ? "Added!" : "Add to Cart"}
-    </button>
+    </Button>
   );
 }

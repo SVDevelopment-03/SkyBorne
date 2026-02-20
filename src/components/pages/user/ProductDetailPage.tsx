@@ -4,9 +4,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ImageWithFallback } from "./ImageWithFallback";
-import { Minus, Plus, ChevronLeft } from "lucide-react";
+import { Minus, Plus, ChevronLeft, Loader2, Check, ShoppingCart } from "lucide-react";
 import { useGetProductByIdQuery } from "@/store/api/productApi";
-import { AddToCartButton } from "./Addtocartbutton";
+import { useAddToCartMutation } from "@/store/api/cartApi";
+import toast from "react-hot-toast";
 
 export default function ProductDetailPage({
   params,
@@ -18,6 +19,19 @@ export default function ProductDetailPage({
   const product = (data as any)?.data ?? data;
 
   const [quantity, setQuantity] = useState(1);
+  const [addToCart, { isLoading: addingToCart }] = useAddToCartMutation();
+  const [addedToCart, setAddedToCart] = useState(false);
+
+  const handleAddToCart = async () => {
+    try {
+      await addToCart({ productId: id, quantity }).unwrap();
+      setAddedToCart(true);
+      toast.success("Product added to cart");
+      setTimeout(() => setAddedToCart(false), 2000);
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to add to cart");
+    }
+  };
 
   // ── Loading skeleton ──────────────────────────────────────────────
   if (isLoading) {
@@ -129,18 +143,27 @@ export default function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              {/* Add to Cart — calls the API */}
-              <AddToCartButton productId={product._id} quantity={quantity} />
-
-              {/* Buy Now */}
+              {/* Add to Cart — local style only for this page */}
               <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={addingToCart || addedToCart}
                 className="w-full py-4 px-8 rounded-full transition-all shadow-md hover:shadow-lg"
                 style={{
                   background: "linear-gradient(135deg, #B95E82 0%, #F39F9F 100%)",
                   color: "#FFFFFF",
                 }}
               >
-                Buy Now
+                <span className="inline-flex items-center justify-center gap-2">
+                  {addingToCart ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : addedToCart ? (
+                    <Check className="w-5 h-5" />
+                  ) : (
+                    <ShoppingCart className="w-5 h-5" />
+                  )}
+                  {addingToCart ? "Adding..." : addedToCart ? "Added!" : "Add to Cart"}
+                </span>
               </button>
             </div>
           </div>

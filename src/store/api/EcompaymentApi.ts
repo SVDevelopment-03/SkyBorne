@@ -81,6 +81,15 @@ export interface GetAllPaymentsParams {
   status?: string;
 }
 
+export interface EcomPaymentStatsResponse {
+  success: boolean;
+  stats: {
+    totalRevenue: number;
+    thisMonth: number;
+    totalTransactions: number;
+  };
+}
+
 // ── API ────────────────────────────────────────────────────────────────────────
 
 export const ecomPaymentApi = createApi({
@@ -131,6 +140,15 @@ export const ecomPaymentApi = createApi({
       }),
       providesTags: ["EcomPayment"],
     }),
+
+    /** GET /ecom-payments/admin/stats — admin stats used by payment cards */
+    getAdminEcomPaymentStats: builder.query<EcomPaymentStatsResponse, void>({
+      query: () => ({
+        url: "/ecom-payments/admin/stats",
+        method: "GET",
+      }),
+      providesTags: ["EcomPayment"],
+    }),
   }),
 });
 
@@ -139,4 +157,5 @@ export const {
   useGetSessionDetailsQuery,
   useGetMyPaymentsQuery,
   useGetAllPaymentsQuery,
+  useGetAdminEcomPaymentStatsQuery,
 } = ecomPaymentApi;

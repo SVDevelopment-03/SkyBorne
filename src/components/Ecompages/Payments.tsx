@@ -2,10 +2,11 @@
 "use client";
 
 import { useState } from "react";
-import { Search, CreditCard, ExternalLink, Receipt } from "lucide-react";
+import { Search, CreditCard, ExternalLink, Receipt, DollarSign, Calendar, CheckCircle, Loader2 } from "lucide-react";
 import CustomPagination from "@/components/ui/CustromPagination";
 import {
   useGetAllPaymentsQuery,
+  useGetAdminEcomPaymentStatsQuery,
   type EcomPayment,
   type EcomPaymentStatus,
   type PopulatedUser,
@@ -68,10 +69,22 @@ export default function EcomPayments() {
     search: debouncedSearch,
     status: statusFilter,
   });
+  const { data: statsData, isLoading: isLoadingStats } = useGetAdminEcomPaymentStatsQuery();
 
   const payments: EcomPayment[] = (data as any)?.data ?? [];
   const totalPages: number = (data as any)?.pagination?.totalPages ?? 1;
   const total: number = (data as any)?.pagination?.total ?? 0;
+  const stats = statsData?.stats || {
+    totalRevenue: 0,
+    thisMonth: 0,
+    totalTransactions: 0,
+  };
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+    }).format(amount || 0);
 
   if (isLoading) {
     return (
@@ -83,6 +96,63 @@ export default function EcomPayments() {
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Top Stats */}
+      <div className="w-full flex flex-wrap gap-4 justify-start">
+        <div className="flex-[1_1_calc(33.333%-1rem)] min-w-[220px] max-w-full border border-[#e5e5e5] rounded-[20px] bg-white p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-base text-[#6B6B6B] mb-1">Total Revenue</p>
+              <p className="text-2xl text-[#1A1A1A] font-semibold">
+                {isLoadingStats ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  formatCurrency(stats.totalRevenue)
+                )}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+              <DollarSign className="w-6 h-6 text-[#b95e82]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-[1_1_calc(33.333%-1rem)] min-w-[220px] max-w-full border border-[#e5e5e5] rounded-[20px] bg-white p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-base text-[#6B6B6B] mb-1">This Month</p>
+              <p className="text-2xl font-semibold text-[#1A1A1A]">
+                {isLoadingStats ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  formatCurrency(stats.thisMonth)
+                )}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-[#b95e82]" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-[1_1_calc(33.333%-1rem)] min-w-[220px] max-w-full border border-[#e5e5e5] rounded-[20px] bg-white p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-base text-[#6B6B6B] mb-1">Total Transactions</p>
+              <p className="text-2xl font-semibold text-[#1A1A1A]">
+                {isLoadingStats ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  stats.totalTransactions || 0
+                )}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-[#b95e82]" />
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-6 px-3 py-6 md:p-6 bg-white rounded-lg overflow-x-hidden">
 
         {/* Header */}

@@ -9,7 +9,7 @@ import { useGetPublishedProductsQuery } from "@/store/api/productApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAddToCartMutation } from "@/store/api/cartApi";
-import { toast } from "sonner";
+import toast from "react-hot-toast";
 
 export default function ShopListingPage() {
   const [category, setCategory] = useState<string>("");
@@ -63,7 +63,7 @@ export default function ShopListingPage() {
     setAddingProductId(productId);
     try {
       await addToCart({ productId, quantity: 1 }).unwrap();
-      toast.success("Added to cart!");
+      toast.success("Product added to cart");
     } catch (err: any) {
       toast.error(err?.data?.message ?? "Failed to add to cart");
     } finally {

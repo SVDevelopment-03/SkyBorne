@@ -130,7 +130,7 @@ export default function OrderDetailPage() {
               </div>
               <div className="flex justify-between pt-3 border-t border-gray-100">
                 <span className="font-medium text-[#333]">Total Amount</span>
-                <span className="text-xl font-bold text-[#333]">${(order.totalAmount / 100 ? order.totalAmount/100 : order.totalAmount).toFixed(2)}</span>
+                <span className="text-xl font-bold text-[#333]">${(order.totalAmount || 0).toFixed(2)}</span>
               </div>
             </div>
           </div>
