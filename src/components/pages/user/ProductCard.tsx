@@ -25,10 +25,10 @@ export function ProductCard({ product, onAddToCart, isAddingToCart = false }: Pr
   const [isHovered, setIsHovered] = useState(false);
 
   return (
-    <Link href={`/product/${product._id}`} className="h-full">
+    <Link href={`/product/${product._id}`} className="h-full block">
       <div
-        className={`bg-card rounded-3xl overflow-hidden transition-all duration-300 h-full flex flex-col ${
-          isHovered ? 'shadow-xl -translate-y-2' : 'shadow-md'
+        className={`bg-card rounded-3xl overflow-hidden transition-all duration-300 h-full flex flex-col border border-border/60 ${
+          isHovered ? 'shadow-xl -translate-y-1' : 'shadow-sm'
         }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -46,11 +46,13 @@ export function ProductCard({ product, onAddToCart, isAddingToCart = false }: Pr
         </div>
 
         {/* Content */}
-        <div className="p-6 flex flex-col flex-1">
-          <h3 className="text-xl mb-2 line-clamp-1">{product.name}</h3>
-          <p className="text-sm text-foreground/70 mb-4 line-clamp-2 flex-1">{product.description}</p>
+        <div className="p-4 sm:p-5 flex flex-col flex-1">
+          <h3 className="text-lg sm:text-xl mb-2 line-clamp-1">{product.name}</h3>
+          <p className="text-sm text-foreground/70 mb-4 line-clamp-2 min-h-10 flex-1">
+            {product.description}
+          </p>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <p className="text-2xl font-serif text-primary">${product.price}</p>
             <Button
               variant="theme"
@@ -60,7 +62,7 @@ export function ProductCard({ product, onAddToCart, isAddingToCart = false }: Pr
                 e.stopPropagation();
                 onAddToCart?.(product._id);
               }}
-              className="px-6 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center gap-2 disabled:opacity-70"
+              className="w-full sm:w-auto px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
             >
               {isAddingToCart ? (
                 <>

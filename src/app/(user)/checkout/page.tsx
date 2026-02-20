@@ -30,9 +30,27 @@ export default function CheckoutPage() {
     city: "",
     zip: "",
   });
+  const [showFieldErrors, setShowFieldErrors] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const getFieldError = (field: keyof typeof form) => {
+    if (!showFieldErrors) return "";
+    if (String(form[field] || "").trim()) return "";
+
+    const fieldLabels: Record<keyof typeof form, string> = {
+      email: "Email",
+      phone: "Phone",
+      firstName: "First name",
+      lastName: "Last name",
+      address: "Address",
+      city: "City",
+      zip: "ZIP",
+    };
+
+    return `${fieldLabels[field]} is required`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -40,6 +58,25 @@ export default function CheckoutPage() {
 
     if (cartItems.length === 0) {
       toast.error("Your cart is empty");
+      return;
+    }
+
+    const requiredFields: Array<keyof typeof form> = [
+      "email",
+      "phone",
+      "firstName",
+      "lastName",
+      "address",
+      "city",
+      "zip",
+    ];
+    const hasMissingFields = requiredFields.some(
+      (field) => !String(form[field] || "").trim(),
+    );
+    setShowFieldErrors(hasMissingFields);
+
+    if (hasMissingFields) {
+      toast.error("Please fill all checkout details before payment");
       return;
     }
 
@@ -76,7 +113,7 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-6 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         <div className="mb-8">
           <Link
             href="/cart"
@@ -87,14 +124,14 @@ export default function CheckoutPage() {
           </Link>
         </div>
 
-        <h1 className="text-4xl mb-12 text-center">Checkout</h1>
+        <h1 className="text-3xl sm:text-4xl mb-8 sm:mb-12 text-center">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
           {/* ── Left: Form ─────────────────────────────────────────── */}
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
 
             {/* Contact Information */}
-            <div className="bg-card rounded-3xl p-8 shadow-md">
+            <div className="bg-card rounded-3xl p-5 sm:p-8 shadow-md">
               <h3 className="text-xl mb-6">Contact Information</h3>
               <div className="space-y-4">
                 <div>
@@ -108,6 +145,9 @@ export default function CheckoutPage() {
                     onChange={handleChange}
                     className={inputClass}
                   />
+                  {getFieldError("email") && (
+                    <p className="mt-1 text-xs text-red-600">{getFieldError("email")}</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm mb-2 text-foreground/70">Phone</label>
@@ -120,15 +160,18 @@ export default function CheckoutPage() {
                     onChange={handleChange}
                     className={inputClass}
                   />
+                  {getFieldError("phone") && (
+                    <p className="mt-1 text-xs text-red-600">{getFieldError("phone")}</p>
+                  )}
                 </div>
               </div>
             </div>
 
             {/* Shipping Address */}
-            <div className="bg-card rounded-3xl p-8 shadow-md">
+            <div className="bg-card rounded-3xl p-5 sm:p-8 shadow-md">
               <h3 className="text-xl mb-6">Shipping Address</h3>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm mb-2 text-foreground/70">First Name</label>
                     <input
@@ -140,6 +183,11 @@ export default function CheckoutPage() {
                       onChange={handleChange}
                       className={inputClass}
                     />
+                    {getFieldError("firstName") && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {getFieldError("firstName")}
+                      </p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm mb-2 text-foreground/70">Last Name</label>
@@ -152,6 +200,11 @@ export default function CheckoutPage() {
                       onChange={handleChange}
                       className={inputClass}
                     />
+                    {getFieldError("lastName") && (
+                      <p className="mt-1 text-xs text-red-600">
+                        {getFieldError("lastName")}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -165,9 +218,14 @@ export default function CheckoutPage() {
                     onChange={handleChange}
                     className={inputClass}
                   />
+                  {getFieldError("address") && (
+                    <p className="mt-1 text-xs text-red-600">
+                      {getFieldError("address")}
+                    </p>
+                  )}
                 </div>
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="col-span-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="sm:col-span-2">
                     <label className="block text-sm mb-2 text-foreground/70">City</label>
                     <input
                       name="city"
@@ -178,6 +236,9 @@ export default function CheckoutPage() {
                       onChange={handleChange}
                       className={inputClass}
                     />
+                    {getFieldError("city") && (
+                      <p className="mt-1 text-xs text-red-600">{getFieldError("city")}</p>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm mb-2 text-foreground/70">ZIP</label>
@@ -190,6 +251,9 @@ export default function CheckoutPage() {
                       onChange={handleChange}
                       className={inputClass}
                     />
+                    {getFieldError("zip") && (
+                      <p className="mt-1 text-xs text-red-600">{getFieldError("zip")}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -221,7 +285,7 @@ export default function CheckoutPage() {
 
           {/* ── Right: Order Summary ────────────────────────────────── */}
           <div className="lg:sticky lg:top-24 h-fit">
-            <div className="bg-card rounded-3xl p-8 shadow-lg">
+            <div className="bg-card rounded-3xl p-5 sm:p-8 shadow-lg">
               <h3 className="text-xl mb-6">Order Summary</h3>
 
               {/* Cart Items — read-only */}
