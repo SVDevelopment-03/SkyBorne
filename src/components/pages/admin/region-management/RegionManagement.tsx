@@ -141,31 +141,31 @@ const RegionManagement = () => {
         </span>
       ),
     },
-    {
-      accessorKey: "displayLabel",
-      header: "Display Label",
-      cell: ({ row }: any) => (
-        <span className="text-[#262626] text-sm">
-          {row?.original?.displayLabel}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "timezone",
-      header: "Timezone",
-      cell: ({ row }) => (
-        <span className="text-[#737373] text-sm">{row.original.timezone}</span>
-      ),
-    },
-    {
-      accessorKey: "replayTime",
-      header: "Replay Time",
-      cell: ({ row }) => (
-        <span className="text-[#262626] font-medium text-sm">
-          {row.original.replayTime}
-        </span>
-      ),
-    },
+    // {
+    //   accessorKey: "displayLabel",
+    //   header: "Display Label",
+    //   cell: ({ row }: any) => (
+    //     <span className="text-[#262626] text-sm">
+    //       {row?.original?.displayLabel}
+    //     </span>
+    //   ),
+    // },
+    // {
+    //   accessorKey: "timezone",
+    //   header: "Timezone",
+    //   cell: ({ row }) => (
+    //     <span className="text-[#737373] text-sm">{row.original.timezone}</span>
+    //   ),
+    // },
+    // {
+    //   accessorKey: "replayTime",
+    //   header: "Replay Time",
+    //   cell: ({ row }) => (
+    //     <span className="text-[#262626] font-medium text-sm">
+    //       {row.original.replayTime}
+    //     </span>
+    //   ),
+    // },
     {
       accessorKey: "status",
       header: "Status",

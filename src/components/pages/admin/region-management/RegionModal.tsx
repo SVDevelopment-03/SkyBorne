@@ -32,8 +32,8 @@ const validationSchema = Yup.object().shape({
     .required("Region code is required")
     .min(2, "Code must be at least 2 characters")
     .max(10, "Code must not exceed 10 characters"),
-  timezone: Yup.string().required("Timezone is required"),
-  replayTime: Yup.string().required("Replay time is required"),
+  timezone: Yup.string().optional(),
+  replayTime: Yup.string().optional(),
 });
 
 // Common timezones list
@@ -67,7 +67,7 @@ export const RegionModal: React.FC<RegionModalProps> = ({
     name: region?.name || "",
     code: region?.code || "",
     timezone: region?.timezone || "",
-    replayTime: region?.replayTime || "10:00 AM",
+  replayTime: region?.replayTime || "",
   };
 
   const handleSubmit = async (
@@ -80,8 +80,8 @@ export const RegionModal: React.FC<RegionModalProps> = ({
       const payload = {
         name: values.name,
         code: values.code.toUpperCase(),
-        timezone: values.timezone,
-        replayTime: values.replayTime,
+        ...(values.timezone && { timezone: values.timezone }),
+        ...(values.replayTime && { replayTime: values.replayTime }),
         status: "active" as const,
       };
 
@@ -141,7 +141,7 @@ export const RegionModal: React.FC<RegionModalProps> = ({
             </div>
 
             {/* Timezone */}
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               <Label>Timezone</Label>
               <Select
                 value={values.timezone}
@@ -152,10 +152,10 @@ export const RegionModal: React.FC<RegionModalProps> = ({
               {errors.timezone && touched.timezone && (
                 <p className="text-red-500 text-xs mt-1.5">{errors.timezone}</p>
               )}
-            </div>
+            </div> */}
 
             {/* Replay Time */}
-            <div className="flex flex-col gap-2">
+            {/* <div className="flex flex-col gap-2">
               <Label>Replay Time</Label>
               <TimePicker
                 value={values.replayTime}
@@ -166,10 +166,7 @@ export const RegionModal: React.FC<RegionModalProps> = ({
                   {errors.replayTime}
                 </p>
               )}
-              {/* <p className="text-[#737373] text-xs mt-1.5">
-                Fixed time when replay sessions will be available in this region
-              </p> */}
-            </div>
+            </div> */}
           </div>
 
           {/* Action Buttons */}
