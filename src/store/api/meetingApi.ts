@@ -13,7 +13,7 @@ export interface UpdateMeetingPayload {
   autoRecording?: boolean;
   rotationEnabled?: boolean;
   recurringClass?: boolean;
-  recurrenceType?: "weekly" | "monthly" | "custom" | null;
+  recurrenceType?: "weekly" | "monthly" | "custom" | "bi-weekly" | null;
   customDays?: number[] | null;
 }
 
@@ -55,7 +55,7 @@ export interface IMeeting {
   createdBy: string;
   status: "active" | "inactive";
   recurringClass?: boolean;
-  recurrenceType?: "weekly" | "monthly" | "custom" | null;
+  recurrenceType?: "weekly" | "monthly" | "custom" | "bi-weekly" | null;
   customDays?: number[] | null;
 }
 

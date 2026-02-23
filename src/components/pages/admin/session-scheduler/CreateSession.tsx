@@ -65,7 +65,7 @@ interface FormValues {
   trainer: string;
   duration: number;
   recurringClass: boolean;
-  recurrenceType: "weekly" | "monthly" | "custom";
+  recurrenceType: "weekly" | "monthly" | "custom" | "bi-weekly";
   customDays: number[];
 }
 
@@ -92,14 +92,14 @@ const validationSchema = Yup.object().shape({
     then: (schema) =>
       schema
         .required("Recurrence type is required")
-        .oneOf(["weekly", "monthly", "custom"], "Invalid recurrence type"),
+        .oneOf(["weekly", "monthly", "custom", "bi-weekly"], "Invalid recurrence type"),
   }),
   customDays: Yup.array().when("recurrenceType", {
-    is: "custom",
+    is: (value: string) => value === "custom" || value === "bi-weekly",
     then: (schema) =>
       schema
         .of(Yup.number())
-        .min(1, "Select at least one day for custom recurrence"),
+        .min(1, "Select at least one day for custom/bi-weekly recurrence"),
   }),
 });
 
@@ -367,7 +367,9 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         recurringClass: values.recurringClass,
         recurrenceType: values.recurringClass ? values.recurrenceType : null,
         customDays:
-          values.recurringClass && values.recurrenceType === "custom"
+          values.recurringClass &&
+          (values.recurrenceType === "custom" ||
+            values.recurrenceType === "bi-weekly")
             ? values.customDays
             : null,
         localTime: localDateTime.toISOString(),
@@ -446,7 +448,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
           values?.title &&
           values.duration > 0 &&
           (!values.recurringClass ||
-            (values.recurrenceType !== "custom" ||
+            (!["custom", "bi-weekly"].includes(values.recurrenceType) ||
               values.customDays.length > 0));
 
         return (
@@ -617,8 +619,8 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                           <label className="block text-sm text-[#525252] mb-2">
                             Recurrence Pattern
                           </label>
-                          <div className="grid grid-cols-3 gap-3">
-                            {["weekly", "monthly", "custom"].map((type) => (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {["weekly", "monthly", "custom", "bi-weekly"].map((type) => (
                               <button
                                 key={type}
                                 type="button"
@@ -643,7 +645,8 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                         </div>
 
                         {/* Custom Days Selection */}
-                        {values.recurrenceType === "custom" && (
+                        {(values.recurrenceType === "custom" ||
+                          values.recurrenceType === "bi-weekly") && (
                           <div>
                             <label className="block text-sm text-[#525252] mb-2">
                               Select Days
@@ -940,7 +943,8 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                           <span className="capitalize">
                             {values.recurrenceType}
                           </span>
-                          {values.recurrenceType === "custom" &&
+                          {(values.recurrenceType === "custom" ||
+                            values.recurrenceType === "bi-weekly") &&
                             values.customDays.length > 0 &&
                             ` (${values.customDays
                               .map(

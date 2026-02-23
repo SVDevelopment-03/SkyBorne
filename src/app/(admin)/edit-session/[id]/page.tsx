@@ -65,7 +65,7 @@ interface FormValues {
   trainer: string;
   duration: number;
   recurringClass: boolean;
-  recurrenceType: "weekly" | "monthly" | "custom";
+  recurrenceType: "weekly" | "monthly" | "custom" | "bi-weekly";
   customDays: number[];
 }
 
@@ -92,14 +92,14 @@ const validationSchema = Yup.object().shape({
     then: (schema) =>
       schema
         .required("Recurrence type is required")
-        .oneOf(["weekly", "monthly", "custom"], "Invalid recurrence type"),
+        .oneOf(["weekly", "monthly", "custom", "bi-weekly"], "Invalid recurrence type"),
   }),
   customDays: Yup.array().when("recurrenceType", {
-    is: "custom",
+    is: (value: string) => value === "custom" || value === "bi-weekly",
     then: (schema) =>
       schema
         .of(Yup.number())
-        .min(1, "Select at least one day for custom recurrence"),
+        .min(1, "Select at least one day for custom/bi-weekly recurrence"),
   }),
 });
 
@@ -361,32 +361,33 @@ export default function EditMeeting() {
         recurringClass: values.recurringClass,
         recurrenceType: values.recurringClass ? values.recurrenceType : null,
         customDays:
-          values.recurringClass && values.recurrenceType === "custom"
+          values.recurringClass &&
+          (values.recurrenceType === "custom" ||
+            values.recurrenceType === "bi-weekly")
             ? values.customDays
             : null,
         localTime: localDateTime.toISOString(),
       };
 
-      const data: any = await updateMeeting({ id: meetingId, body: payload });
+      await updateMeeting({ id: meetingId, body: payload }).unwrap();
 
-      if (data?.data?.success) {
-        setButtonState("success");
-        toast.success("Meeting updated successfully!");
+      setButtonState("success");
+      toast.success("Meeting updated successfully!");
 
+      setTimeout(() => {
+        setShowModal(true);
+        router.push("/schedule-session");
         setTimeout(() => {
-          setShowModal(true);
-          router.push("/schedule-session");
-          setTimeout(() => {
-            setButtonState("default");
-          }, 2000);
-        }, 500);
-      } else {
-        toast.error(data?.data?.message || "Failed to update meeting");
-        setButtonState("default");
-      }
+          setButtonState("default");
+        }, 2000);
+      }, 500);
     } catch (error: any) {
       console.error("Error updating meeting:", error);
-      toast.error(error.message || "Error updating meeting");
+      toast.error(
+        error?.data?.message ||
+          error?.message ||
+          "Error updating meeting",
+      );
       setButtonState("default");
     } finally {
       setSubmitting(false);
@@ -435,17 +436,37 @@ export default function EditMeeting() {
 
   const meeting = meetingData.data;
 
+  const resolvedLiveRegionValue = (() => {
+    const savedRegion = String(meeting.liveRegion || "").trim();
+    if (!savedRegion) return "";
+
+    // Prefer exact ID match first.
+    const byId = regionsData?.data?.find((r: any) => r?._id === savedRegion);
+    if (byId?._id) return byId._id;
+
+    // Backward compatibility: older data may store display label instead of ID.
+    const byLabel = regionsData?.data?.find(
+      (r: any) =>
+        String(r?.displayLabel || "")
+          .trim()
+          .toLowerCase() === savedRegion.toLowerCase(),
+    );
+    if (byLabel?._id) return byLabel._id;
+
+    return "";
+  })();
+
   const initialValues: FormValues = {
     service: meeting.service?._id || "",
     fromDate: new Date(meeting.startDate),
     toDate: meeting.weeklyEndDate ? new Date(meeting.weeklyEndDate) : undefined,
-    liveRegion: meeting.liveRegion || "",
+    liveRegion: resolvedLiveRegionValue,
     title: meeting.title || "",
     liveTime: meeting.liveTime || "10:00 AM",
     trainer: meeting.trainer?._id || "",
     duration: meeting.duration || 60,
     recurringClass: meeting.recurringClass || false,
-    recurrenceType: (meeting.recurrenceType as "weekly" | "monthly" | "custom") || "weekly",
+    recurrenceType: (meeting.recurrenceType as "weekly" | "monthly" | "custom" | "bi-weekly") || "weekly",
     customDays: meeting.customDays || [],
   };
 
@@ -486,7 +507,7 @@ export default function EditMeeting() {
           values?.title &&
           values.duration > 0 &&
           (!values.recurringClass ||
-            (values.recurrenceType !== "custom" ||
+            (!["custom", "bi-weekly"].includes(values.recurrenceType) ||
               values.customDays.length > 0));
 
         return (
@@ -665,8 +686,8 @@ export default function EditMeeting() {
                           <label className="block text-sm text-[#525252] mb-2">
                             Recurrence Pattern
                           </label>
-                          <div className="grid grid-cols-3 gap-3">
-                            {["weekly", "monthly", "custom"].map((type) => (
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            {["weekly", "monthly", "custom", "bi-weekly"].map((type) => (
                               <button
                                 key={type}
                                 type="button"
@@ -691,7 +712,8 @@ export default function EditMeeting() {
                         </div>
 
                         {/* Custom Days Selection */}
-                        {values.recurrenceType === "custom" && (
+                        {(values.recurrenceType === "custom" ||
+                          values.recurrenceType === "bi-weekly") && (
                           <div>
                             <label className="block text-sm text-[#525252] mb-2">
                               Select Days
@@ -996,7 +1018,8 @@ export default function EditMeeting() {
                           <span className="capitalize">
                             {values.recurrenceType}
                           </span>
-                          {values.recurrenceType === "custom" &&
+                          {(values.recurrenceType === "custom" ||
+                            values.recurrenceType === "bi-weekly") &&
                             values.customDays.length > 0 &&
                             ` (${values.customDays
                               .map(
