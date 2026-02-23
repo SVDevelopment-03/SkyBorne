@@ -235,6 +235,8 @@ export default function EditMeeting() {
   };
 
   const convertTimeTo24Hour = (time12h: string): string => {
+      if (!time12h) return "";
+
     const [time, period] = time12h.split(" ");
     const [hours, minutes] = time.split(":").map(Number);
 
