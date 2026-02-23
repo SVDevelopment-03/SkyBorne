@@ -339,15 +339,23 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
       }
 
       const time24h = convertTimeTo24Hour(values.liveTime);
-      const [hours, minutes] = time24h?.split(":").map(Number);
+      const liveRegionTimezone = regionTimezones[values.liveRegion];
+      if (!liveRegionTimezone) {
+        toast.error("Selected region timezone not found");
+        setSubmitting(false);
+        return;
+      }
 
-      const localDateTime = new Date(
-        values.fromDate.getFullYear(),
-        values.fromDate.getMonth(),
-        values.fromDate.getDate(),
-        hours,
-        minutes
+      const liveDateTime = dayjs.tz(
+        `${dayjs(values.fromDate).format("YYYY-MM-DD")} ${time24h}`,
+        "YYYY-MM-DD HH:mm",
+        liveRegionTimezone
       );
+      if (!liveDateTime.isValid()) {
+        toast.error("Invalid live date/time");
+        setSubmitting(false);
+        return;
+      }
 
       // Get the region name instead of using the ID
       const liveRegionName =
@@ -372,7 +380,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
             values.recurrenceType === "bi-weekly")
             ? values.customDays
             : null,
-        localTime: localDateTime.toISOString(),
+        localTime: liveDateTime.toISOString(),
         adminId: user?.id,
       };
 

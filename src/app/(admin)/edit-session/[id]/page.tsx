@@ -334,15 +334,23 @@ export default function EditMeeting() {
       }
 
       const time24h = convertTimeTo24Hour(values.liveTime);
-      const [hours, minutes] = time24h?.split(":").map(Number);
+      const liveRegionTimezone = regionTimezones[values.liveRegion];
+      if (!liveRegionTimezone) {
+        toast.error("Selected region timezone not found");
+        setSubmitting(false);
+        return;
+      }
 
-      const localDateTime = new Date(
-        values.fromDate.getFullYear(),
-        values.fromDate.getMonth(),
-        values.fromDate.getDate(),
-        hours,
-        minutes
+      const liveDateTime = dayjs.tz(
+        `${dayjs(values.fromDate).format("YYYY-MM-DD")} ${time24h}`,
+        "YYYY-MM-DD HH:mm",
+        liveRegionTimezone
       );
+      if (!liveDateTime.isValid()) {
+        toast.error("Invalid live date/time");
+        setSubmitting(false);
+        return;
+      }
 
       const liveRegionName =
         regionOptions?.find((r) => r.value === values.liveRegion)?.label ||
@@ -366,7 +374,7 @@ export default function EditMeeting() {
             values.recurrenceType === "bi-weekly")
             ? values.customDays
             : null,
-        localTime: localDateTime.toISOString(),
+        localTime: liveDateTime.toISOString(),
       };
 
       await updateMeeting({ id: meetingId, body: payload }).unwrap();
