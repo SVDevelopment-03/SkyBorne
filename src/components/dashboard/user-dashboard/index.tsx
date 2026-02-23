@@ -283,10 +283,11 @@ export default function Page() {
     limit,
   } as GetMeetingsParams);
 
-  const avatarName =
-    user?.firstName[0] + (user?.lastName ? user?.lastName[0] : "");
+  const avatarName = `${user?.firstName?.charAt(0) || "U"}${
+    user?.lastName?.charAt(0) || ""
+  }`;
   const fullName = toTitleCase(
-    user?.firstName + " " + (user?.lastName ? user?.lastName : ""),
+    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
   );
   type TimeFilter = "3months" | "6months" | "1year";
 

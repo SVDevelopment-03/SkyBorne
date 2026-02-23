@@ -263,6 +263,7 @@ const sessions: Session[] = (meetingsData?.meetings || []).map(
       regionInfo?.localTime,
       regionInfo?.mode,
     );
+    const formattedTime = formatTimeWithTimezone(session?.localTime);
 
     const classItem = {
       meetingId: session._id,
@@ -271,7 +272,7 @@ const sessions: Session[] = (meetingsData?.meetings || []).map(
       participants: [],
       participantsCount: 0,
       image: "/images/upcoming-ico.jpg",
-      time: regionInfo?.localTime,
+      time: formattedTime,
       startTime: session?.localTime,
       date: formattedDate,
       title: session.name,

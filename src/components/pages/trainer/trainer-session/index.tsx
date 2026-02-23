@@ -99,6 +99,25 @@ const calculateMeetingStatus = (
   return "upcoming";
 };
 
+const normalizeTrainerName = (name?: string) => {
+  const cleaned = (name || "").trim();
+  if (!cleaned) return "Instructor";
+
+  const normalized = cleaned.toLowerCase();
+  const unknownLabels = new Set([
+    "unknown",
+    "unknown trainer",
+    "unknow",
+    "unknow trainer",
+    "n/a",
+    "na",
+    "null",
+    "undefined",
+  ]);
+
+  return unknownLabels.has(normalized) ? "Instructor" : cleaned;
+};
+
 export default function TrainerSessions() {
   const { user } = useGetUser();
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
@@ -165,7 +184,7 @@ export default function TrainerSessions() {
       return {
         id: meeting._id,
         name: meeting.title,
-        trainer: meeting.trainer?.name || "Unknown Trainer",
+        trainer: normalizeTrainerName(meeting.trainer?.name),
         date: new Date(meeting.localTime).toLocaleDateString("en-US", {
           year: "numeric",
           month: "short",
@@ -530,7 +549,9 @@ export default function TrainerSessions() {
                           </Badge>
                         </div>
                         <p className="text-sm text-[#6B6B6B]">
-                          with {session?.trainer}
+                          {session?.trainer === "Instructor"
+                            ? "Instructor"
+                            : `with ${session?.trainer}`}
                         </p>
                       </div>
                     </div>
