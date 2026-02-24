@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { ShieldIcon } from "@/icons/helpIcon";
 import {
   InputOTP,
@@ -32,8 +32,9 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
     otp: "",
   };
 
-  const [sendOtp] = useSendOtpMutation();
+  const [sendOtp, { isLoading: isResending }] = useSendOtpMutation();
   const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
+  const resendLockRef = useRef(false);
 
   const [timer, setTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
@@ -56,13 +57,20 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
 
   // RESEND OTP HANDLER
   const resendOtpHandler = async () => {
+    if (!canResend || resendLockRef.current || isResending || !userEmail) return;
+
     try {
+      resendLockRef.current = true;
       setCanResend(false);
       setTimer(30);
       await sendOtp({ email: userEmail }).unwrap();
       console.log("OTP resent successfully");
     } catch (err: any) {
       console.log("Resend OTP Error:", err?.data?.message || err.message);
+      setCanResend(true);
+      setTimer(0);
+    } finally {
+      resendLockRef.current = false;
     }
   };
 
@@ -73,7 +81,6 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
         email: userEmail,
         otp: values.otp,
       }).unwrap();
-      const { data } = res;
       if (res?.success) {
         toast.success(res?.message ?? "Otp verified successfully");
 
@@ -130,6 +137,7 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
                   <InputOTP
                     maxLength={6}
                     value={values?.otp}
+                    autoComplete="one-time-code"
                     onChange={(val) => setFieldValue("otp", val)}
                   >
                     <InputOTPGroup className="flex items-center justify-between sm:justify-start gap-1 sm:gap-1.5 w-full max-w-[280px] sm:max-w-none">
@@ -154,12 +162,14 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
                   ) : (
                     <p className="font-satoshi-500 text-sm sm:text-lg font-normal leading-5 text-[#6A7282]">
                       {`Didn't receive it?`}
-                      <span
-                        className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer"
+                      <button
+                        type="button"
+                        disabled={isResending}
+                        className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={resendOtpHandler}
                       >
                         Resend code
-                      </span>
+                      </button>
                     </p>
                   )}
                 </div>
@@ -168,15 +178,17 @@ const OtpVerify = ({ nextStep, prevStep, userEmail }: EmailVerifyProps) => {
               <div className="flex flex-col sm:flex-row justify-start items-stretch sm:items-center gap-3 sm:gap-4 md:gap-5.5 pt-8 sm:pt-[57px]">
                 <Button
                   variant={"outlineBlack"}
+                  type="button"
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                   onClick={prevStep}
-                  disabled={isLoading}
+                  disabled={isLoading || isResending}
                 >
                   Back
                 </Button>
                 <Button
                   variant={"theme"}
-                  disabled={isLoading}
+                  type="submit"
+                  disabled={isLoading || isResending}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                 >
                   <span className="flex flex-row gap-2 items-center">

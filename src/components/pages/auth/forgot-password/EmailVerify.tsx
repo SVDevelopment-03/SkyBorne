@@ -12,6 +12,7 @@ import { usePasswordResetRequestMutation } from "@/store/api/authApi";
 import { Loader2 } from "lucide-react";
 import { EmailVerifyProps } from ".";
 import HomeIcon from "@/utils/homeIcon";
+import { useRef } from "react";
 
 export interface EmailFormValues {
   email: string;
@@ -31,6 +32,8 @@ const EmailVerify = ({
   const router = useRouter();
   const [passwordResetRequest, { isLoading }] =
     usePasswordResetRequestMutation();
+  const requestLockRef = useRef(false);
+  const lastRequestRef = useRef<{ email: string; at: number } | null>(null);
 
   const initialValues: EmailFormValues = {
     email: userEmail ?? "",
@@ -51,14 +54,31 @@ const EmailVerify = ({
           initialValues={initialValues}
           validationSchema={EmailSchema}
           onSubmit={async (values, { resetForm }) => {
+            const normalizedEmail = values.email.trim().toLowerCase();
+            const now = Date.now();
+
+            if (requestLockRef.current || isLoading) return;
+
+            // Safari autofill can trigger repeated submits; dedupe same email for a short window.
+            if (
+              lastRequestRef.current?.email === normalizedEmail &&
+              now - lastRequestRef.current.at < 5000
+            ) {
+              return;
+            }
+
+            requestLockRef.current = true;
             try {
-              await passwordResetRequest(values).unwrap();
+              await passwordResetRequest({ email: normalizedEmail }).unwrap();
+              lastRequestRef.current = { email: normalizedEmail, at: now };
               toast.success("Otp sent to your email.");
-              if (updateEmail) updateEmail(values?.email);
+              if (updateEmail) updateEmail(normalizedEmail);
               resetForm();
               nextStep();
             } catch (error) {
               handleApiError(error);
+            } finally {
+              requestLockRef.current = false;
             }
           }}
         >
@@ -73,6 +93,7 @@ const EmailVerify = ({
                     name="email"
                     value={values?.email}
                     onChange={handleChange}
+                    autoComplete="email"
                     className="bg-[#F3F3F5] min-h-[55px]"
                     placeholder="Enter email to verify..."
                   />
