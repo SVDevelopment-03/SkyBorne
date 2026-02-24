@@ -7,17 +7,9 @@ import * as Yup from "yup";
 import { useRouter, useParams } from "next/navigation";
 import { Select } from "@/components/ui/Select2";
 import { TimePicker } from "@/components/ui/TimePicker";
-import { Toggle2 } from "@/components/ui/Toggle2";
 import { Badge } from "@/components/ui/Badge2";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
 import {
   Clock,
   Globe,
@@ -37,7 +29,6 @@ import {
 } from "@/store/api/meetingApi";
 import { useGetAllActiveRegionsQuery } from "@/store/api/regionApi";
 import { useGetCountriesQuery } from "@/store/api/countryApi";
-import useGetUser from "@/hooks/useGetUser";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
@@ -72,13 +63,6 @@ interface FormValues {
 const validationSchema = Yup.object().shape({
   service: Yup.string().required("Service is required"),
   title: Yup.string().required("Title is required"),
-  fromDate: Yup.date()
-    .required("From date is required")
-    .typeError("From date is required"),
-  toDate: Yup.date()
-    .required("To date is required")
-    .typeError("To date is required")
-    .min(Yup.ref("fromDate"), "To date must be after or equal to from date"),
   liveRegion: Yup.string().required("Live region is required"),
   liveTime: Yup.string().required("Live time is required"),
   trainer: Yup.string().required("Trainer is required"),
@@ -86,38 +70,12 @@ const validationSchema = Yup.object().shape({
     .required("Duration is required")
     .min(30, "Duration must be at least 30 minutes")
     .max(480, "Duration cannot exceed 8 hours"),
-  recurringClass: Yup.boolean(),
-  recurrenceType: Yup.string().when("recurringClass", {
-    is: true,
-    then: (schema) =>
-      schema
-        .required("Recurrence type is required")
-        .oneOf(["weekly", "monthly", "custom", "bi-weekly"], "Invalid recurrence type"),
-  }),
-  customDays: Yup.array().when("recurrenceType", {
-    is: (value: string) => value === "custom" || value === "bi-weekly",
-    then: (schema) =>
-      schema
-        .of(Yup.number())
-        .min(1, "Select at least one day for custom/bi-weekly recurrence"),
-  }),
 });
-
-const DAYS_OF_WEEK = [
-  { label: "Mon", value: 1 },
-  { label: "Tue", value: 2 },
-  { label: "Wed", value: 3 },
-  { label: "Thu", value: 4 },
-  { label: "Fri", value: 5 },
-  { label: "Sat", value: 6 },
-  { label: "Sun", value: 7 },
-];
 
 export default function EditMeeting() {
   const router = useRouter();
   const params = useParams();
   const meetingId = params.id as string;
-  const { user } = useGetUser();
 
   // Queries
   const { data: meetingData, isLoading: meetingLoading } =
@@ -162,10 +120,6 @@ export default function EditMeeting() {
   >(null);
 
   const [regionTimezones, setRegionTimezones] = useState<
-    Record<string, string>
-  >({});
-
-  const [fixedReplayTimes, setFixedReplayTimes] = useState<
     Record<string, string>
   >({});
 
@@ -217,11 +171,6 @@ export default function EditMeeting() {
       });
       setRegionTimezones(timezones);
 
-      const replayTimes: Record<string, string> = {};
-      regions.forEach((region: any) => {
-        replayTimes[region._id] = region.replayTime;
-      });
-      setFixedReplayTimes(replayTimes);
     }
   }, [regionsData?.data, regionsLoading]);
 
@@ -235,7 +184,7 @@ export default function EditMeeting() {
   };
 
   const convertTimeTo24Hour = (time12h: string): string => {
-      if (!time12h) return "";
+    if (!time12h) return "";
 
     const [time, period] = time12h.split(" ");
     const [hours, minutes] = time.split(":").map(Number);
@@ -329,8 +278,8 @@ export default function EditMeeting() {
     try {
       setButtonState("default");
 
-      if (!values.fromDate || !values.toDate) {
-        toast.error("Please select both from and to dates");
+      if (!values.fromDate) {
+        toast.error("Meeting start date is missing");
         setSubmitting(false);
         return;
       }
@@ -366,16 +315,6 @@ export default function EditMeeting() {
         title: values?.title,
         regions: timezoneConversions,
         duration: values.duration,
-        startDate: values?.fromDate,
-        weeklyEndDate: values?.toDate,
-        recurringClass: values.recurringClass,
-        recurrenceType: values.recurringClass ? values.recurrenceType : null,
-        customDays:
-          values.recurringClass &&
-          (values.recurrenceType === "custom" ||
-            values.recurrenceType === "bi-weekly")
-            ? values.customDays
-            : null,
         localTime: liveDateTime.toISOString(),
       };
 
@@ -511,14 +450,10 @@ export default function EditMeeting() {
         const isFormValid =
           values.service &&
           values.fromDate &&
-          values.toDate &&
           values.liveRegion &&
           values.trainer &&
           values?.title &&
-          values.duration > 0 &&
-          (!values.recurringClass ||
-            (!["custom", "bi-weekly"].includes(values.recurrenceType) ||
-              values.customDays.length > 0));
+          values.duration > 0;
 
         return (
           <Form>
@@ -563,12 +498,12 @@ export default function EditMeeting() {
                   </section>
                 )}
 
-                {/* Section 2: Title & Date Range */}
+                {/* Section 2: Session Title */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="w-5 h-5 text-[#b95e82]" />
                     <h3 className="text-large text-[#262626]">
-                      Title & Date Range
+                      Session Title
                     </h3>
                   </div>
 
@@ -589,184 +524,8 @@ export default function EditMeeting() {
                     )}
                   </div>
 
-                  {/* Date Range Pickers */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* From Date */}
-                    <div>
-                      <label className="block text-sm text-[#525252] mb-2">
-                        From Date
-                      </label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="themeRect"
-                            type="button"
-                            className="w-full max-h-[50px] min-h-[50px] justify-start text-left font-normal bg-white border border-[#E5E5E5]! hover:bg-[#F3F3F5] text-[#262626]"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4 text-[#b95e82]" />
-                            {values.fromDate
-                              ? format(values.fromDate, "PPP")
-                              : "Pick from date"}
-                          </Button>
-                        </PopoverTrigger>
-
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            className="rounded-lg"
-                            selected={values.fromDate}
-                            onSelect={(date) => setFieldValue("fromDate", date)}
-                            disabled={(date) =>
-                              date < new Date(new Date().setHours(0, 0, 0, 0))
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-
-                      {errors.fromDate && touched.fromDate && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.fromDate}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* To Date */}
-                    <div>
-                      <label className="block text-sm text-[#525252] mb-2">
-                        To Date
-                      </label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="themeRect"
-                            type="button"
-                            className="w-full max-h-[50px] min-h-[50px] justify-start text-left font-normal bg-white border border-[#E5E5E5]! hover:bg-[#F3F3F5] text-[#262626]"
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4 text-[#b95e82]" />
-                            {values.toDate
-                              ? format(values.toDate, "PPP")
-                              : "Pick to date"}
-                          </Button>
-                        </PopoverTrigger>
-
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            className="rounded-lg"
-                            selected={values.toDate}
-                            onSelect={(date) => setFieldValue("toDate", date)}
-                            disabled={(date) =>
-                              !values.fromDate ||
-                              date < values.fromDate
-                            }
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-
-                      {errors.toDate && touched.toDate && (
-                        <p className="text-red-500 text-sm mt-1">
-                          {errors.toDate}
-                        </p>
-                      )}
-                    </div>
-                  </div>
                 </section>
-
-                {/* Section 3: Recurring Class Options */}
-                <section className="space-y-4">
-                  <div className="bg-[#f5f5f5] rounded-xl p-4">
-                    <Toggle2
-                      checked={values.recurringClass}
-                      onChange={(val) => {
-                        setFieldValue("recurringClass", val);
-                        if (!val) {
-                          setFieldValue("customDays", []);
-                        }
-                      }}
-                      label="Recurring Class"
-                      description="Enable to create recurring class sessions"
-                    />
-
-                    {values.recurringClass && (
-                      <div className="mt-6 space-y-4">
-                        {/* Recurrence Type Selection */}
-                        <div>
-                          <label className="block text-sm text-[#525252] mb-2">
-                            Recurrence Pattern
-                          </label>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            {["weekly", "monthly", "custom", "bi-weekly"].map((type) => (
-                              <button
-                                key={type}
-                                type="button"
-                                onClick={() =>
-                                  setFieldValue("recurrenceType", type)
-                                }
-                                className={`px-4 py-3 rounded-lg border-2 transition-all capitalize ${
-                                  values.recurrenceType === type
-                                    ? "border-[#b95e82] bg-[#b95e82]/10 text-[#b95e82]"
-                                    : "border-[#e5e5e5] bg-white text-[#737373] hover:border-[#b95e82]/30"
-                                }`}
-                              >
-                                {type}
-                              </button>
-                            ))}
-                          </div>
-                          {errors.recurrenceType && touched.recurrenceType && (
-                            <p className="text-red-500 text-sm mt-1">
-                              {errors.recurrenceType}
-                            </p>
-                          )}
-                        </div>
-
-                        {/* Custom Days Selection */}
-                        {(values.recurrenceType === "custom" ||
-                          values.recurrenceType === "bi-weekly") && (
-                          <div>
-                            <label className="block text-sm text-[#525252] mb-2">
-                              Select Days
-                            </label>
-                            <div className="flex flex-wrap gap-2">
-                              {DAYS_OF_WEEK.map((day) => (
-                                <button
-                                  key={day.value}
-                                  type="button"
-                                  onClick={() => {
-                                    const currentDays = values.customDays || [];
-                                    const newDays = currentDays.includes(
-                                      day.value
-                                    )
-                                      ? currentDays.filter(
-                                          (d) => d !== day.value
-                                        )
-                                      : [...currentDays, day.value];
-                                    setFieldValue("customDays", newDays);
-                                  }}
-                                  className={`px-4 py-2 rounded-lg border-2 transition-all ${
-                                    values.customDays?.includes(day.value)
-                                      ? "border-[#b95e82] bg-[#b95e82] text-white"
-                                      : "border-[#e5e5e5] bg-white text-[#737373] hover:border-[#b95e82]/30"
-                                  }`}
-                                >
-                                  {day.label}
-                                </button>
-                              ))}
-                            </div>
-                            {errors.customDays && touched.customDays && (
-                              <p className="text-red-500 text-sm mt-1">
-                                {errors.customDays}
-                              </p>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </section>
-
-                {/* Section 4: Set Live Region & Time */}
+                {/* Section 3: Set Live Region & Time */}
                 <section className="space-y-4">
                   <div className="bg-gradient-to-r from-[#d4849f]/20 to-[#f9d5c7]/20 rounded-xl p-4 space-y-4">
                     <div className="flex items-center gap-2">
@@ -837,7 +596,7 @@ export default function EditMeeting() {
                   </div>
                 </section>
 
-                {/* Section 5: Assign Trainer */}
+                {/* Section 4: Assign Trainer */}
                 {trainerOptions && (
                   <section className="space-y-4">
                     <h4 className="text-[#262626]">Trainer</h4>
@@ -853,7 +612,7 @@ export default function EditMeeting() {
                   </section>
                 )}
 
-                {/* Section 6: Duration */}
+                {/* Section 5: Duration */}
                 <section className="space-y-4">
                   <h4 className="text-[#262626]">Duration (minutes)</h4>
                   <input
@@ -874,7 +633,7 @@ export default function EditMeeting() {
                   )}
                 </section>
 
-                {/* Section 7: Global Time Preview */}
+                {/* Section 6: Global Time Preview */}
                 <section className="space-y-4">
                   <div>
                     <h3 className="text-large text-[#262626] mb-1">
@@ -1005,12 +764,6 @@ export default function EditMeeting() {
                         {serviceName}
                       </h4>
                       <p className="text-[#737373]">
-                        Date Range:{" "}
-                        {values.fromDate && values.toDate
-                          ? `${format(values.fromDate, "PPP")} - ${format(values.toDate, "PPP")}`
-                          : "Not set"}
-                      </p>
-                      <p className="text-[#737373]">
                         Live Time: {values.liveTime} (
                         {
                           regionOptions?.find(
@@ -1022,24 +775,6 @@ export default function EditMeeting() {
                       <p className="text-[#737373]">
                         Duration: {values.duration} minutes
                       </p>
-                      {values.recurringClass && (
-                        <p className="text-[#737373]">
-                          Recurrence:{" "}
-                          <span className="capitalize">
-                            {values.recurrenceType}
-                          </span>
-                          {(values.recurrenceType === "custom" ||
-                            values.recurrenceType === "bi-weekly") &&
-                            values.customDays.length > 0 &&
-                            ` (${values.customDays
-                              .map(
-                                (d) =>
-                                  DAYS_OF_WEEK.find((day) => day.value === d)
-                                    ?.label
-                              )
-                              .join(", ")})`}
-                        </p>
-                      )}
                       <p className="text-[#737373]">
                         Replay Regions:{" "}
                         {timezoneConversions
