@@ -1,7 +1,7 @@
 "use client";
 import { Typography } from "@/components/ui/heading";
 import { Progress } from "@/components/ui/progress";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import EmailVerify from "./EmailVerify";
 import OtpVerify from "./OtpVerify";
 import ResetPassword from "./ResetPassword";
@@ -13,17 +13,50 @@ export interface EmailVerifyProps {
 }
 
 const totalSteps = 3;
+const FORGOT_PASSWORD_STEP_KEY = "forgot-password-step";
+const FORGOT_PASSWORD_EMAIL_KEY = "forgot-password-email";
+
+const getInitialStep = () => {
+  if (typeof window === "undefined") return 1;
+
+  const savedStep = window.sessionStorage.getItem(FORGOT_PASSWORD_STEP_KEY);
+  const parsedStep = Number(savedStep);
+
+  if (Number.isNaN(parsedStep) || parsedStep < 1 || parsedStep > totalSteps) {
+    return 1;
+  }
+
+  return parsedStep;
+};
+
+const getInitialEmail = () => {
+  if (typeof window === "undefined") return "";
+  return window.sessionStorage.getItem(FORGOT_PASSWORD_EMAIL_KEY) ?? "";
+};
 
 const ForgotPassword = () => {
-  const [step, setStep] = useState(1);
-  const [userEmail, setUserEmail] = useState("");
+  const [step, setStep] = useState(getInitialStep);
+  const [userEmail, setUserEmail] = useState(getInitialEmail);
+
+  useEffect(() => {
+    window.sessionStorage.setItem(FORGOT_PASSWORD_STEP_KEY, String(step));
+  }, [step]);
+
+  useEffect(() => {
+    if (userEmail) {
+      window.sessionStorage.setItem(FORGOT_PASSWORD_EMAIL_KEY, userEmail);
+      return;
+    }
+
+    window.sessionStorage.removeItem(FORGOT_PASSWORD_EMAIL_KEY);
+  }, [userEmail]);
 
   const nextStep = () => {
-    if (step < totalSteps) setStep(step + 1);
+    setStep((prev) => (prev < totalSteps ? prev + 1 : prev));
   };
 
   const prevStep = () => {
-    if (step > 0) setStep(step - 1);
+    setStep((prev) => (prev > 1 ? prev - 1 : prev));
   };
 
   const updateEmail = (email: string) => {

@@ -3,8 +3,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Typography } from "@/components/ui/heading";
-import { Input2 } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, Formik } from "formik";
 import * as Yup from "yup";
 import React, { useEffect, useRef, useState } from "react";
@@ -25,6 +23,9 @@ export interface OtpFormValues {
   otp: string;
 }
 
+const SIGNUP_OTP_SENT_EMAIL_KEY = "signup-otp-sent-email";
+const SIGNUP_OTP_SENT_AT_KEY = "signup-otp-sent-at";
+
 const OtpSchema = Yup.object().shape({
   otp: Yup.string()
     .matches(/^\d{6}$/, "OTP must be 6 digits")
@@ -38,11 +39,12 @@ const Step4 = () => {
   const [showSuccess, setShowSuccess] = useState(false);
   const otpSentRef = useRef(false);
   const emailSentToRef = useRef<string | null>(null);
+  const resendLockRef = useRef(false);
 
   const { step, setStep, totalSteps, updateStepData, formData } = useSignup();
   const userEmail = formData?.step2?.email;
 
-  const [sendOtp] = useSendOtpMutation();
+  const [sendOtp, { isLoading: isResending }] = useSendOtpMutation();
   const [verifyOtp, { isLoading }] = useVerifyOtpMutation();
 
   const [timer, setTimer] = useState(30);
@@ -50,12 +52,49 @@ const Step4 = () => {
 
   useEffect(() => {
     if (!userEmail) return;
+    const normalizedEmail = userEmail.trim().toLowerCase();
 
     // Only send OTP if we haven't sent it yet to this email
-    if (!otpSentRef.current && emailSentToRef.current !== userEmail) {
+    if (!otpSentRef.current && emailSentToRef.current !== normalizedEmail) {
+      const sentEmail =
+        typeof window !== "undefined"
+          ? window.sessionStorage.getItem(SIGNUP_OTP_SENT_EMAIL_KEY)
+          : null;
+      const sentAt =
+        typeof window !== "undefined"
+          ? Number(window.sessionStorage.getItem(SIGNUP_OTP_SENT_AT_KEY) ?? "0")
+          : 0;
+
+      if (
+        sentEmail === normalizedEmail &&
+        Number.isFinite(sentAt) &&
+        sentAt > 0 &&
+        Date.now() - sentAt < 5 * 60 * 1000
+      ) {
+        otpSentRef.current = true;
+        emailSentToRef.current = normalizedEmail;
+        return;
+      }
+
       otpSentRef.current = true;
-      emailSentToRef.current = userEmail;
-      sendOtp({ email: userEmail });
+      emailSentToRef.current = normalizedEmail;
+      sendOtp({ email: normalizedEmail })
+        .unwrap()
+        .then(() => {
+          if (typeof window !== "undefined") {
+            window.sessionStorage.setItem(
+              SIGNUP_OTP_SENT_EMAIL_KEY,
+              normalizedEmail
+            );
+            window.sessionStorage.setItem(
+              SIGNUP_OTP_SENT_AT_KEY,
+              String(Date.now())
+            );
+          }
+        })
+        .catch(() => {
+          otpSentRef.current = false;
+        });
     }
   }, [userEmail, sendOtp]);
 
@@ -77,13 +116,27 @@ const Step4 = () => {
 
   // RESEND OTP HANDLER
   const resendOtpHandler = async () => {
+    if (!canResend || resendLockRef.current || isResending || !userEmail) return;
+
     try {
+      resendLockRef.current = true;
       setCanResend(false);
       setTimer(30);
       await sendOtp({ email: userEmail }).unwrap();
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(
+          SIGNUP_OTP_SENT_EMAIL_KEY,
+          userEmail.trim().toLowerCase()
+        );
+        window.sessionStorage.setItem(SIGNUP_OTP_SENT_AT_KEY, String(Date.now()));
+      }
       console.log("OTP resent successfully");
     } catch (err: any) {
       console.log("Resend OTP Error:", err?.data?.message || err.message);
+      setCanResend(true);
+      setTimer(0);
+    } finally {
+      resendLockRef.current = false;
     }
   };
 
@@ -158,7 +211,7 @@ const Step4 = () => {
           validationSchema={OtpSchema}
           onSubmit={handleSubmit}
         >
-          {({ values, errors, touched, handleChange, setFieldValue }) => (
+          {({ values, errors, touched, setFieldValue }) => (
             <Form>
               {/* 2 Column Grid */}
               <div className="grid grid-cols-1">
@@ -199,12 +252,14 @@ const Step4 = () => {
                   ) : (
                     <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
                       {`Didn't receive it?`}
-                      <span
-                        className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer"
+                      <button
+                        type="button"
+                        disabled={isResending}
+                        className="font-satoshi-700 font-bold text-[#B95E82] pl-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={resendOtpHandler}
                       >
                         Resend code
-                      </span>
+                      </button>
                     </p>
                   )}
                   <p className="font-satoshi-500  text-lg font-normal leading-5 text-[#6A7282]">
@@ -221,15 +276,17 @@ const Step4 = () => {
               <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 md:gap-5.5 pt-[40px] sm:pt-[57px]">
                 <Button
                   variant={"outlineBlack"}
+                  type="button"
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                   onClick={prevStep}
-                  disabled={isLoading}
+                  disabled={isLoading || isResending}
                 >
                   Back
                 </Button>
                 <Button
                   variant={"theme"}
-                  disabled={isLoading}
+                  type="submit"
+                  disabled={isLoading || isResending}
                   className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                 >
                   <span className="flex flex-row gap-2 items-center">
