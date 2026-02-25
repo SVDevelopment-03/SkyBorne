@@ -135,9 +135,10 @@ interface GetMeetingsParams {
 export default function Page() {
   const [userRegion, setUserRegion] = useState<{
     region: string | null;
+    timezone: string | null;
   } | null>(null);
 
-  const { region } = useUserRegionFromStore();
+  const { region, timezone } = useUserRegionFromStore();
 
   
 
@@ -168,15 +169,14 @@ export default function Page() {
   }, [search]);
 
   useEffect(() => {
-
     setTimeout(() => {
       console.log("user region", region);
-      
-       setUserRegion({region:region});
-
-      // setUserRegion({ region: "Canada / USA", timezone: "America/New_York" });
+      setUserRegion({
+        region: region ?? null,
+        timezone: timezone ?? null,
+      });
     }, 0);
-  }, [region]);
+  }, [region, timezone]);
 
   const {
     data: upcomingData,
@@ -338,7 +338,7 @@ export default function Page() {
         day: "numeric" as const,
         month: "short" as const,
         year: "numeric" as const,
-        timeZone: undefined,
+        timeZone: timezone || undefined,
       };
 
       const formattedDate = date
@@ -600,18 +600,18 @@ export default function Page() {
                     //   userRegion?.timezone
                     // );
 
-                    const formattedTime = new Date(
-                      meeting?.localTime,
-                    ).toLocaleTimeString([], {
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    });
+                    const formattedTime =
+                      regionInfo?.localTime ||
+                      meeting?.liveTime ||
+                      formatTimeWithTimezone(
+                        meeting?.localTime,
+                        userRegion?.timezone || regionInfo?.timezone,
+                      );
 
                     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
                     const formattedDate = formatDateWithTimezone(
                       meeting?.localTime,
-                      " ",
+                      userRegion?.timezone || regionInfo?.timezone,
                       regionInfo?.localTime,
                       "live"
                       // regionInfo?.mode,

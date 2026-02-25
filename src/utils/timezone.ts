@@ -32,12 +32,21 @@ export const useUserRegionFromStore = () => {
   });
 
   const countries :any= countriesData?.data?.countries || [];
-  const region = countries?.find((country:any)=>normalizeCountry(country.name)===userCountry)?.region?.name ?? " ";
+  const matchedCountry = countries?.find(
+    (country: any) => normalizeCountry(country.name) === userCountry
+  );
+  const regionObject =
+    matchedCountry?.region && typeof matchedCountry.region === "object"
+      ? matchedCountry.region
+      : null;
+  const region = regionObject?.name ?? " ";
+  const timezone = regionObject?.timezone ?? null;
   console.log("region", region);
 
 
   return {
     region,
+    timezone,
     userCountry,
     isLoading,
     isError,

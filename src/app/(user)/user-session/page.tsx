@@ -41,6 +41,7 @@ interface Session {
   trainer: string;
   date: string;
   time: string;
+  liveTime?: string;
   localTime: string;
   duration: number;
   type: string;
@@ -73,9 +74,10 @@ export default function UserSessions() {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [userRegion, setUserRegion] = useState<{
     region: string | null;
+    timezone: string | null;
   } | null>(null);
 
-  const { region } = useUserRegionFromStore();
+  const { region, timezone } = useUserRegionFromStore();
 
   // RTK Query hooks
   const {
@@ -97,21 +99,25 @@ export default function UserSessions() {
 
     setTimeout(() => {
       console.log("user region", region);
-       setUserRegion({region:region});
+      setUserRegion({
+        region: region ?? null,
+        timezone: timezone ?? null,
+      });
     }, 0);
-  }, [region]);
+  }, [region, timezone]);
 
   // ✅ Helper function to format date with timezone awareness
   // If region is not 'live' and region time has passed, shows next day date for recording
   const formatDateWithTimezone = (
     isoString: string,
+    timezone?: string,
     regionTimeStr?: string,
     mode?: string,
   ) => {
     if (!isoString) return "N/A";
 
     try {
-      let date = new Date(isoString);
+      const date = new Date(isoString);
 
       // Validate date
       if (isNaN(date.getTime())) {
@@ -147,6 +153,7 @@ export default function UserSessions() {
         day: "numeric" as const,
         month: "short" as const,
         year: "numeric" as const,
+        timeZone: timezone || undefined,
       };
 
       const formattedDate = date
@@ -196,6 +203,9 @@ export default function UserSessions() {
 const sessions: Session[] = (meetingsData?.meetings || []).map(
   (meeting: any) => {
     const meetingTime = new Date(meeting.localTime);
+    const regionInfo = meeting?.regions?.find(
+      (r: any) => r.region == userRegion?.region,
+    );
     const oneHourAfterMeeting = new Date(
       meetingTime.getTime() + 60 * 60 * 1000
     );
@@ -209,11 +219,14 @@ const sessions: Session[] = (meetingsData?.meetings || []).map(
         month: "short",
         day: "numeric",
       }),
-      time: meetingTime.toLocaleTimeString("en-US", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      }),
+      time:
+        regionInfo?.localTime ||
+        meeting?.liveTime ||
+        formatTimeWithTimezone(
+          meeting?.localTime,
+          userRegion?.timezone || regionInfo?.timezone,
+        ),
+      liveTime: meeting?.liveTime,
       duration: meeting.duration,
       localTime: meeting?.localTime,
       type: "Online",
@@ -260,10 +273,17 @@ const sessions: Session[] = (meetingsData?.meetings || []).map(
     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
     const formattedDate = formatDateWithTimezone(
       session?.localTime,
+      userRegion?.timezone || regionInfo?.timezone,
       regionInfo?.localTime,
       regionInfo?.mode,
     );
-    const formattedTime = formatTimeWithTimezone(session?.localTime);
+    const formattedTime =
+      regionInfo?.localTime ||
+      session?.liveTime ||
+      formatTimeWithTimezone(
+        session?.localTime,
+        userRegion?.timezone || regionInfo?.timezone,
+      );
 
     const classItem = {
       meetingId: session._id,
@@ -558,6 +578,7 @@ const handleJoinMeeting = async (session: Session) => {
             // ✅ Use the enhanced formatDateWithTimezone with recording mode support
             const formattedDate = formatDateWithTimezone(
               session?.localTime,
+              userRegion?.timezone || regionInfo?.timezone,
               regionInfo?.localTime,
               "live"
               // regionInfo?.mode,
@@ -573,13 +594,13 @@ const handleJoinMeeting = async (session: Session) => {
 
             const isJoinDisabled = diffMinutes > 5;
 
-            const formattedTime = new Date(
-              session?.localTime,
-            ).toLocaleTimeString([], {
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            });
+            const formattedTime =
+              regionInfo?.localTime ||
+              session?.liveTime ||
+              formatTimeWithTimezone(
+                session?.localTime,
+                userRegion?.timezone || regionInfo?.timezone,
+              );
 
             return (
               <Card
