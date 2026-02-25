@@ -10,6 +10,7 @@ import { TimePicker } from "@/components/ui/TimePicker";
 import { Badge } from "@/components/ui/Badge2";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 import {
   Clock,
   Globe,
@@ -498,12 +499,12 @@ export default function EditMeeting() {
                   </section>
                 )}
 
-                {/* Section 2: Session Title */}
+                {/* Section 2: Session Title & Date Range */}
                 <section className="space-y-4">
                   <div className="flex items-center gap-2">
                     <CalendarIcon className="w-5 h-5 text-[#b95e82]" />
                     <h3 className="text-large text-[#262626]">
-                      Session Title
+                      Session Title & Date Range
                     </h3>
                   </div>
 
@@ -522,6 +523,43 @@ export default function EditMeeting() {
                         {errors.title}
                       </p>
                     )}
+                  </div>
+
+                  {/* Date Range (Read Only) */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-[#525252] mb-2">
+                        From Date
+                      </label>
+                      <Button
+                        variant="themeRect"
+                        type="button"
+                        disabled
+                        className="w-full max-h-[50px] min-h-[50px] justify-start text-left font-normal bg-[#F3F3F5] border border-[#E5E5E5]! text-[#262626] cursor-not-allowed opacity-100"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-[#b95e82]" />
+                        {values.fromDate
+                          ? format(values.fromDate, "PPP")
+                          : "Not available"}
+                      </Button>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm text-[#525252] mb-2">
+                        To Date
+                      </label>
+                      <Button
+                        variant="themeRect"
+                        type="button"
+                        disabled
+                        className="w-full max-h-[50px] min-h-[50px] justify-start text-left font-normal bg-[#F3F3F5] border border-[#E5E5E5]! text-[#262626] cursor-not-allowed opacity-100"
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4 text-[#b95e82]" />
+                        {values.toDate
+                          ? format(values.toDate, "PPP")
+                          : "Not available"}
+                      </Button>
+                    </div>
                   </div>
 
                 </section>
