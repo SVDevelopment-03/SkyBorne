@@ -43,15 +43,18 @@ export interface AdminPayment {
   userId: string;
   username: string;
   email: string;
+  phoneNumber?: string;
   orderRef: string;
   reference: string;
   amount: number;
   localAmount?: number;
   currency: string;
   stripeSubscriptionId: string;
+  transactionId?: string;
   plan: string;
   status: string;
   invoiceId?: string;
+  verifiedAt?: string;
   createdAt: string;
   updatedAt: string;
   paymentMethod?: string;
@@ -210,6 +213,15 @@ function AdminPayments() {
       ),
     },
     {
+      accessorKey: "transactionId",
+      header: "Transaction Id",
+      cell: ({ row }) => (
+        <div className="text-sm font-mono text-[#6B6B6B]">
+          {row.original.transactionId || "N/A"}
+        </div>
+      ),
+    },
+    {
       accessorKey: "username",
       header: "User Name",
       cell: ({ row }) => (
@@ -228,14 +240,32 @@ function AdminPayments() {
       ),
     },
     {
-      accessorKey: "createdAt",
-      header: "Date",
+      accessorKey: "phoneNumber",
+      header: "Phone Number",
       cell: ({ row }) => (
         <div className="text-sm text-[#6B6B6B]">
-          {formatDate(row.original.createdAt)}
+          {row.original.phoneNumber || "N/A"}
         </div>
       ),
     },
+    {
+      accessorKey: "verifiedAt",
+      header: "Verified At",
+      cell: ({ row }) => (
+        <div className="text-sm text-[#6B6B6B]">
+          {row.original.verifiedAt ? formatDate(row.original.verifiedAt) : "N/A"}
+        </div>
+      ),
+    },
+    // {
+    //   accessorKey: "createdAt",
+    //   header: "Date",
+    //   cell: ({ row }) => (
+    //     <div className="text-sm text-[#6B6B6B]">
+    //       {formatDate(row.original.createdAt)}
+    //     </div>
+    //   ),
+    // },
     {
       accessorKey: "plan",
       header: "Plan",
