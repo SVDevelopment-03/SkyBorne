@@ -83,6 +83,14 @@ export default function EditMeeting() {
     useGetMeetingByIdQuery(meetingId, {
       skip: !meetingId,
     });
+  const rawParentMeetingId = (meetingData?.data as any)?.parentMeetingId;
+  const parentMeetingId =
+    typeof rawParentMeetingId === "string"
+      ? rawParentMeetingId
+      : rawParentMeetingId?._id || "";
+  const { data: parentMeetingData } = useGetMeetingByIdQuery(parentMeetingId, {
+    skip: !parentMeetingId,
+  });
 
   const { data: trainersData, isLoading: trainersLoading } =
     useGetActiveTrainersQuery({
@@ -385,6 +393,10 @@ export default function EditMeeting() {
   }
 
   const meeting = meetingData.data;
+  const resolvedWeeklyEndDate =
+    meeting.weeklyEndDate ||
+    (parentMeetingData?.data as any)?.weeklyEndDate ||
+    null;
 
   const resolvedLiveRegionValue = (() => {
     const savedRegion = String(meeting.liveRegion || "").trim();
@@ -409,7 +421,7 @@ export default function EditMeeting() {
   const initialValues: FormValues = {
     service: meeting.service?._id || "",
     fromDate: new Date(meeting.startDate),
-    toDate: meeting.weeklyEndDate ? new Date(meeting.weeklyEndDate) : undefined,
+    toDate: resolvedWeeklyEndDate ? new Date(resolvedWeeklyEndDate) : undefined,
     liveRegion: resolvedLiveRegionValue,
     title: meeting.title || "",
     liveTime: meeting.liveTime || "10:00 AM",
