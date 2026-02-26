@@ -65,7 +65,7 @@ interface FormValues {
   liveRegion: string;
   liveTime: string;
   trainer: string;
-  duration: number;
+  duration: number | "";
   recurringClass: boolean;
   recurrenceType: "weekly" | "monthly" | "custom" | "bi-weekly";
   customDays: number[];
@@ -85,6 +85,9 @@ const validationSchema = Yup.object().shape({
   liveTime: Yup.string().required("Live time is required"),
   trainer: Yup.string().required("Trainer is required"),
   duration: Yup.number()
+    .transform((value, originalValue) =>
+      originalValue === "" ? undefined : value
+    )
     .required("Duration is required")
     .min(30, "Duration must be at least 30 minutes")
     .max(480, "Duration cannot exceed 8 hours"),
@@ -377,7 +380,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         effectiveLiveRegionId,
         values.liveTime,
         values.fromDate,
-        values.duration
+        Number(values.duration) || 0
       ).map((conversion) =>
         conversion.mode === "live"
           ? {
@@ -395,7 +398,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         trainer: values.trainer,
         title: values?.title,
         regions: payloadTimezoneConversions,
-        duration: values.duration,
+        duration: Number(values.duration),
         startDate: values?.fromDate,
         weeklyEndDate: values?.toDate,
         recurringClass: values.recurringClass,
@@ -463,7 +466,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
           values.liveRegion,
           values.liveTime,
           values.fromDate,
-          values.duration
+          Number(values.duration) || 0
         );
 
         const currentService = serviceOptions?.find(
@@ -480,7 +483,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
           values.liveRegion &&
           values.trainer &&
           values?.title &&
-          values.duration > 0 &&
+          Number(values.duration) > 0 &&
           (!values.recurringClass ||
             (!["custom", "bi-weekly"].includes(values.recurrenceType) ||
               values.customDays.length > 0));
@@ -817,10 +820,28 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                     type="number"
                     name="duration"
                     value={values.duration}
-                    onChange={(e) =>
-                      setFieldValue("duration", parseInt(e.target.value) || 60)
-                    }
-                    onBlur={() => setFieldValue("duration", values.duration)}
+                    onChange={(e) => {
+                      const rawValue = e.target.value;
+                      if (rawValue === "") {
+                        setFieldValue("duration", "");
+                        return;
+                      }
+
+                      const parsed = Number(rawValue);
+                      if (!Number.isNaN(parsed)) {
+                        setFieldValue("duration", parsed);
+                      }
+                    }}
+                    onBlur={() => {
+                      const durationValue = Number(values.duration);
+                      if (!durationValue || Number.isNaN(durationValue)) {
+                        setFieldValue("duration", 60);
+                        return;
+                      }
+
+                      const clamped = Math.min(480, Math.max(30, durationValue));
+                      setFieldValue("duration", clamped);
+                    }}
                     min="30"
                     max="480"
                     className="w-full px-4 py-3 bg-[#F3F3F5] border border-[#e5e5e5] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#b95e82]"
