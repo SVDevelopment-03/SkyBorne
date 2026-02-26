@@ -39,6 +39,8 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore);
 
+const GULF_TIMEZONE = "Asia/Dubai";
+
 interface TimezoneConversion {
   region: string;
   localTime: string;
@@ -294,7 +296,11 @@ export default function EditMeeting() {
       }
 
       const time24h = convertTimeTo24Hour(values.liveTime);
-      const liveRegionTimezone = regionTimezones[values.liveRegion];
+      const gulfRegion = regionsData?.data?.find(
+        (region: any) => region?.timezone === GULF_TIMEZONE
+      );
+      const effectiveLiveRegionId = gulfRegion?._id || values.liveRegion;
+      const liveRegionTimezone = regionTimezones[effectiveLiveRegionId];
       if (!liveRegionTimezone) {
         toast.error("Selected region timezone not found");
         setSubmitting(false);
@@ -312,9 +318,20 @@ export default function EditMeeting() {
         return;
       }
 
+      const gulfLocalTime = liveDateTime
+        .tz(GULF_TIMEZONE)
+        .format("YYYY-MM-DDTHH:mm:ssZ");
+
       const liveRegionName =
-        regionOptions?.find((r) => r.value === values.liveRegion)?.label ||
+        regionOptions?.find((r) => r.value === effectiveLiveRegionId)?.label ||
         values.liveRegion;
+
+      const payloadTimezoneConversions = getTimezoneConversions(
+        effectiveLiveRegionId,
+        values.liveTime,
+        values.fromDate,
+        values.duration
+      );
 
       const payload = {
         service: values.service,
@@ -322,9 +339,9 @@ export default function EditMeeting() {
         liveTime: values.liveTime,
         trainer: values.trainer,
         title: values?.title,
-        regions: timezoneConversions,
+        regions: payloadTimezoneConversions,
         duration: values.duration,
-        localTime: liveDateTime.toISOString(),
+        localTime: gulfLocalTime,
       };
 
       await updateMeeting({ id: meetingId, body: payload }).unwrap();

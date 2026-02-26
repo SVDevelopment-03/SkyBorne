@@ -1,3 +1,5 @@
+
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useSelector } from "react-redux";
@@ -24,6 +26,8 @@ export const useUserRegionFromStore = () => {
   const user = useSelector((state: any) => state.auth.user);
   const userCountry = normalizeCountry(user?.country);
 
+  console.log("userCountry", userCountry);
+
   // Fetch countries list (same as CountryManagement)
   const { data: countriesData, isLoading, isError } = useGetCountriesQuery({
     page: 1,
@@ -31,10 +35,15 @@ export const useUserRegionFromStore = () => {
     search: "",
   });
 
+    console.log("country data", countriesData);
+
+
   const countries :any= countriesData?.data?.countries || [];
   const matchedCountry = countries?.find(
     (country: any) => normalizeCountry(country.name) === userCountry
   );
+    console.log("matchedCountry", matchedCountry);
+
   const regionObject =
     matchedCountry?.region && typeof matchedCountry.region === "object"
       ? matchedCountry.region

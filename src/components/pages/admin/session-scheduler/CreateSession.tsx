@@ -43,6 +43,8 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(isSameOrBefore);
 
+const GULF_TIMEZONE = "Asia/Dubai";
+
 interface TimezoneConversion {
   region: string;
   localTime: string;
@@ -340,7 +342,11 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
       }
 
       const time24h = convertTimeTo24Hour(values.liveTime);
-      const liveRegionTimezone = regionTimezones[values.liveRegion];
+      const gulfRegion = regionsData?.data?.find(
+        (region: any) => region?.timezone === GULF_TIMEZONE
+      );
+      const effectiveLiveRegionId = gulfRegion?._id || values.liveRegion;
+      const liveRegionTimezone = regionTimezones[effectiveLiveRegionId];
       if (!liveRegionTimezone) {
         toast.error("Selected region timezone not found");
         setSubmitting(false);
@@ -358,10 +364,22 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         return;
       }
 
+      // Keep the same class instant, but serialize it in Gulf timezone format.
+      const gulfLocalTime = liveDateTime
+        .tz(GULF_TIMEZONE)
+        .format("YYYY-MM-DDTHH:mm:ssZ");
+
       // Get the region name instead of using the ID
       const liveRegionName =
-        regionOptions?.find((r) => r.value === values.liveRegion)?.label ||
+        regionOptions?.find((r) => r.value === effectiveLiveRegionId)?.label ||
         values.liveRegion;
+
+      const payloadTimezoneConversions = getTimezoneConversions(
+        effectiveLiveRegionId,
+        values.liveTime,
+        values.fromDate,
+        values.duration
+      );
 
       const payload = {
         service: values.service,
@@ -369,7 +387,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         liveTime: values.liveTime,
         trainer: values.trainer,
         title: values?.title,
-        regions: timezoneConversions,
+        regions: payloadTimezoneConversions,
         duration: values.duration,
         startDate: values?.fromDate,
         weeklyEndDate: values?.toDate,
@@ -381,7 +399,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
             values.recurrenceType === "bi-weekly")
             ? values.customDays
             : null,
-        localTime: liveDateTime.toISOString(),
+        localTime: gulfLocalTime,
         adminId: user?.id,
       };
 
