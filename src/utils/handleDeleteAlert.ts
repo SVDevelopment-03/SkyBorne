@@ -6,8 +6,8 @@ import Swal from "sweetalert2";
 export const handleDeleteTrainer = async (
   id: string,
   deleteTrainerFn: (id: string) => Promise<any>,
-  refetch: () => void,
-  title:string
+  refetch: () => void | Promise<unknown>,
+  title: string
 ) => {
   const confirmDelete = await Swal.fire({
     title: "Are you sure?",
@@ -28,13 +28,20 @@ export const handleDeleteTrainer = async (
 
   if (confirmDelete.isConfirmed) {
     try {
-      await deleteTrainerFn(id);
+      const deleteResult = deleteTrainerFn(id) as any;
+      if (deleteResult && typeof deleteResult.unwrap === "function") {
+        await deleteResult.unwrap();
+      } else {
+        await deleteResult;
+      }
       toast.success(`${title} deleted successfully!`);
-      refetch();
+      await refetch();
     } catch (error) {
       console.error("Error deleting trainer:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete trainer";
+        (error as any)?.data?.message ||
+        (error as any)?.message ||
+        `Failed to delete ${title.toLowerCase()}`;
       toast.error(errorMessage);
     }
   }
