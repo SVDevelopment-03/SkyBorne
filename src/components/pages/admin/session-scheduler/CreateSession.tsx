@@ -369,9 +369,8 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         .tz(GULF_TIMEZONE)
         .format("YYYY-MM-DDTHH:mm:ssZ");
 
-      // Get the region name instead of using the ID
-      const liveRegionName =
-        regionOptions?.find((r) => r.value === effectiveLiveRegionId)?.label ||
+      const selectedLiveRegionName =
+        regionOptions?.find((r) => r.value === values.liveRegion)?.label ||
         values.liveRegion;
 
       const payloadTimezoneConversions = getTimezoneConversions(
@@ -379,11 +378,19 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         values.liveTime,
         values.fromDate,
         values.duration
+      ).map((conversion) =>
+        conversion.mode === "live"
+          ? {
+              ...conversion,
+              region: selectedLiveRegionName,
+              timezone: GULF_TIMEZONE,
+            }
+          : conversion
       );
 
       const payload = {
         service: values.service,
-        liveRegion: liveRegionName,
+        liveRegion: selectedLiveRegionName,
         liveTime: values.liveTime,
         trainer: values.trainer,
         title: values?.title,
