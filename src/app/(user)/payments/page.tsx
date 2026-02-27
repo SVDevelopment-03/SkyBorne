@@ -7,19 +7,22 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from "@tanstack/react-table";
 import {
-  CreditCard,
   Download,
   Calendar,
   DollarSign,
   Clock,
-  CheckCircle,
   AlertCircle,
   Plus,
   XCircle,
   Loader2,
+  CheckCircle,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useGetPaymentHistoryQuery, useGetPaymentStatsQuery } from '@/store/api/paymentApi';
+import {
+  useCreateCardPortalSessionMutation,
+  useGetPaymentHistoryQuery,
+  useGetPaymentStatsQuery,
+} from '@/store/api/paymentApi';
 import { useGetPlansQuery } from '@/store/api/publicApi';
 import { useSelector } from 'react-redux';
 import useGetUser from '@/hooks/useGetUser';
@@ -87,6 +90,8 @@ function UserPayments() {
   const { data: paymentStatsData, isLoading: isLoadingStats } = useGetPaymentStatsQuery(userId, {
     skip: !userId,
   });
+  const [createCardPortalSession, { isLoading: isOpeningStripeCardPage }] =
+    useCreateCardPortalSessionMutation();
 
   // Parse data from API responses
   const payments = useMemo(() => paymentHistoryData?.payments || [], [paymentHistoryData]);
@@ -96,7 +101,6 @@ function UserPayments() {
   // Get subscription from user object
   const subscription = useMemo(() => user?.subscription || {}, [user]);
   const plan = useMemo(() => user?.plan || '', [user]);
-
   // Calculate days remaining
   const calculateDaysRemaining = () => {
     if (!subscription?.endDate) return 0;
@@ -312,6 +316,20 @@ function UserPayments() {
 
   const isLoading = isLoadingHistory || isLoadingStats;
 
+  const handleOpenStripeCardPage = async () => {
+    try {
+      const returnUrl =
+        typeof window !== "undefined" ? `${window.location.origin}/payments` : undefined;
+      const resp = await createCardPortalSession({ returnUrl }).unwrap();
+      const portalUrl = resp?.data?.url;
+      if (portalUrl && typeof window !== "undefined") {
+        window.location.href = portalUrl;
+      }
+    } catch (error) {
+      console.error("Failed to open Stripe card update page", error);
+    }
+  };
+
     // Handle cancel subscription
   // const handleCancelSubscription = async () => {
   //   const confirmDelete = await Swal.fire({
@@ -434,50 +452,62 @@ function UserPayments() {
 
       {/* Upcoming Payment - Show when subscription is active */}
       {subscription && subscription.status === 'active' && (
-        <Card
-          className="border-none"
-          style={{
-            borderRadius: '24px',
-            background: '#B95E82',
-          }}
-        >
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-white">
-              <div className="flex items-start gap-4 flex-1">
-                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
-                  <Clock className="w-6 h-6 text-white" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-xl font-semibold mb-1 font-satoshi-500">Next Payment Due</h3>
-                  <p className="text-white/90 mb-3">
-                    {formatPlanName(plan)} - Monthly Subscription
-                  </p>
-                  <div className="flex items-center gap-4 text-sm flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4" />
-                      <span>{subscription.endDate ? formatDate(subscription.endDate) : 'N/A'}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="w-4 h-4" />
-                      <span>{formatCurrency(stats.lastPaymentAmount || 0)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4" />
-                      <span>{daysRemaining} days remaining</span>
+        <div className="space-y-4">
+          <Card
+            className="border-none"
+            style={{
+              borderRadius: '24px',
+              background: '#B95E82',
+            }}
+          >
+            <CardContent className="p-6">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 text-white">
+                <div className="flex items-start gap-4 flex-1">
+                  <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
+                    <Clock className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-semibold mb-1 font-satoshi-500">Next Payment Due</h3>
+                    <p className="text-white/90 mb-3">
+                      {formatPlanName(plan)} - Monthly Subscription
+                    </p>
+                    <div className="flex items-center gap-4 text-sm flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        <span>{subscription.endDate ? formatDate(subscription.endDate) : 'N/A'}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="w-4 h-4" />
+                        <span>{formatCurrency(stats.lastPaymentAmount || 0)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        <span>{daysRemaining} days remaining</span>
+                      </div>
                     </div>
                   </div>
                 </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    className="bg-white text-[#B95E82] font-semibold"
+                    style={{ borderRadius: '12px' }}
+                    onClick={handleOpenStripeCardPage}
+                    disabled={isOpeningStripeCardPage}
+                  >
+                    {isOpeningStripeCardPage ? 'Opening...' : 'Edit Card'}
+                  </Button>
+                  <Button
+                    className="bg-white text-[#B95E82] font-semibold"
+                    style={{ borderRadius: '12px' }}
+                    onClick={() => setShowCancelModal(true)}
+                  >
+                    Request Cancellation
+                  </Button>
+                </div>
               </div>
-              <Button
-                className="bg-white text-[#B95E82] font-semibold"
-                style={{ borderRadius: '12px' }}
-                onClick={() => setShowCancelModal(true)}
-              >
-                Request Cancellation
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       {/* Show message when subscription is not active */}

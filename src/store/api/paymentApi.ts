@@ -79,6 +79,47 @@ interface CancelSubscriptionReasonResponse {
   message: string;
 }
 
+interface CardAddress {
+  line1?: string;
+  line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
+}
+
+interface CardBillingDetails {
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: CardAddress;
+}
+
+interface CardDetailsResponse {
+  success: boolean;
+  data: {
+    customerId: string;
+    hasCard: boolean;
+    card: {
+      paymentMethodId: string;
+      brand: string;
+      last4: string;
+      expMonth: number;
+      expYear: number;
+      funding?: string | null;
+    } | null;
+    billingDetails: CardBillingDetails;
+  };
+}
+
+interface CardPortalSessionResponse {
+  success: boolean;
+  data: {
+    customerId: string;
+    url: string;
+  };
+}
+
 export const paymentApi = createApi({
   reducerPath: "paymentApi",
   baseQuery: axiosBaseQuery(),
@@ -240,6 +281,22 @@ export const paymentApi = createApi({
       },
       providesTags: ["Payment"],
     }),
+
+    getCardDetails: builder.query<CardDetailsResponse, void>({
+      query: () => ({
+        url: "/payment/card-details",
+        method: "GET",
+      }),
+      providesTags: ["Payment"],
+    }),
+
+    createCardPortalSession: builder.mutation<CardPortalSessionResponse, { returnUrl?: string }>({
+      query: (body) => ({
+        url: "/payment/card-portal-session",
+        method: "POST",
+        data: body,
+      }),
+    }),
   }),
 });
 
@@ -254,5 +311,7 @@ export const {
   useCreatePaymentVerificationMutation,
   useGetPaymentStatusQuery,
   useSendCancellationReasonMutation,
-  useGetCancelledSubscriptionsQuery
+  useGetCancelledSubscriptionsQuery,
+  useGetCardDetailsQuery,
+  useCreateCardPortalSessionMutation,
 } = paymentApi;
