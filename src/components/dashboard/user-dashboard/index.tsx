@@ -34,6 +34,7 @@ import { useGetPlansQuery } from "@/store/api/publicApi";
 import { SearchIcon } from "@/icons/helpIcon";
 import { useUserRegionFromStore } from "@/utils/timezone";
 import { log } from "console";
+import { COUNTRY_TIMEZONE_MAP_ALL } from "@/constants/countryTimezoneMap";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -276,6 +277,12 @@ export default function Page() {
   const today = format(new Date(), "dd/MM/yyyy");
 
   const { user } = useSelector((state: RootState) => state.auth);
+  const userCountryTimezone = useMemo(() => {
+    const countryCode = String(user?.countryCode || "").trim().toUpperCase();
+    if (!countryCode) return null;
+    const timezones = COUNTRY_TIMEZONE_MAP_ALL[countryCode];
+    return Array.isArray(timezones) && timezones.length > 0 ? timezones[0] : null;
+  }, [user?.countryCode]);
   const { data, isLoading, error, refetch }: any = useGetAllMeetingsQuery({
     userId: user?.id,
     status,
@@ -590,8 +597,14 @@ export default function Page() {
                 {!loadingMeetings &&
                   !isFetching &&
                   upcomingData?.meetings?.map((meeting: any, index: number) => {
+                    const normalizedUserRegion = String(userRegion?.region || "")
+                      .trim()
+                      .toLowerCase();
                     const regionInfo = meeting?.regions?.find(
-                      (r: any) => r.region == userRegion?.region,
+                      (r: any) =>
+                        String(r?.region || "")
+                          .trim()
+                          .toLowerCase() === normalizedUserRegion,
                     );
 
                     // need to reuse
@@ -601,17 +614,19 @@ export default function Page() {
                     // );
 
                     const formattedTime =
-                      regionInfo?.localTime ||
-                      meeting?.liveTime ||
                       formatTimeWithTimezone(
                         meeting?.localTime,
-                        userRegion?.timezone || regionInfo?.timezone,
+                        userCountryTimezone ||
+                          userRegion?.timezone ||
+                          regionInfo?.timezone,
                       );
 
                     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
                     const formattedDate = formatDateWithTimezone(
                       meeting?.localTime,
-                      userRegion?.timezone || regionInfo?.timezone,
+                      userCountryTimezone ||
+                        userRegion?.timezone ||
+                        regionInfo?.timezone,
                       regionInfo?.localTime,
                       "live"
                       // regionInfo?.mode,

@@ -487,9 +487,9 @@ function UserPayments() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col md:flex-row items-center gap-2 max-[320px]:w-full max-[320px]:flex-col max-[320px]:items- max-[320px]:gap-3">
                   <Button
-                    className="bg-white text-[#B95E82] font-semibold"
+                    className="bg-white text-[#B95E82] font-semibold  w-full md:w-auto max-[320px]:w-full max-[320px]:px-2 max-[320px]:text-xs max-[320px]:h-auto"
                     style={{ borderRadius: '12px' }}
                     onClick={handleOpenStripeCardPage}
                     disabled={isOpeningStripeCardPage}
@@ -497,7 +497,7 @@ function UserPayments() {
                     {isOpeningStripeCardPage ? 'Opening...' : 'Edit Card'}
                   </Button>
                   <Button
-                    className="bg-white text-[#B95E82] font-semibold"
+                    className="bg-white text-[#B95E82] font-semibold max-[320px]:w-full max-[320px]:px-3 max-[320px]:leading-snug max-[320px]:text-xs max-[320px]:whitespace-normal max-[320px]:break-words max-[320px]:text-center max-[320px]:h-auto max-[320px]:py-2"
                     style={{ borderRadius: '12px' }}
                     onClick={() => setShowCancelModal(true)}
                   >
