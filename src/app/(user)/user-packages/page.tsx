@@ -5,7 +5,7 @@ import { SelectedPlanMeta, UpgradePlan } from "./UpgradePlan";
 import { ReviewConfirm } from "@/components/pages/auth/signup/ReviewConfirm";
 import { Payment } from "@/components/pages/auth/signup/Payment";
 import { Confirmation } from "@/components/pages/auth/signup/Confirmation";
-import { useCreatePaymentOrderMutation } from "@/store/api/paymentApi";
+import { useUpgradePlanOrderMutation } from "@/store/api/paymentApi";
 import toast from "react-hot-toast";
 import { PackageType } from "@/components/pages/auth/signup/PackageSelection";
 
@@ -27,7 +27,7 @@ const Page = () => {
   });
   const { user } = useGetUser();
 
-  const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
+  const [upgradePlanOrder, { isLoading }] = useUpgradePlanOrderMutation();
   const price =
     billingType === "yearly"
       ? selectedPlanData?.yearlyPrice || 0
@@ -35,7 +35,7 @@ const Page = () => {
 
   const handlePaymentTransaction = async () => {
     try {
-      const res = await createPaymentOrder({
+      await upgradePlanOrder({
         amount: price,
         currency: "USD",
         userId: user?.id,
@@ -43,13 +43,10 @@ const Page = () => {
         billingType: billingType,
       }).unwrap();
 
-      localStorage.setItem("orderRef", res?.orderRef);
-
-      setTimeout(() => {
-        window.location.href = res.paymentLink;
-      }, 100);
+      toast.success("Plan upgraded successfully");
+      goToStep(4);
     } catch (err) {
-      toast.error("Paymnent order failed");
+      toast.error("Plan upgrade failed");
       console.error(err);
     }
   };

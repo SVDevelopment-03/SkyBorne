@@ -139,6 +139,18 @@ export const paymentApi = createApi({
       invalidatesTags: ["Payment"],
     }),
 
+    // ---------------------------------------
+    // UPGRADE PLAN ORDER
+    // ---------------------------------------
+    upgradePlanOrder: builder.mutation({
+      query: (body) => ({
+        url: "/payment/upgrade-order",
+        method: "POST",
+        data: body,
+      }),
+      invalidatesTags: ["Payment"],
+    }),
+
     // =======================================
     // GET PAYMENT HISTORY
     // =======================================
@@ -302,6 +314,7 @@ export const paymentApi = createApi({
 
 export const {
   useCreatePaymentOrderMutation,
+  useUpgradePlanOrderMutation,
   useGetPaymentHistoryQuery,
   useGetPaymentStatsQuery,
   useGetAllPaymentsQuery,
