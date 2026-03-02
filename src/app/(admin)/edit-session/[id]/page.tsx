@@ -34,6 +34,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
+import { COUNTRY_TIMEZONE_MAP_ALL } from "@/constants/countryTimezoneMap";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -47,6 +48,16 @@ interface TimezoneConversion {
   timezone: string;
   mode: "live" | "replay";
   date: string;
+}
+
+interface CountryTimePreviewRow {
+  countryId: string;
+  countryName: string;
+  localTime: string;
+  date: string;
+  timezone: string;
+  format: string;
+  mode: "live" | "replay";
 }
 
 interface FormValues {
@@ -174,7 +185,10 @@ export default function EditMeeting() {
       const regions = regionsData.data;
 
       const options = regions.map((region: any) => ({
-        label: region.displayLabel,
+        label:
+          String(region.name || "").trim() ||
+          String(region.displayLabel || "").trim() ||
+          String(region.code || "").trim(),
         value: region._id,
       }));
       setRegionOptions(options);
@@ -191,9 +205,12 @@ export default function EditMeeting() {
   // Get countries for selected region
   const getCountriesForRegion = (regionId: string) => {
     if (!regionId || !countries.length) return [];
-    const countryData = countries.filter(
-      (country: any) => country.region?._id === regionId
-    );
+    const countryData = countries.filter((country: any) => {
+      const regionRef = country.region;
+      const countryRegionId =
+        typeof regionRef === "string" ? regionRef : regionRef?._id;
+      return countryRegionId === regionId;
+    });
     return countryData;
   };
 
@@ -241,7 +258,7 @@ export default function EditMeeting() {
     return regionsData.data.map((region: any) => {
       if (region._id === liveRegionId) {
         return {
-          region: region.displayLabel,
+          region: region.name || region.displayLabel || region.code,
           localTime: liveTime,
           timezone: region.timezone,
           mode: "live",
@@ -276,12 +293,71 @@ export default function EditMeeting() {
       }
 
       return {
-        region: region.displayLabel,
+        region: region.name || region.displayLabel || region.code,
         localTime: replayTimeStr,
         timezone: region.timezone,
         mode: "replay",
         date: finalReplayDate.format("YYYY-MM-DD"),
       };
+    });
+  };
+
+  const getTimeFormatLabel = (timeValue: string) => {
+    const upperTime = timeValue.toUpperCase();
+    if (upperTime.includes("AM") || upperTime.includes("PM")) {
+      return "12-hour (hh:mm A)";
+    }
+
+    return "24-hour (HH:mm)";
+  };
+
+  const getCountryTimePreviewRows = (
+    liveRegionId: string,
+    liveTime: string,
+    date: Date | undefined
+  ): CountryTimePreviewRow[] => {
+    if (!liveRegionId || !liveTime) return [];
+
+    const selectedRegion = regionsData?.data?.find(
+      (region: any) => region._id === liveRegionId
+    );
+    const selectedRegionTimezone =
+      selectedRegion?.timezone || regionTimezones[liveRegionId] || GULF_TIMEZONE;
+
+    const countriesInRegion = getCountriesForRegion(liveRegionId);
+    if (!countriesInRegion.length) return [];
+
+    const time24hStr = convertTimeTo24Hour(liveTime);
+    const [liveHours, liveMinutes] = time24hStr.split(":").map(Number);
+    const baseDate = date || new Date();
+    const baseDateStr = dayjs(baseDate).format("YYYY-MM-DD");
+
+    const gulfDateTime = dayjs.tz(
+      `${baseDateStr}T${String(liveHours).padStart(2, "0")}:${String(
+        liveMinutes
+      ).padStart(2, "0")}:00`,
+      GULF_TIMEZONE
+    );
+
+    return countriesInRegion.flatMap((country: any) => {
+      const countryCode = String(country?.code || "").toUpperCase();
+      const countryTimezones = COUNTRY_TIMEZONE_MAP_ALL[countryCode] || [
+        selectedRegionTimezone,
+      ];
+
+      return countryTimezones.map((countryTimezone, timezoneIndex) => {
+        const countryLocalDateTime = gulfDateTime.tz(countryTimezone);
+
+        return {
+          countryId: `${country._id || country.code || country.name}-${countryTimezone}-${timezoneIndex}`,
+          countryName: country.name,
+          localTime: countryLocalDateTime.format("hh:mm A"),
+          date: countryLocalDateTime.format("YYYY-MM-DD"),
+          timezone: countryTimezone,
+          format: getTimeFormatLabel(liveTime),
+          mode: "live",
+        };
+      });
     });
   };
 
@@ -434,16 +510,17 @@ export default function EditMeeting() {
     const byId = regionsData?.data?.find((r: any) => r?._id === savedRegion);
     if (byId?._id) return byId._id;
 
-    // Backward compatibility: older data may store display label instead of ID.
+    // Backward compatibility: older data may store name/displayLabel/code instead of ID.
     const byLabel = regionsData?.data?.find(
       (r: any) =>
-        String(r?.displayLabel || "")
+        String(r?.name || r?.displayLabel || r?.code || "")
           .trim()
           .toLowerCase() === savedRegion.toLowerCase(),
     );
     if (byLabel?._id) return byLabel._id;
 
-    return "";
+    // Keep saved value visible in dropdown even if it no longer exists in active regions.
+    return savedRegion;
   })();
 
   const initialValues: FormValues = {
@@ -452,7 +529,11 @@ export default function EditMeeting() {
     toDate: resolvedWeeklyEndDate ? new Date(resolvedWeeklyEndDate) : undefined,
     liveRegion: resolvedLiveRegionValue,
     title: meeting.title || "",
-    liveTime: meeting.liveTime || "10:00 AM",
+    liveTime:
+      meeting.liveTime ||
+      meeting.regions?.find((region: any) => region?.mode === "live")
+        ?.localTime ||
+      "10:00 AM",
     trainer: meeting.trainer?._id || "",
     duration: meeting.duration || 60,
     recurringClass: meeting.recurringClass || false,
@@ -485,8 +566,27 @@ export default function EditMeeting() {
           (s) => s.value === values?.service
         );
         const serviceName = currentService?.label;
+        const hasCurrentRegionOption = (regionOptions || []).some(
+          (option) => option.value === values.liveRegion
+        );
+        const liveRegionOptions =
+          values.liveRegion && !hasCurrentRegionOption
+            ? [
+                {
+                  value: values.liveRegion,
+                  label:
+                    String(meeting.liveRegion || "").trim() || values.liveRegion,
+                },
+                ...(regionOptions || []),
+              ]
+            : regionOptions || [];
 
         const regionCountries = getCountriesForRegion(values.liveRegion);
+        const countryTimePreviewRows = getCountryTimePreviewRows(
+          values.liveRegion,
+          values.liveTime,
+          values.fromDate
+        );
 
         const isFormValid =
           values.service &&
@@ -623,7 +723,7 @@ export default function EditMeeting() {
                           label="🌍 Select Region"
                           value={values.liveRegion}
                           onChange={(val) => setFieldValue("liveRegion", val)}
-                          options={regionOptions || []}
+                          options={liveRegionOptions}
                           placeholder="Choose region..."
                         />
                         {errors.liveRegion && touched.liveRegion && (
@@ -733,20 +833,26 @@ export default function EditMeeting() {
                 <section className="space-y-4">
                   <div>
                     <h3 className="text-large text-[#262626] mb-1">
-                      Global Time Preview
+                      Country Time Preview
                     </h3>
-                    <p className="text-[#737373]">
+                    {/* <p className="text-[#737373]">
                       Converted automatically based on user time zones.
-                    </p>
+                    </p> */}
                   </div>
 
                   <div className="border border-[#e5e5e5] rounded-xl overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div
+                      className={`overflow-x-auto ${
+                        countryTimePreviewRows.length > 10
+                          ? "max-h-[560px] overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[6px]"
+                          : ""
+                      }`}
+                    >
                       <table className="w-full">
                         <thead>
                           <tr className="bg-[#fafafa] border-b border-[#e5e5e5]">
                             <th className="px-4 py-3 text-left text-[#525252]">
-                              Region
+                              Country
                             </th>
                             <th className="px-4 py-3 text-left text-[#525252]">
                               Local Time
@@ -760,32 +866,37 @@ export default function EditMeeting() {
                           </tr>
                         </thead>
                         <tbody>
-                          {timezoneConversions.map(
-                            (conversion: any, index: number) => (
+                          {countryTimePreviewRows.length > 0 ? (
+                            countryTimePreviewRows.map((countryPreview) => (
                               <tr
-                                key={index}
+                                key={countryPreview.countryId}
                                 className={`border-b border-[#e5e5e5] last:border-b-0 transition-colors ${
-                                  conversion.mode === "live"
+                                  countryPreview.mode === "live"
                                     ? "bg-[#e8f5e9]"
                                     : "bg-[#fff9e6]"
                                 }`}
                               >
                                 <td className="px-4 py-3 text-[#262626]">
-                                  {conversion.region}
+                                  {countryPreview.countryName}
                                 </td>
                                 <td className="px-4 py-3 text-[#525252]">
                                   <div className="flex flex-col">
-                                    <span>{conversion.localTime}</span>
+                                    <span>{countryPreview.localTime}</span>
                                     <span className="text-xs text-[#737373]">
-                                      {conversion.date}
+                                      {countryPreview.date}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 text-[#737373]">
-                                  {conversion?.timezone}
+                                  <div className="flex flex-col">
+                                    <span>{countryPreview.format}</span>
+                                    <span className="text-xs text-[#737373]">
+                                      {countryPreview.timezone}
+                                    </span>
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  {conversion.mode === "live" ? (
+                                  {countryPreview.mode === "live" ? (
                                     <div className="flex flex-col gap-1 max-w-[100px]">
                                       <Badge type="live">
                                         <Star className="w-3.5 h-3.5" />
@@ -798,7 +909,7 @@ export default function EditMeeting() {
                                         <RotateCw className="w-3.5 h-3.5" />
                                         Replay
                                       </Badge>
-                                      {conversion.date !==
+                                      {countryPreview.date !==
                                         dayjs(values.fromDate).format(
                                           "YYYY-MM-DD"
                                         ) && (
@@ -810,7 +921,17 @@ export default function EditMeeting() {
                                   )}
                                 </td>
                               </tr>
-                            )
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan={4}
+                                className="px-4 py-5 text-center text-sm text-[#737373]"
+                              >
+                                Select a region to preview country-wise local
+                                times.
+                              </td>
+                            </tr>
                           )}
                         </tbody>
                       </table>

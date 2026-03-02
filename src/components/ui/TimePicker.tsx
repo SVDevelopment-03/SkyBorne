@@ -31,6 +31,18 @@ export function TimePicker({ value, onChange }: TimePickerProps) {
     onChange(`${h.padStart(2, "0")}:${m.padStart(2, "0")} ${p}`);
   };
 
+  const getSafeHour = (h: string) => {
+    const num = Number(h);
+    if (Number.isNaN(num) || num < 1) return "01";
+    return String(Math.min(num, 12)).padStart(2, "0");
+  };
+
+  const getSafeMinute = (m: string) => {
+    const num = Number(m);
+    if (Number.isNaN(num) || num < 0) return "00";
+    return String(Math.min(num, 59)).padStart(2, "0");
+  };
+
   // ---------- Hour ----------
 const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   const val = e.target.value.replace(/\D/g, "");
@@ -38,6 +50,7 @@ const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   // allow empty (so user can edit)
   if (val === "") {
     setHour("");
+    commit("01", minute || "00", period);
     return;
   }
 
@@ -45,6 +58,7 @@ const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
   if (Number(val) > 12) return;
 
   setHour(val);
+  commit(getSafeHour(val), getSafeMinute(minute || "00"), period);
 };
 
 const handleHourBlur = () => {
@@ -57,7 +71,9 @@ const handleHourBlur = () => {
 
   // ---------- Minute ----------
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setMinute(e.target.value.replace(/\D/g, ""));
+    const val = e.target.value.replace(/\D/g, "");
+    setMinute(val);
+    commit(getSafeHour(hour || "01"), getSafeMinute(val || "00"), period);
   };
 
   const handleMinuteBlur = () => {

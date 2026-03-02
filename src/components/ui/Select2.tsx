@@ -30,11 +30,14 @@ export function Select({ label, value, onChange, options, placeholder, helper, c
           className={`w-full appearance-none bg-[#f3f3f5] border border-[#d4d4d4] rounded-lg px-4 py-3 pr-10 text-[#262626] cursor-pointer hover:border-[#b95e82] focus:outline-none focus:ring-2 focus:ring-[#b95e82] focus:border-transparent transition-all ${cssProp}`}
         >
           {placeholder && <option value="">{placeholder}</option>}
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
+          {options.map((option) => {
+            const optionLabel = String(option.label || "").trim() || option.value;
+            return (
+              <option key={option.value} value={option.value}>
+                {optionLabel}
+              </option>
+            );
+          })}
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-[#737373] pointer-events-none" />
       </div>

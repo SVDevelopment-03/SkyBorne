@@ -38,6 +38,7 @@ import useGetUser from "@/hooks/useGetUser";
 import dayjs from "dayjs";
 import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 import { useRouter } from "next/navigation";
+import { COUNTRY_TIMEZONE_MAP_ALL } from "@/constants/countryTimezoneMap";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -51,6 +52,16 @@ interface TimezoneConversion {
   timezone: string;
   mode: "live" | "replay";
   date: string;
+}
+
+interface CountryTimePreviewRow {
+  countryId: string;
+  countryName: string;
+  localTime: string;
+  date: string;
+  timezone: string;
+  format: string;
+  mode: "live" | "replay";
 }
 
 interface ClassSchedulerProps {
@@ -167,10 +178,6 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
     Record<string, string>
   >({});
 
-  const [fixedReplayTimes, setFixedReplayTimes] = useState<
-    Record<string, string>
-  >({});
-
   const [showModal, setShowModal] = useState(false);
   const [buttonState, setButtonState] = useState<"default" | "success">(
     "default"
@@ -205,7 +212,10 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
 
       // Build region options for dropdown
       const options = regions.map((region: any) => ({
-        label: region.displayLabel,
+        label:
+          String(region.name || "").trim() ||
+          String(region.displayLabel || "").trim() ||
+          String(region.code || "").trim(),
         value: region._id,
       }));
       setRegionOptions(options);
@@ -217,12 +227,6 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
       });
       setRegionTimezones(timezones);
 
-      // Build replay times mapping
-      const replayTimes: Record<string, string> = {};
-      regions.forEach((region: any) => {
-        replayTimes[region._id] = region.replayTime;
-      });
-      setFixedReplayTimes(replayTimes);
     }
   }, [regionsData?.data, regionsLoading]);
 
@@ -230,13 +234,18 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
   const getCountriesForRegion = (regionId: string) => {
     if (!regionId || !countries.length) return [];
     console.log("regionId:", regionId);
-    const countryData = countries.filter((country: any) => country.region?._id === regionId);
+    const countryData = countries.filter((country: any) => {
+      const regionRef = country.region;
+      const countryRegionId =
+        typeof regionRef === "string" ? regionRef : regionRef?._id;
+      return countryRegionId === regionId;
+    });
     console.log("countryData:", countryData);
     return countryData;
   };
 
   const convertTimeTo24Hour = (time12h: string): string => {
-          if (!time12h) return "";
+    if (!time12h) return "";
     const [time, period] = time12h.split(" ");
     const [hours, minutes] = time.split(":").map(Number);
 
@@ -248,6 +257,66 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
       2,
       "0"
     )}`;
+  };
+
+  const getTimeFormatLabel = (timeValue: string) => {
+    const upperTime = timeValue.toUpperCase();
+    if (upperTime.includes("AM") || upperTime.includes("PM")) {
+      return "12-hour (hh:mm A)";
+    }
+
+    return "24-hour (HH:mm)";
+  };
+
+  const getCountryTimePreviewRows = (
+    liveRegionId: string,
+    liveTime: string,
+    date: Date | undefined
+  ): CountryTimePreviewRow[] => {
+    if (!liveRegionId || !liveTime) return [];
+
+    const selectedRegion = regionsData?.data?.find(
+      (region: any) => region._id === liveRegionId
+    );
+    const selectedRegionTimezone =
+      selectedRegion?.timezone || regionTimezones[liveRegionId] || GULF_TIMEZONE;
+
+    const countriesInRegion = getCountriesForRegion(liveRegionId);
+    if (!countriesInRegion.length) return [];
+
+    const time24hStr = convertTimeTo24Hour(liveTime);
+    const [liveHours, liveMinutes] = time24hStr.split(":").map(Number);
+
+    const baseDate = date || new Date();
+    const baseDateStr = dayjs(baseDate).format("YYYY-MM-DD");
+
+    const gulfDateTime = dayjs.tz(
+      `${baseDateStr}T${String(liveHours).padStart(2, "0")}:${String(
+        liveMinutes
+      ).padStart(2, "0")}:00`,
+      GULF_TIMEZONE
+    );
+
+    return countriesInRegion.flatMap((country: any) => {
+      const countryCode = String(country?.code || "").toUpperCase();
+      const countryTimezones = COUNTRY_TIMEZONE_MAP_ALL[countryCode] || [
+        selectedRegionTimezone,
+      ];
+
+      return countryTimezones.map((countryTimezone, timezoneIndex) => {
+        const countryLocalDateTime = gulfDateTime.tz(countryTimezone);
+
+        return {
+          countryId: `${country._id || country.code || country.name}-${countryTimezone}-${timezoneIndex}`,
+          countryName: country.name,
+          localTime: countryLocalDateTime.format("hh:mm A"),
+          date: countryLocalDateTime.format("YYYY-MM-DD"),
+          timezone: countryTimezone,
+          format: getTimeFormatLabel(liveTime),
+          mode: "live",
+        };
+      });
+    });
   };
 
   const getTimezoneConversions = (
@@ -281,7 +350,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
       if (region._id === liveRegionId) {
         // Live region shows the live class at the specified time
         return {
-          region: region.displayLabel,
+          region: region.name || region.displayLabel || region.code,
           localTime: liveTime,
           timezone: region.timezone,
           mode: "live",
@@ -475,6 +544,11 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
         const serviceName = currentService?.label;
 
         const regionCountries = getCountriesForRegion(values.liveRegion);
+        const countryTimePreviewRows = getCountryTimePreviewRows(
+          values.liveRegion,
+          values.liveTime,
+          values.fromDate
+        );
 
         const isFormValid =
           values.service &&
@@ -856,20 +930,26 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                 <section className="space-y-4">
                   <div>
                     <h3 className="text-large text-[#262626] mb-1">
-                      Global Time Preview
+                      Country Time Preview
                     </h3>
-                    <p className="text-[#737373]">
+                    {/* <p className="text-[#737373]">
                       Converted automatically based on user time zones.
-                    </p>
+                    </p> */}
                   </div>
 
                   <div className="border border-[#e5e5e5] rounded-xl overflow-hidden">
-                    <div className="overflow-x-auto">
+                    <div
+                      className={`overflow-x-auto ${
+                        countryTimePreviewRows.length > 10
+                          ? "max-h-[560px] overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-[6px]"
+                          : ""
+                      }`}
+                    >
                       <table className="w-full">
                         <thead>
                           <tr className="bg-[#fafafa] border-b border-[#e5e5e5]">
                             <th className="px-4 py-3 text-left text-[#525252]">
-                              Region
+                              Country
                             </th>
                             <th className="px-4 py-3 text-left text-[#525252]">
                               Local Time
@@ -883,32 +963,37 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                           </tr>
                         </thead>
                         <tbody>
-                          {timezoneConversions.map(
-                            (conversion: any, index: number) => (
+                          {countryTimePreviewRows.length > 0 ? (
+                            countryTimePreviewRows.map((countryPreview) => (
                               <tr
-                                key={index}
+                                key={countryPreview.countryId}
                                 className={`border-b border-[#e5e5e5] last:border-b-0 transition-colors ${
-                                  conversion.mode === "live"
+                                  countryPreview.mode === "live"
                                     ? "bg-[#e8f5e9]"
                                     : "bg-[#fff9e6]"
                                 }`}
                               >
                                 <td className="px-4 py-3 text-[#262626]">
-                                  {conversion.region}
+                                  {countryPreview.countryName}
                                 </td>
                                 <td className="px-4 py-3 text-[#525252]">
                                   <div className="flex flex-col">
-                                    <span>{conversion.localTime}</span>
+                                    <span>{countryPreview.localTime}</span>
                                     <span className="text-xs text-[#737373]">
-                                      {conversion.date}
+                                      {countryPreview.date}
                                     </span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3 text-[#737373]">
-                                  {conversion?.timezone}
+                                  <div className="flex flex-col">
+                                    <span>{countryPreview.format}</span>
+                                    <span className="text-xs text-[#737373]">
+                                      {countryPreview.timezone}
+                                    </span>
+                                  </div>
                                 </td>
                                 <td className="px-4 py-3">
-                                  {conversion.mode === "live" ? (
+                                  {countryPreview.mode === "live" ? (
                                     <div className="flex flex-col gap-1 max-w-[100px]">
                                       <Badge type="live">
                                         <Star className="w-3.5 h-3.5" />
@@ -921,7 +1006,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                                         <RotateCw className="w-3.5 h-3.5" />
                                         Replay
                                       </Badge>
-                                      {conversion.date !==
+                                      {countryPreview.date !==
                                         dayjs(values.fromDate).format(
                                           "YYYY-MM-DD"
                                         ) && (
@@ -933,7 +1018,17 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                                   )}
                                 </td>
                               </tr>
-                            )
+                            ))
+                          ) : (
+                            <tr>
+                              <td
+                                colSpan={4}
+                                className="px-4 py-5 text-center text-sm text-[#737373]"
+                              >
+                                Select a region to preview country-wise local
+                                times.
+                              </td>
+                            </tr>
                           )}
                         </tbody>
                       </table>
