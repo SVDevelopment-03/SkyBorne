@@ -31,7 +31,7 @@ import {
   ChevronDown,
   Package2Icon,
   Boxes,
-  Receipt,
+  Mail,
 } from "lucide-react";
 
 export const SidebarNav = {
@@ -180,6 +180,12 @@ export const AdminNav = {
       title: "Payment Management",
       url: "/payment-management",
       icon: BadgeDollarSign,
+      items: [],
+    },
+    {
+      title: "Reminder Management",
+      url: "/mail-management",
+      icon: Mail,
       items: [],
     },
     {
