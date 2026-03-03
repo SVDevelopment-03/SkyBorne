@@ -2,7 +2,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { DataTable } from "@/components/ui/CommonTable";
@@ -11,32 +11,28 @@ import MainListHeading from "@/components/ui/MainListHeading";
 import { columns, CancelSubscriptionRow } from "./Column";
 import { ColumnDef } from "@tanstack/react-table";
 import { Loader } from "lucide-react";
-import { CommonSelect } from "@/components/ui/CountrySelect";
 import CustomPagination from "@/components/ui/CustromPagination";
-import countryList from "react-select-country-list";
-import toast from "react-hot-toast";
 import DeleteSubscriptionModal from "@/utils/DeleteSubscriptionModal";
 
-import { useCancelSubscriptionMutation, useGetCancelledSubscriptionsQuery } from "@/store/api/paymentApi";
+import { useGetCancelledSubscriptionsQuery } from "@/store/api/paymentApi";
 
 const CancelSubscriptionPage = () => {
   const [search, setSearch] = useState("");
-  const [filterCountry, setFilterCountry] = useState("all");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<string | null>(null);
   const [selectedSubscriptionName, setSelectedSubscriptionName] = useState<string | undefined>(undefined);
+  const [textModalOpen, setTextModalOpen] = useState(false);
+  const [textModalTitle, setTextModalTitle] = useState("");
+  const [textModalContent, setTextModalContent] = useState("");
 
   // ✅ Use paymentApi query to fetch cancelled subscriptions
   const { data, isLoading, isFetching, refetch }:any = useGetCancelledSubscriptionsQuery({
     page,
     limit,
     search: search || undefined,
-    country: filterCountry !== "all" ? filterCountry : undefined,
   });
-
-  const [cancelSubscription] = useCancelSubscriptionMutation();
 
   // ✅ Map API data to table rows safely
   const subscriptions: CancelSubscriptionRow[] =
@@ -47,20 +43,13 @@ const CancelSubscriptionPage = () => {
       userId:s.userId || "",
       cancelledAt: s.cancelledAt || null,
       description: s.description || "",
+      adminComment: s.adminDescription || s.adminComment || s.admin_description || "",
       createdAt: s.createdAt || s.updatedAt,
       plan: s.plan || "-", 
-      status: s.isCancelled ? "inactive" : "active", // toggle active/inactive
+      status: s.status || "pending",
     })) || [];
 
   const totalPages = data?.data?.pagination?.totalPages || 1;
-
-  const countryOptions = useMemo(() => {
-    const countries = countryList().getData();
-    return [
-      { value: "all", label: "All Countries" },
-      ...countries.map((c) => ({ value: c.value.toUpperCase(), label: c.label })),
-    ];
-  }, []);
 
   const handleSearch = (value: string) => {
     setSearch(value);
@@ -73,19 +62,16 @@ const CancelSubscriptionPage = () => {
     setModalOpen(true);
   };
 
-  const handleCountryFilter = (value: string) => {
-    setFilterCountry(value);
-    setPage(1);
+  const handleOpenTextModal = (title: string, content: string) => {
+    setTextModalTitle(title);
+    setTextModalContent(content);
+    setTextModalOpen(true);
   };
 
-  const handleCancel = async (id: string) => {
-    try {
-      await cancelSubscription(id).unwrap();
-      toast.success("Subscription cancelled successfully");
-      refetch(); // refresh table
-    } catch (error: any) {
-      toast.error(error?.data?.message || "Failed to cancel subscription");
-    }
+  const handleCloseTextModal = () => {
+    setTextModalOpen(false);
+    setTextModalTitle("");
+    setTextModalContent("");
   };
 
   return (
@@ -103,22 +89,10 @@ const CancelSubscriptionPage = () => {
                 placeholder="Search by name or email"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
-                // className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] min-w-[260px] md:min-w-[300px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
                 className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full sm:w-[260px] md:w-[300px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
               />
               <SearchIcon />
             </div>
-{/* 
-            <div className="w-full md:w-auto">
-              <CommonSelect
-                label="Country"
-                showLabel={false}
-                options={countryOptions}
-                cssProp="min-h-[45px]! md:min-w-[200px]!"
-                value={filterCountry}
-                onChange={handleCountryFilter}
-              />
-            </div> */}
           </div>
         </div>
 
@@ -130,12 +104,7 @@ const CancelSubscriptionPage = () => {
           )}
 
           <DataTable
-            columns={columns(
-              async (id: string, currentStatus: "active" | "inactive") => {
-                console.log("Status toggle clicked");
-              },
-              handleAction
-            ) as ColumnDef<CancelSubscriptionRow, unknown>[]}
+            columns={columns(handleAction, handleOpenTextModal) as ColumnDef<CancelSubscriptionRow, unknown>[]}
             data={subscriptions}
             isLoadingData={isLoading}
           />
@@ -159,6 +128,24 @@ const CancelSubscriptionPage = () => {
         subscriptionName={selectedSubscriptionName}
         onSuccess={() => refetch()} 
       />
+      {textModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 md:p-8 relative font-satoshi-regular">
+            <button
+              onClick={handleCloseTextModal}
+              className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition text-2xl"
+            >
+              &times;
+            </button>
+            <h2 className="text-2xl md:text-3xl font-satoshi-semibold text-gray-900 mb-4">
+              {textModalTitle}
+            </h2>
+            <p className="text-gray-700 text-sm md:text-base whitespace-pre-wrap break-words max-h-[60vh] overflow-y-auto">
+              {textModalContent}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

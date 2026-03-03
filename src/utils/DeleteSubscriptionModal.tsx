@@ -4,7 +4,7 @@
 
 import { useState, useCallback } from "react";
 import toast from "react-hot-toast";
-import { useCancelSubscriptionMutation } from "@/store/api/paymentApi";
+import { useCancelSubscriptionMutation, useUpdateCancelSubscriptionStatusMutation } from "@/store/api/paymentApi";
 import { Button } from "@/components/ui/button";
 
 interface DeleteSubscriptionModalProps {
@@ -23,7 +23,13 @@ const DeleteSubscriptionModal = ({
   onSuccess,
 }: DeleteSubscriptionModalProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [description, setDescription] = useState("");
   const [cancelSubscription] = useCancelSubscriptionMutation();
+  const [updateCancelSubscriptionStatus] = useUpdateCancelSubscriptionStatusMutation();
+  const handleClose = useCallback(() => {
+    setDescription("");
+    onClose();
+  }, [onClose]);
 
   const handleConfirm = useCallback(async () => {
     if (!subscriptionId) {
@@ -31,15 +37,24 @@ const DeleteSubscriptionModal = ({
       return;
     }
 
+    if (!description.trim()) {
+      toast.error("Please enter a cancellation description.");
+      return;
+    }
+
     try {
       setIsProcessing(true);
 
-      const response = await cancelSubscription(subscriptionId).unwrap();
+      const response = await cancelSubscription({
+        userId: subscriptionId,
+        adminDescription: description.trim(),
+      }).unwrap();
 
       if (response.success) {
         toast.success(response.message || "Subscription cancelled successfully!");
+        setDescription("");
         onSuccess?.();
-        onClose();
+        handleClose();
       } else {
         console.warn("⚠️ Backend returned failure:", response.message);
         toast.error(response.message || "Failed to cancel subscription");
@@ -50,7 +65,41 @@ const DeleteSubscriptionModal = ({
     } finally {
       setIsProcessing(false);
     }
-  }, [subscriptionId, cancelSubscription, onClose, onSuccess]);
+  }, [subscriptionId, description, cancelSubscription, handleClose, onSuccess]);
+
+  const handleRetain = useCallback(async () => {
+    if (!subscriptionId) {
+      console.log("❌ No subscriptionId provided. Cannot retain subscription.");
+      return;
+    }
+
+    if (!description.trim()) {
+      toast.error("Please enter a cancellation description.");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      const response = await updateCancelSubscriptionStatus({
+        userId: subscriptionId,
+        status: "retained",
+        adminDescription: description.trim(),
+      }).unwrap();
+
+      if (response.success) {
+        toast.success(response.message || "Subscription retained successfully!");
+        onSuccess?.();
+        handleClose();
+        return;
+      }
+
+      toast.error(response.message || "Failed to retain subscription");
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to retain subscription");
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [subscriptionId, description, updateCancelSubscriptionStatus, onSuccess, handleClose]);
 
 
   if (!open) return null;
@@ -60,7 +109,7 @@ const DeleteSubscriptionModal = ({
       <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 md:p-8 relative font-satoshi-regular">
         {/* Close Button */}
         <button
-          onClick={onClose}
+          onClick={handleClose}
           className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition text-2xl"
         >
           &times;
@@ -82,20 +131,40 @@ const DeleteSubscriptionModal = ({
           ? This action cannot be undone.
         </p>
 
+        <label className="block text-gray-700 font-satoshi-medium mb-2 text-sm">
+          Description <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Enter cancellation description"
+          rows={4}
+          maxLength={500}
+          className="w-full px-4 py-3 border rounded-xl text-black focus:outline-none focus:ring-2 resize-none text-sm mb-1 border-gray-300 focus:border-[#b95e82] focus:ring-[#b95e82]/20"
+        />
+        <div className="flex justify-end text-xs text-gray-400 mb-6">
+          <span>{description.length}/500</span>
+        </div>
+
         {/* Buttons */}
         <div className="flex justify-end gap-3">
           <button
-            onClick={onClose}
-            className="px-6 py-2 rounded-lg border border-gray-300 font-satoshi-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition text-sm"
+            onClick={handleRetain}
+            disabled={isProcessing || !description.trim()}
+            className={`px-6 py-2 rounded-lg border border-gray-300 font-satoshi-medium transition text-sm ${
+              isProcessing || !description.trim()
+                ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                : "text-gray-700 bg-gray-100 hover:bg-gray-200"
+            }`}
           >
-            Keep Subscription
+            Retain Subscription
           </button>
           <Button
           variant={"theme"}
             onClick={handleConfirm}
-            disabled={isProcessing}
+            disabled={isProcessing || !description.trim()}
             className={`px-6 py-2 rounded-lg font-satoshi-medium text-white transition text-sm
-              ${isProcessing ? "bg-gray-300 cursor-not-allowed" : "bg-[#b95e82]"}
+              ${isProcessing || !description.trim() ? "bg-gray-300 cursor-not-allowed" : "bg-[#b95e82]"}
             `}
           >
             {isProcessing ? "Processing..." : "Yes, Cancel"}

@@ -38,6 +38,36 @@ interface CancelSubscriptionResponse {
   subscription?: Subscription;
 }
 
+type CancelSubscriptionStatus = "pending" | "retained" | "cancelled";
+
+interface CancelSubscriptionRecord {
+  _id: string;
+  subscriptionId?: string;
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  userId?: string;
+  status: CancelSubscriptionStatus;
+  description?: string;
+  createdAt?: string;
+  cancelledAt?: string;
+  plan?: string;
+}
+
+interface CancelSubscriptionsListResponse {
+  success: boolean;
+  message: string;
+  data: {
+    cancelSubscriptions: CancelSubscriptionRecord[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      total: number;
+      limit: number;
+    };
+  };
+}
+
 interface PaymentStatsResponse {
   success: boolean;
   stats: {
@@ -77,6 +107,17 @@ interface CancelSubscriptionReasonRequest {
 interface CancelSubscriptionReasonResponse {
   success: boolean;
   message: string;
+}
+
+interface CancelSubscriptionRequest {
+  userId: string;
+  adminDescription: string;
+}
+
+interface UpdateCancelSubscriptionStatusRequest {
+  userId: string;
+  status: CancelSubscriptionStatus;
+  adminDescription: string;
 }
 
 interface CardAddress {
@@ -181,7 +222,7 @@ export const paymentApi = createApi({
         // Filter out undefined/null/empty values from params
         const filteredParams = Object.fromEntries(
           Object.entries(params || {}).filter(
-            ([_, v]) => v !== undefined && v !== null && v !== ''
+            ([, v]) => v !== undefined && v !== null && v !== ''
           )
         );
 
@@ -212,7 +253,7 @@ export const paymentApi = createApi({
       query: (params) => {
         const filteredParams = Object.fromEntries(
           Object.entries(params || {}).filter(
-            ([_, v]) => v !== undefined && v !== null && v !== ''
+            ([, v]) => v !== undefined && v !== null && v !== ''
           )
         );
 
@@ -228,10 +269,23 @@ export const paymentApi = createApi({
     // =======================================
     // CANCEL SUBSCRIPTION
     // =======================================
-    cancelSubscription: builder.mutation<CancelSubscriptionResponse, string>({
-      query: (userId) => ({
+    cancelSubscription: builder.mutation<CancelSubscriptionResponse, CancelSubscriptionRequest>({
+      query: ({ userId, adminDescription }) => ({
         url: `/subscription/${userId}/cancel`,
         method: "POST",
+        data: { adminDescription },
+      }),
+      invalidatesTags: ["Payment"],
+    }),
+
+    updateCancelSubscriptionStatus: builder.mutation<
+      CancelSubscriptionReasonResponse,
+      UpdateCancelSubscriptionStatusRequest
+    >({
+      query: ({ userId, status, adminDescription }) => ({
+        url: `/subscription/${userId}/status`,
+        method: "PATCH",
+        data: { status, adminDescription },
       }),
       invalidatesTags: ["Payment"],
     }),
@@ -277,11 +331,11 @@ export const paymentApi = createApi({
     // =======================================
     // GET ALL CANCELLED SUBSCRIPTIONS (ADMIN)
     // =======================================
-    getCancelledSubscriptions: builder.query<AllPaymentsResponse, { page?: number; limit?: number; search?: string; country?: string }>({
+    getCancelledSubscriptions: builder.query<CancelSubscriptionsListResponse, { page?: number; limit?: number; search?: string; country?: string; filter?: CancelSubscriptionStatus }>({
       query: (params) => {
         const filteredParams = Object.fromEntries(
           Object.entries(params || {}).filter(
-            ([_, v]) => v !== undefined && v !== null && v !== ''
+            ([, v]) => v !== undefined && v !== null && v !== ''
           )
         );
 
@@ -320,6 +374,7 @@ export const {
   useGetAllPaymentsQuery,
   useExportPaymentsCSVMutation,
   useCancelSubscriptionMutation,
+  useUpdateCancelSubscriptionStatusMutation,
   useGetAdminPaymentStatsQuery,
   useCreatePaymentVerificationMutation,
   useGetPaymentStatusQuery,

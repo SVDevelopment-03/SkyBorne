@@ -1,9 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ColumnDef } from "@tanstack/react-table";
-import { Toggle2 } from "@/components/ui/Toggle2";
-import { Trash2, Trash2Icon } from "lucide-react";
+import { Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const formatDate = (isoDate?: string) => {
   if (!isoDate) return "—";
@@ -22,16 +19,17 @@ export interface CancelSubscriptionRow {
   name: string;
   email: string;
   description: string;
+  adminComment?: string;
   createdAt: string;
   cancelledAt?: string;
   plan: string;
   userId: string;
-  status: "active" | "inactive";
+  status: "pending" | "retained" | "cancelled";
 }
 
 export const columns = (
-  handleStatusToggle: (id: string, currentStatus: "active" | "inactive") => Promise<void>,
-  handleAction: (id: string, plan: string) => void
+  handleAction: (id: string, plan: string) => void,
+  handleOpenTextModal: (title: string, content: string) => void
 ): ColumnDef<CancelSubscriptionRow>[] => [
   {
     id: "serial",
@@ -53,19 +51,38 @@ export const columns = (
     header: "Description",
     cell: ({ row }) => {
       const desc = row.original.description || "—";
-      const shortDesc = desc.length > 10 ? desc.slice(0, 10) + "..." : desc;
+      const shortDesc = desc.length > 40 ? `${desc.slice(0, 40)}...` : desc;
+      const hasDescription = desc !== "—";
 
       return (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span className="cursor-help">{shortDesc}</span>
-            </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-xs w-[200px] p-4 whitespace-normal">
-              {desc}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <button
+          type="button"
+          className={`text-left ${hasDescription ? "text-blue-600 hover:underline" : "text-gray-500 cursor-default"}`}
+          onClick={() => hasDescription && handleOpenTextModal("Description", desc)}
+          disabled={!hasDescription}
+        >
+          {shortDesc}
+        </button>
+      );
+    },
+  },
+  {
+    accessorKey: "adminComment",
+    header: "Admin Comment",
+    cell: ({ row }) => {
+      const comment = row.original.adminComment || "—";
+      const shortComment = comment.length > 40 ? `${comment.slice(0, 40)}...` : comment;
+      const hasComment = comment !== "—";
+
+      return (
+        <button
+          type="button"
+          className={`text-left ${hasComment ? "text-blue-600 hover:underline" : "text-gray-500 cursor-default"}`}
+          onClick={() => hasComment && handleOpenTextModal("Admin Comment", comment)}
+          disabled={!hasComment}
+        >
+          {shortComment}
+        </button>
       );
     },
   },
@@ -87,18 +104,29 @@ export const columns = (
   {
     accessorKey: "status",
     header: "Status",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-2">
-        <span className={row.original.status === "active" ? "text-green-600" : "text-red-600"}>
-          {row.original.status === "active" ? "Pending" : "Cancelled"}
-        </span>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const status = row.original.status;
+      const statusColor =
+        status === "pending"
+          ? "text-amber-600"
+          : status === "retained"
+          ? "text-emerald-600"
+          : "text-red-600";
+
+      return (
+        <div className="flex items-center gap-2">
+          <span className={statusColor}>{status.charAt(0).toUpperCase() + status.slice(1)}</span>
+        </div>
+      );
+    },
   },
   {
     id: "action",
     header: "Action",
      cell: ({ row }) => {
+      if (row.original.status === "retained" || row.original.status === "cancelled") {
+        return <span className="text-gray-400">—</span>;
+      }
 
       return(
         <div className="flex gap-3">
@@ -108,7 +136,7 @@ export const columns = (
             onClick={() => handleAction(row.original.userId,row?.original?.plan)}
             className="rounded-lg "
           >
-            <Trash2Icon className="w-4 h-4" />
+            <Flag className="w-4 h-4" />
           </Button>
         </div>
       )},

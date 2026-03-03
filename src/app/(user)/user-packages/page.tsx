@@ -35,13 +35,18 @@ const Page = () => {
 
   const handlePaymentTransaction = async () => {
     try {
-      await upgradePlanOrder({
+      const response = await upgradePlanOrder({
         amount: price,
         currency: "USD",
         userId: user?.id,
         plan: selectedPlanData?.planKey || state.selectedPackage,
         billingType: billingType,
       }).unwrap();
+
+      if (response?.checkoutUrl) {
+        window.location.assign(response.checkoutUrl);
+        return;
+      }
 
       toast.success("Plan upgraded successfully");
       goToStep(4);
