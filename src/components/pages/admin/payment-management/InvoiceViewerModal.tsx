@@ -2,7 +2,6 @@
 
 "use client";
 
-import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +43,11 @@ export function InvoiceViewerModal({
     if (!invoiceId) return;
 
     try {
-      const blob = await downloadInvoicePDF({ invoiceId }).unwrap();
+      const fileData = await downloadInvoicePDF({ invoiceId }).unwrap();
+      const blob =
+        fileData instanceof Blob
+          ? fileData
+          : new Blob([fileData as BlobPart], { type: "application/pdf" });
 
       // Create blob URL and download
       const url = window.URL.createObjectURL(blob);
@@ -223,11 +226,11 @@ export function InvoiceViewerModal({
               </div>
             </div>
 
-            {/* Download Button */}
-            <div className="flex gap-3 pt-4 border-t">
-              {/* <Button
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+              <Button
                 onClick={handleDownload}
-                disabled={isDownloading}
+                disabled={isDownloading || !invoiceId}
                 className="flex-1 flex items-center justify-center gap-2"
                 variant="themeRegular"
               >
@@ -237,7 +240,7 @@ export function InvoiceViewerModal({
                   <Download className="w-4 h-4" />
                 )}
                 Download PDF
-              </Button> */}
+              </Button>
               <Button
                 onClick={onClose}
                 variant="outline"

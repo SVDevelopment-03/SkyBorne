@@ -210,6 +210,15 @@ function AdminPayments() {
       ),
     },
     {
+      accessorKey: "invoiceId",
+      header: "Invoice Id",
+      cell: ({ row }) => (
+        <div className="text-sm font-mono text-[#6B6B6B]">
+          {row.original.invoiceId || "N/A"}
+        </div>
+      ),
+    },
+    {
       accessorKey: "username",
       header: "User Name",
       cell: ({ row }) => (

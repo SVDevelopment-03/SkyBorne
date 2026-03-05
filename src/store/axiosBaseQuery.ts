@@ -9,13 +9,15 @@ export const axiosBaseQuery =
       method: AxiosRequestConfig["method"];
       data?: AxiosRequestConfig["data"];
       params?: AxiosRequestConfig["params"];
+      headers?: AxiosRequestConfig["headers"];
+      responseType?: AxiosRequestConfig["responseType"];
     },
     unknown,
     unknown
   > =>
-  async ({ url, method, data, params }) => {
+  async ({ url, method, data, params, headers, responseType }) => {
     try {
-      const result = await API({ url, method, data, params });
+      const result = await API({ url, method, data, params, headers, responseType });
       return { data: result.data };
     } catch (error) {
       const err = error as AxiosError;
