@@ -81,6 +81,25 @@ const MailManagement = () => {
         <span className="text-[#4B4B4B]">{row.original.totalUsers || 0}</span>
       ),
     },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.original.status || "failed";
+        const isSuccess = status === "success";
+        return (
+          <span
+            className={`inline-flex px-2 py-1 rounded-md text-xs font-semibold uppercase ${
+              isSuccess
+                ? "bg-[#27AE60]/10 text-[#27AE60]"
+                : "bg-[#E05252]/10 text-[#E05252]"
+            }`}
+          >
+            {status}
+          </span>
+        );
+      },
+    },
   ];
 
   return (

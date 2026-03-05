@@ -7,6 +7,7 @@ export interface MailLogRow {
   meetingTime: string | null;
   sentAt: string | null;
   totalUsers: number;
+  status: "success" | "failed";
 }
 
 export interface MailLogListResponse {
