@@ -99,6 +99,11 @@ interface ExportPaymentsParams {
   country?: string;
 }
 
+interface ExportCancelSubscriptionsParams {
+  search?: string;
+  filter?: CancelSubscriptionStatus;
+}
+
 interface CancelSubscriptionReasonRequest {
   userId: string;
   description: string;
@@ -348,6 +353,23 @@ export const paymentApi = createApi({
       providesTags: ["Payment"],
     }),
 
+    exportCancelSubscriptionsCSV: builder.mutation<string, ExportCancelSubscriptionsParams>({
+      query: (params) => {
+        const filteredParams = Object.fromEntries(
+          Object.entries(params || {}).filter(
+            ([, v]) => v !== undefined && v !== null && v !== ''
+          )
+        );
+
+        return {
+          url: "/subscription/admin/export",
+          method: "GET",
+          params: filteredParams,
+          responseType: "text",
+        };
+      },
+    }),
+
     getCardDetails: builder.query<CardDetailsResponse, void>({
       query: () => ({
         url: "/payment/card-details",
@@ -380,6 +402,7 @@ export const {
   useGetPaymentStatusQuery,
   useSendCancellationReasonMutation,
   useGetCancelledSubscriptionsQuery,
+  useExportCancelSubscriptionsCSVMutation,
   useGetCardDetailsQuery,
   useCreateCardPortalSessionMutation,
 } = paymentApi;

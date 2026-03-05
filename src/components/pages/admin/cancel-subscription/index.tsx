@@ -10,11 +10,16 @@ import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
 import MainListHeading from "@/components/ui/MainListHeading";
 import { columns, CancelSubscriptionRow } from "./Column";
 import { ColumnDef } from "@tanstack/react-table";
-import { Loader } from "lucide-react";
+import { Loader, Loader2, FileDown } from "lucide-react";
 import CustomPagination from "@/components/ui/CustromPagination";
 import DeleteSubscriptionModal from "@/utils/DeleteSubscriptionModal";
+import { Button } from "@/components/ui/button";
+import toast from "react-hot-toast";
 
-import { useGetCancelledSubscriptionsQuery } from "@/store/api/paymentApi";
+import {
+  useGetCancelledSubscriptionsQuery,
+  useExportCancelSubscriptionsCSVMutation,
+} from "@/store/api/paymentApi";
 
 const CancelSubscriptionPage = () => {
   const [search, setSearch] = useState("");
@@ -26,6 +31,7 @@ const CancelSubscriptionPage = () => {
   const [textModalOpen, setTextModalOpen] = useState(false);
   const [textModalTitle, setTextModalTitle] = useState("");
   const [textModalContent, setTextModalContent] = useState("");
+  const [exportCSV, { isLoading: isExporting }] = useExportCancelSubscriptionsCSVMutation();
 
   // ✅ Use paymentApi query to fetch cancelled subscriptions
   const { data, isLoading, isFetching, refetch }:any = useGetCancelledSubscriptionsQuery({
@@ -74,6 +80,36 @@ const CancelSubscriptionPage = () => {
     setTextModalContent("");
   };
 
+  const downloadCSV = async () => {
+    try {
+      const params = {
+        search: search || undefined,
+      };
+
+      const csvText = await exportCSV(params).unwrap();
+      const blob = new Blob([csvText], { type: "text/csv;charset=utf-8;" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.setAttribute(
+        "download",
+        `cancel_subscriptions_${new Date().toISOString().split("T")[0]}.csv`
+      );
+
+      document.body.appendChild(link);
+      link.click();
+
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("CSV exported successfully");
+    } catch (error: any) {
+      console.error("Export error:", error);
+      toast.error(error?.data?.message || error?.message || "Failed to export CSV");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col items-start gap-2 md:flex-row md:items-center justify-between px-4">
@@ -82,8 +118,8 @@ const CancelSubscriptionPage = () => {
       </div>
 
       <div className="flex flex-col gap-6 p-6 bg-white rounded-lg">
-        <div className="flex flex-col items-start md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 w-full">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
             <div className="relative">
               <Input2
                 placeholder="Search by name or email"
@@ -93,6 +129,21 @@ const CancelSubscriptionPage = () => {
               />
               <SearchIcon />
             </div>
+          </div>
+          <div className="w-full md:w-auto">
+            <Button
+              onClick={downloadCSV}
+              variant="themeRegular"
+              className="rounded-[10px] py-3! w-full md:w-auto"
+              disabled={isExporting || subscriptions.length === 0}
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileDown className="w-4 h-4" />
+              )}
+              Download
+            </Button>
           </div>
         </div>
 
