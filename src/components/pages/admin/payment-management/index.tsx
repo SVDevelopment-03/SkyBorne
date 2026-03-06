@@ -114,9 +114,11 @@ function AdminPayments() {
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Asia/Dubai",
+     // timeZone: "Asia/Kolkata",
+
     });
   };
-
   // Format currency utility
   const formatCurrency = (amount: number, currency: string = "USD") => {
     return new Intl.NumberFormat("en-US", {

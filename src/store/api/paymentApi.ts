@@ -17,6 +17,34 @@ interface AllPaymentsResponse {
   };
 }
 
+interface RecurringPaymentFailure {
+  _id: string;
+  userId?: string | null;
+  fullName?: string | null;
+  email?: string | null;
+  phoneNumber?: string | null;
+  subscriptionId?: string | null;
+  invoiceId?: string | null;
+  status: "processing" | "cancelled";
+  failedAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+interface RecurringPaymentFailuresResponse {
+  success: boolean;
+  failures: RecurringPaymentFailure[];
+  total: number;
+  filteredCount: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  currentFilters?: {
+    status?: string;
+    search?: string;
+  };
+}
+
 interface Subscription {
   _id: string;
   userId: string;
@@ -97,6 +125,13 @@ interface ExportPaymentsParams {
   search?: string;
   status?: string;
   country?: string;
+}
+
+interface RecurringPaymentFailuresParams {
+  search?: string;
+  status?: "processing" | "cancelled" | "all";
+  page?: number;
+  limit?: number;
 }
 
 interface ExportCancelSubscriptionsParams {
@@ -233,6 +268,29 @@ export const paymentApi = createApi({
 
         return {
           url: "/payment/admin/all",
+          method: "GET",
+          params: filteredParams,
+        };
+      },
+      providesTags: ["Payment"],
+    }),
+
+    // =======================================
+    // GET RECURRING PAYMENT FAILURES (ADMIN)
+    // =======================================
+    getRecurringPaymentFailures: builder.query<
+      RecurringPaymentFailuresResponse,
+      RecurringPaymentFailuresParams
+    >({
+      query: (params) => {
+        const filteredParams = Object.fromEntries(
+          Object.entries(params || {}).filter(
+            ([, v]) => v !== undefined && v !== null && v !== ""
+          )
+        );
+
+        return {
+          url: "/payment/admin/recurring-failures",
           method: "GET",
           params: filteredParams,
         };
@@ -394,6 +452,7 @@ export const {
   useGetPaymentHistoryQuery,
   useGetPaymentStatsQuery,
   useGetAllPaymentsQuery,
+  useGetRecurringPaymentFailuresQuery,
   useExportPaymentsCSVMutation,
   useCancelSubscriptionMutation,
   useUpdateCancelSubscriptionStatusMutation,

@@ -32,6 +32,7 @@ import {
   Package2Icon,
   Boxes,
   Mail,
+  AlertTriangle,
 } from "lucide-react";
 
 export const SidebarNav = {
@@ -180,6 +181,12 @@ export const AdminNav = {
       title: "Payment Management",
       url: "/payment-management",
       icon: BadgeDollarSign,
+      items: [],
+    },
+    {
+      title: "Recurring Failed",
+      url: "/recurring-failed",
+      icon: AlertTriangle,
       items: [],
     },
     {
