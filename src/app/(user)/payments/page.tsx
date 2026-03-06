@@ -7,7 +7,6 @@ import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
 import { ColumnDef } from "@tanstack/react-table";
 import {
-  Download,
   Calendar,
   DollarSign,
   Clock,
@@ -16,8 +15,9 @@ import {
   XCircle,
   Loader2,
   CheckCircle,
+  Eye,
 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import {
   useCreateCardPortalSessionMutation,
   useGetCardDetailsQuery,
@@ -32,6 +32,7 @@ import useGetUser from '@/hooks/useGetUser';
 // import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
 import CancelSubscriptionModal from "@/utils/CancelSubscriptionAlert";
+import { InvoiceViewerModal } from "@/components/pages/admin/payment-management/InvoiceViewerModal";
 
 export interface Payment {
   _id: string;
@@ -74,6 +75,8 @@ const toTitleCase = (value: string) =>
 function UserPayments() {
     // const [isCancellingSubscription, setIsCancellingSubscription] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
+    const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+    const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
     const router = useRouter();
 
   // Get userId from Redux or auth state
@@ -316,10 +319,32 @@ function UserPayments() {
         );
       },
     },
+    {
+      id: 'actions',
+      header: 'Actions',
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2">
+          {row.original.invoiceId ? (
+            <Button
+              onClick={() => {
+                setSelectedInvoiceId(row.original.invoiceId!);
+                setIsInvoiceModalOpen(true);
+              }}
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-[#b95e82] hover:bg-[#b95e82]/10 h-8"
+              title="View Invoice"
+            >
+              <Eye className="w-4 h-4" />
+              <span className="text-xs">View</span>
+            </Button>
+          ) : (
+            <span className="text-xs text-[#929292]">No Invoice</span>
+          )}
+        </div>
+      ),
+    },
   ];
-
-
-  const isLoading = isLoadingHistory || isLoadingStats;
 
   const handleOpenStripeCardPage = async () => {
     try {
@@ -588,6 +613,14 @@ function UserPayments() {
       <CancelSubscriptionModal
         open={showCancelModal}
         onClose={() => setShowCancelModal(false)}
+      />
+      <InvoiceViewerModal
+        isOpen={isInvoiceModalOpen}
+        invoiceId={selectedInvoiceId}
+        onClose={() => {
+          setIsInvoiceModalOpen(false);
+          setSelectedInvoiceId(null);
+        }}
       />
     </div>
   );
