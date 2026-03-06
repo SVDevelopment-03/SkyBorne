@@ -20,7 +20,6 @@ import {
 import { useMemo, useState } from 'react';
 import {
   useCreateCardPortalSessionMutation,
-  useGetCardDetailsQuery,
   useGetPaymentHistoryQuery,
   useGetPaymentStatsQuery,
 } from '@/store/api/paymentApi';
@@ -96,19 +95,16 @@ function UserPayments() {
   });
   const [createCardPortalSession, { isLoading: isOpeningStripeCardPage }] =
     useCreateCardPortalSessionMutation();
-  const { data: cardDetailsData } = useGetCardDetailsQuery(undefined, {
-    skip: !userId,
-  });
 
   // Parse data from API responses
   const payments = useMemo(() => paymentHistoryData?.payments || [], [paymentHistoryData]);
   const stats = useMemo(() => paymentStatsData?.stats || {}, [paymentStatsData]);
   const plans = useMemo(() => plansData?.data || [], [plansData]);
-  const canEditCard = Boolean(cardDetailsData?.data?.hasCard);
   
   // Get subscription from user object
   const subscription = useMemo(() => user?.subscription || {}, [user]);
   const plan = useMemo(() => user?.plan || '', [user]);
+  const canEditCard = subscription?.status === 'active';
   // Calculate days remaining
   const calculateDaysRemaining = () => {
     if (!subscription?.endDate) return 0;
