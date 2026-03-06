@@ -9,6 +9,8 @@ import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { DataTable } from "@/components/ui/CommonTable";
 import CustomPagination from "@/components/ui/CustromPagination";
+import { CommonSelect } from "@/components/ui/CountrySelect";
+import { Badge } from "@/components/ui/badge";
 import {
   MailLogRow,
   useGetMailLogsQuery,
@@ -29,8 +31,15 @@ const formatDateTime = (value?: string | null) => {
   });
 };
 
+const statusOptions = [
+  { value: "all", label: "All Statuses" },
+  { value: "success", label: "Success" },
+  { value: "failed", label: "Failed" },
+];
+
 const MailManagement = () => {
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState<"all" | "success" | "failed">("all");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
@@ -38,6 +47,7 @@ const MailManagement = () => {
     page,
     limit,
     search,
+    status,
   });
 
   const mailRows = data?.data || [];
@@ -45,6 +55,11 @@ const MailManagement = () => {
 
   const handleSearch = (value: string) => {
     setSearch(value);
+    setPage(1);
+  };
+
+  const handleStatusChange = (value: string) => {
+    setStatus(value as "all" | "success" | "failed");
     setPage(1);
   };
 
@@ -81,6 +96,25 @@ const MailManagement = () => {
         <span className="text-[#4B4B4B]">{row.original.totalUsers || 0}</span>
       ),
     },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = row.original.status || "failed";
+        const isSuccess = status === "success";
+
+        return (
+          <Badge
+            className={`py-1! px-3! text-xs font-medium ${
+              isSuccess ? "bg-[#27AE60]/10 text-[#27AE60]" : "bg-[#e74c3c]/10 text-[#e74c3c]"
+            }`}
+            style={{ borderRadius: "8px" }}
+          >
+            {isSuccess ? "Success" : "Failed"}
+          </Badge>
+        );
+      },
+    },
   ];
 
   return (
@@ -101,6 +135,17 @@ const MailManagement = () => {
                 className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
               />
               <SearchIcon />
+            </div>
+
+            <div className="w-full sm:w-[220px]">
+              <CommonSelect
+                label="Status"
+                showLabel={false}
+                options={statusOptions}
+                cssProp="min-h-[45px]! w-full!"
+                value={status}
+                onChange={handleStatusChange}
+              />
             </div>
           </div>
         </div>
