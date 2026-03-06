@@ -20,6 +20,7 @@ import {
 import { useEffect, useMemo, useState } from 'react';
 import {
   useCreateCardPortalSessionMutation,
+  useGetCardDetailsQuery,
   useGetPaymentHistoryQuery,
   useGetPaymentStatsQuery,
 } from '@/store/api/paymentApi';
@@ -92,11 +93,15 @@ function UserPayments() {
   });
   const [createCardPortalSession, { isLoading: isOpeningStripeCardPage }] =
     useCreateCardPortalSessionMutation();
+  const { data: cardDetailsData } = useGetCardDetailsQuery(undefined, {
+    skip: !userId,
+  });
 
   // Parse data from API responses
   const payments = useMemo(() => paymentHistoryData?.payments || [], [paymentHistoryData]);
   const stats = useMemo(() => paymentStatsData?.stats || {}, [paymentStatsData]);
   const plans = useMemo(() => plansData?.data || [], [plansData]);
+  const canEditCard = Boolean(cardDetailsData?.data?.hasCard);
   
   // Get subscription from user object
   const subscription = useMemo(() => user?.subscription || {}, [user]);
@@ -488,14 +493,16 @@ function UserPayments() {
                   </div>
                 </div>
                 <div className="flex flex-col md:flex-row items-center gap-2 max-[320px]:w-full max-[320px]:flex-col max-[320px]:items- max-[320px]:gap-3">
-                  <Button
-                    className="bg-white text-[#B95E82] font-semibold  w-full md:w-auto max-[320px]:w-full max-[320px]:px-2 max-[320px]:text-xs max-[320px]:h-auto"
-                    style={{ borderRadius: '12px' }}
-                    onClick={handleOpenStripeCardPage}
-                    disabled={isOpeningStripeCardPage}
-                  >
-                    {isOpeningStripeCardPage ? 'Opening...' : 'Edit Card'}
-                  </Button>
+                  {canEditCard && (
+                    <Button
+                      className="bg-white text-[#B95E82] font-semibold  w-full md:w-auto max-[320px]:w-full max-[320px]:px-2 max-[320px]:text-xs max-[320px]:h-auto"
+                      style={{ borderRadius: '12px' }}
+                      onClick={handleOpenStripeCardPage}
+                      disabled={isOpeningStripeCardPage}
+                    >
+                      {isOpeningStripeCardPage ? 'Opening...' : 'Edit Card'}
+                    </Button>
+                  )}
                   <Button
                     className="bg-white text-[#B95E82] font-semibold max-[320px]:w-full max-[320px]:px-3 max-[320px]:leading-snug max-[320px]:text-xs max-[320px]:whitespace-normal max-[320px]:break-words max-[320px]:text-center max-[320px]:h-auto max-[320px]:py-2"
                     style={{ borderRadius: '12px' }}
