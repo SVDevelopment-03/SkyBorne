@@ -17,12 +17,14 @@ import { useGetInvoiceDetailsQuery, useDownloadInvoicePDFMutation } from "@/stor
 interface InvoiceViewerModalProps {
   isOpen: boolean;
   invoiceId: string | null;
+  transactionId?: string | null;
   onClose: () => void;
 }
 
 export function InvoiceViewerModal({
   isOpen,
   invoiceId,
+  transactionId,
   onClose,
 }: InvoiceViewerModalProps) {
   const [downloadInvoicePDF, { isLoading: isDownloading }] = useDownloadInvoicePDFMutation();
@@ -38,12 +40,20 @@ export function InvoiceViewerModal({
   );
 
   const invoice = invoiceData?.invoice;
+  console.log("aaaaaaaaaa", invoice);
+  
+  const resolvedInvoiceId = invoice?.invoiceId || invoiceId || null;
+  const resolvedTransactionId = invoice?.transactionId || transactionId || "N/A";
 
   const handleDownload = async () => {
-    if (!invoiceId) return;
+    if (!resolvedInvoiceId) return;
 
     try {
-      const fileData = await downloadInvoicePDF({ invoiceId }).unwrap();
+      const fileData = await downloadInvoicePDF({
+        invoiceId: resolvedInvoiceId,
+        transactionId: resolvedTransactionId !== "N/A" ? resolvedTransactionId : undefined,
+        orderRef: invoice?.orderRef,
+      }).unwrap();
       const blob =
         fileData instanceof Blob
           ? fileData
@@ -53,7 +63,14 @@ export function InvoiceViewerModal({
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `invoice-${invoiceId}.pdf`);
+      const safeTransactionId =
+        resolvedTransactionId !== "N/A"
+          ? resolvedTransactionId.replace(/[^a-zA-Z0-9_-]/g, "_")
+          : null;
+      const fileName = safeTransactionId
+        ? `invoice-${resolvedInvoiceId}-${safeTransactionId}.pdf`
+        : `invoice-${resolvedInvoiceId}.pdf`;
+      link.setAttribute("download", fileName);
       document.body.appendChild(link);
       link.click();
       link.parentNode?.removeChild(link);
@@ -169,9 +186,9 @@ export function InvoiceViewerModal({
             {/* Invoice Details */}
             <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Order Reference</p>
-                <p className="font-mono font-semibold text-gray-900">
-                  {invoice.orderRef}
+                <p className="text-sm text-gray-600 mb-1">Transaction ID</p>
+                <p className="font-mono font-semibold text-gray-900 break-all">
+                  {resolvedTransactionId}
                 </p>
               </div>
               <div>
@@ -230,7 +247,7 @@ export function InvoiceViewerModal({
             <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
               <Button
                 onClick={handleDownload}
-                disabled={isDownloading || !invoiceId}
+                disabled={isDownloading || !resolvedInvoiceId}
                 className="flex-1 flex items-center justify-center gap-2"
                 variant="themeRegular"
               >

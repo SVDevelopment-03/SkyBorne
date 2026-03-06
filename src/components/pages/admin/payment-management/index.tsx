@@ -66,6 +66,7 @@ function AdminPayments() {
   const [filterCountry, setFilterCountry] = useState("all");
   const [page, setPage] = useState(1);
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null);
+  const [selectedTransactionId, setSelectedTransactionId] = useState<string | null>(null);
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
 
   // RTK Query hooks
@@ -331,6 +332,7 @@ function AdminPayments() {
             <Button
               onClick={() => {
                 setSelectedInvoiceId(row.original.invoiceId!);
+                setSelectedTransactionId(row.original.transactionId || null);
                 setIsInvoiceModalOpen(true);
               }}
               variant="ghost"
@@ -538,9 +540,11 @@ function AdminPayments() {
       <InvoiceViewerModal
         isOpen={isInvoiceModalOpen}
         invoiceId={selectedInvoiceId}
+        transactionId={selectedTransactionId}
         onClose={() => {
           setIsInvoiceModalOpen(false);
           setSelectedInvoiceId(null);
+          setSelectedTransactionId(null);
         }}
       />
     </div>

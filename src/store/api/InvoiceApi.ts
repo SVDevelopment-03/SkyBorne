@@ -5,6 +5,7 @@ import { axiosBaseQuery } from "../axiosBaseQuery";
 interface InvoiceDetails {
   invoiceId: string;
   orderRef: string;
+  transactionId?: string;
   userName: string;
   userEmail: string;
   plan: string;
@@ -45,6 +46,8 @@ interface UserInvoicesResponse {
 
 interface InvoiceDownloadParams {
   invoiceId: string;
+  transactionId?: string;
+  orderRef?: string;
 }
 
 interface UserInvoicesParams {
@@ -74,11 +77,35 @@ export const invoiceApi = createApi({
     // DOWNLOAD INVOICE PDF
     // =======================================
     downloadInvoicePDF: builder.mutation<Blob, InvoiceDownloadParams>({
-      query: ({ invoiceId }) => ({
-        url: `/invoice/${invoiceId}/download`,
-        method: "GET",
-        responseType: "blob",
-      }),
+      query: ({ invoiceId, transactionId, orderRef }) => {
+        const params: Record<string, string> = {
+          invoiceId,
+        };
+        if (transactionId) {
+          params.transactionId = transactionId;
+          params.transaction_id = transactionId;
+          params.txnId = transactionId;
+          params.reference = transactionId;
+          params.paymentReference = transactionId;
+          params.payment_reference = transactionId;
+        }
+        if (orderRef) {
+          params.orderRef = orderRef;
+          params.order_ref = orderRef;
+        }
+
+        return {
+          url: `/invoice/${invoiceId}/download`,
+          method: "GET",
+          params,
+          headers: {
+            "x-invoice-id": invoiceId,
+            ...(transactionId ? { "x-transaction-id": transactionId } : {}),
+            ...(orderRef ? { "x-order-ref": orderRef } : {}),
+          },
+          responseType: "blob",
+        };
+      },
     }),
 
     // =======================================
