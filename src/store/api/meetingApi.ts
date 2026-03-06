@@ -84,6 +84,21 @@ export interface MonthlyAttendanceResponse {
   data: MonthlyAttendanceData[];
 }
 
+export interface CompletedSessionsResponse {
+  success: boolean;
+  data: {
+    sessions: any[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      total: number;
+      limit: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+  };
+}
+
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
 
@@ -148,6 +163,22 @@ export const meetingApi = createApi({
         url: "/meetings/getAll",
         method: "GET",
         params: data,
+      }),
+      providesTags: ["Meetings"],
+    }),
+
+    getCompletedSessions: builder.query<
+      CompletedSessionsResponse,
+      { page?: number; limit?: number; search?: string }
+    >({
+      query: ({ page = 1, limit = 10, search = "" }) => ({
+        url: "/meetings/completed-sessions",
+        method: "GET",
+        params: {
+          page,
+          limit,
+          search,
+        },
       }),
       providesTags: ["Meetings"],
     }),
@@ -284,6 +315,7 @@ export const meetingApi = createApi({
 export const {
   useCreateMeetingMutation,
   useGetAllMeetingsQuery,
+  useGetCompletedSessionsQuery,
   useGetMeetingByIdQuery,
   useGetAllUserMeetingsQuery,
   useUpdateMeetingMutation,

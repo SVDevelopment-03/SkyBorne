@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
-import Sidebar from "@/components/layout/sidebar";
 import { useEffect, useMemo, useState } from "react";
 import DashboardBanner from "./DashboardBanner";
 import { Typography } from "@/components/ui/heading";
@@ -21,7 +20,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { ColumnDef } from "@tanstack/react-table";
 import { Input2 } from "@/components/ui/input";
 import {
-  useGetAllMeetingsQuery,
+  useGetCompletedSessionsQuery,
   useGetUpcomingMeetingsQuery,
 } from "@/store/api/meetingApi";
 import { format } from "date-fns";
@@ -33,8 +32,8 @@ import { useGetDashboardStatsQuery } from "@/store/api/authApi";
 import { useGetPlansQuery } from "@/store/api/publicApi";
 import { SearchIcon } from "@/icons/helpIcon";
 import { useUserRegionFromStore } from "@/utils/timezone";
-import { log } from "console";
 import { COUNTRY_TIMEZONE_MAP_ALL } from "@/constants/countryTimezoneMap";
+import CustomPagination from "@/components/ui/CustromPagination";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
@@ -125,14 +124,6 @@ const getCreditsChartOptions = (
   return options;
 };
 
-type MeetingStatus = "registered" | "joined" | "completed" | "missed";
-
-interface GetMeetingsParams {
-  status?: MeetingStatus;
-  page?: number;
-  limit?: number;
-}
-
 export default function Page() {
   const [userRegion, setUserRegion] = useState<{
     region: string | null;
@@ -148,17 +139,11 @@ export default function Page() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  const [status, setStatus] = useState<MeetingStatus | undefined>("joined");
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const limit = 3;
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-  };
-
-  const handleLimitChange = (newLimit: number) => {
-    setLimit(newLimit);
-    setPage(1); // Reset to first page when limit changes
   };
 
   useEffect(() => {
@@ -191,7 +176,6 @@ export default function Page() {
   const {
     data: dashboardData,
     isLoading: tileLoading,
-    error: tileerror,
   } = useGetDashboardStatsQuery({ region: userRegion?.region });
   const { data: plansData } = useGetPlansQuery(undefined);
 
@@ -283,12 +267,18 @@ export default function Page() {
     const timezones = COUNTRY_TIMEZONE_MAP_ALL[countryCode];
     return Array.isArray(timezones) && timezones.length > 0 ? timezones[0] : null;
   }, [user?.countryCode]);
-  const { data, isLoading, error, refetch }: any = useGetAllMeetingsQuery({
-    userId: user?.id,
-    status,
+  const {
+    data: completedSessionsData,
+    isLoading: isLoadingCompletedSessions,
+  } = useGetCompletedSessionsQuery({
     page,
     limit,
-  } as GetMeetingsParams);
+  });
+
+  const completedSessions = completedSessionsData?.data?.sessions || [];
+  const completedSessionsPagination = completedSessionsData?.data?.pagination;
+  const paginationTotalPages = completedSessionsPagination?.totalPages ?? 1;
+  const paginationCurrentPage = completedSessionsPagination?.currentPage ?? 1;
 
   const avatarName = `${user?.firstName?.charAt(0) || "U"}${
     user?.lastName?.charAt(0) || ""
@@ -300,12 +290,7 @@ export default function Page() {
 
   // ✅ Helper function to format date with timezone awareness
   // If region is not 'live' and region time has passed, shows next day date for recording
-  const formatDateWithTimezone = (
-    isoString: string,
-    timezone?: string,
-    regionTimeStr?: string,
-    mode?: string,
-  ) => {
+  const formatDateWithTimezone = (isoString: string, timezone?: string) => {
     if (!isoString) return "N/A";
 
     try {
@@ -384,21 +369,10 @@ export default function Page() {
     }
   };
 
-  // Combined format: "Oct 28, 2:30 PM"
-  const formatDateTimeWithTimezone = (isoString: string, timezone?: string) => {
-    const date = formatDateWithTimezone(isoString, timezone);
-    const time = formatTimeWithTimezone(isoString, timezone);
-    return `${date}, ${time}`;
-  };
-
   const STORAGE_KEY = process.env.NEXT_PUBLIC_STORAGE_KEY as string;
   const STEP_KEY = process.env.NEXT_PUBLIC_STEP_KEY as string;
 
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("6months");
-
-  const handleFilterChange = (value: string) => {
-    setTimeFilter(value as TimeFilter);
-  };
 
   const getFilterLabel = (value: string) => {
     switch (value) {
@@ -627,9 +601,6 @@ export default function Page() {
                       userCountryTimezone ||
                         userRegion?.timezone ||
                         regionInfo?.timezone,
-                      regionInfo?.localTime,
-                      "live"
-                      // regionInfo?.mode,
                     );
 
                     const trainer = meeting?.trainer?.name ?? "";
@@ -691,12 +662,22 @@ export default function Page() {
                 {
                   <DataTable
                     columns={columns as ColumnDef<UserData, unknown>[]}
-                    data={(data?.data as UserData[]) ?? []}
-                    isLoadingData={isLoading}
+                    data={(completedSessions as UserData[]) ?? []}
+                    isLoadingData={isLoadingCompletedSessions}
                   />
                 }
               </div>
             </div>
+            {paginationTotalPages > 1 && (
+              <div className="w-full flex justify-center pb-2">
+                <CustomPagination
+                  totalPages={paginationTotalPages}
+                  currentPage={paginationCurrentPage}
+                  onPageChange={handlePageChange}
+                  visiblePages={3}
+                />
+              </div>
+            )}
           </div>
           <div
             className={`bg-white rounded-[20px] p-7 mb-16 sm:mb-0 flex flex-col items-start justify-start gap-7.5 w-full [&>*:first-child]:justify-start`}

@@ -1,4 +1,3 @@
-import { BadgeIcon } from "@/icons/helpIcon";
 import { toTitleCase } from "@/utils/Titlecase";
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
@@ -10,6 +9,7 @@ export type UserData = {
   }
   date: string;
   duration: string;
+  totalDuration?: number;
   status: string;
   badge?: boolean; // or string if badge name
 };
@@ -57,6 +57,22 @@ export const columns: ColumnDef<UserData>[] = [
         {toTitleCase(status=="joined"? "completed":status) }
       </div>
     )},
+  },
+
+  {
+    accessorKey: "totalDuration",
+    header: "Duration",
+    cell: ({ row }) => {
+      const value = row.getValue("totalDuration");
+      const duration =
+        typeof value === "number" ? value : Number(value || 0);
+
+      return (
+        <div className="text-[16px] font-satoshi-500">
+          {`${duration} min`}
+        </div>
+      );
+    },
   },
 
   // {
