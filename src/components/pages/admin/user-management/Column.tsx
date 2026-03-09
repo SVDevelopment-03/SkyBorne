@@ -24,6 +24,7 @@ export interface UserRowData {
   name: string;
   email: string;
   plan?: string;
+  subscriptionStatus?: string;
   phone?: string;
   country?: string;
   state?: string;
@@ -119,6 +120,31 @@ export const columns = (
     ),
   },
   {
+    accessorKey: "subscriptionStatus",
+    header: "Subscription Status",
+    cell: ({ row }) => {
+      const rawStatus = String(row.original.subscriptionStatus || "N/A");
+      const normalized = rawStatus.toLowerCase();
+
+      const statusClass =
+        normalized === "active"
+          ? "bg-[#E9F9EF] text-[#1C9C56]"
+          : normalized === "cancelled" || normalized === "canceled"
+            ? "bg-[#FDECEC] text-[#D14343]"
+            : normalized === "expired" || normalized === "inactive"
+              ? "bg-[#F5F5F5] text-[#666666]"
+              : normalized === "suspended"
+                ? "bg-[#FFF5E8] text-[#CC7A00]"
+                : "bg-[#F5F5F5] text-[#666666]";
+
+      return (
+        <span className={`px-3 py-1 rounded-full text-sm capitalize ${statusClass}`}>
+          {rawStatus}
+        </span>
+      );
+    },
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
@@ -142,21 +168,4 @@ export const columns = (
     ),
   },
 ];
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

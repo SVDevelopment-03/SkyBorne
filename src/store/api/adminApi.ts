@@ -40,6 +40,7 @@ export interface Payment {
 export interface CountryRevenueRow {
   country: string;
   count: number;
+  activeUsers?: number;
   amount: number;
 }
 

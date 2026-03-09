@@ -12,6 +12,10 @@ export interface User {
   city?: string;
   countryCode?: string;
   plan?: string;
+  subscription?: {
+    status?: string;
+  };
+  subscriptionStatus?: string;
   isActive: boolean;
   createdAt: string;
 }

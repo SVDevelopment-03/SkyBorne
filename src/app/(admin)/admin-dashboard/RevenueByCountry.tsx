@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
-import { Loader, FileDown, Loader2 } from "lucide-react";
-import { useGetRevenueByCountryQuery } from "@/store/api/adminApi";
+import React, { useMemo, useState } from "react";
+import { FileDown, Loader2 } from "lucide-react";
+import {
+  useGetRevenueByCountryQuery,
+  type CountryRevenueRow,
+} from "@/store/api/adminApi";
 import { Typography } from "@/components/ui/heading";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -15,15 +18,44 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type RevenueRowLike = CountryRevenueRow & {
+  user?: number | string;
+  users?: number | string;
+};
+
+const getActiveUsersCount = (row: RevenueRowLike | null | undefined): number => {
+  const value = row?.activeUsers ?? row?.user ?? row?.users;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
 const RevenueByCountryTable = () => {
   const { data, isLoading, error } = useGetRevenueByCountryQuery();
   const [isExporting, setIsExporting] = useState(false);
 
   const tableData = data?.data;
 
+  const totalActiveUsers = useMemo(() => {
+    if (!tableData) return 0;
+
+    const hasGrandTotalActiveUsers =
+      tableData.grandTotal &&
+      Object.prototype.hasOwnProperty.call(tableData.grandTotal, "activeUsers");
+
+    if (hasGrandTotalActiveUsers) {
+      return getActiveUsersCount(tableData.grandTotal);
+    }
+
+    return (tableData.rows || []).reduce(
+      (sum: number, row) => sum + getActiveUsersCount(row),
+      0,
+    );
+  }, [tableData]);
+
   const columns = [
     { id: "country", label: "Country" },
-    { id: "count", label: "Count" },
+    { id: "user", label: "Active User" },
+    { id: "count", label: "Invoice Count" },
     { id: "amount", label: "Amount" },
   ];
 
@@ -33,11 +65,12 @@ const RevenueByCountryTable = () => {
     setIsExporting(true);
     try {
       // Create CSV headers
-      const headers = ["Country", "Count", "Amount"];
+      const headers = ["Country", "Active User", "Count", "Amount"];
 
       // Create CSV rows from data
       const csvRows = tableData.rows.map((row) => [
         `"${row.country}"`, // Wrap country in quotes to handle special characters
+        getActiveUsersCount(row),
         row.count,
         `$${row.amount.toFixed(2)}`,
       ]);
@@ -45,6 +78,7 @@ const RevenueByCountryTable = () => {
       // Add grand total row
       csvRows.push([
         `"${tableData.grandTotal.country}"`,
+        totalActiveUsers,
         tableData.grandTotal.count,
         `$${tableData.grandTotal.amount.toFixed(2)}`,
       ]);
@@ -61,7 +95,10 @@ const RevenueByCountryTable = () => {
       const url = URL.createObjectURL(blob);
 
       link.setAttribute("href", url);
-      link.setAttribute("download", `revenue-by-country-${new Date().toISOString().split("T")[0]}.csv`);
+      link.setAttribute(
+        "download",
+        `revenue-by-country-${new Date().toISOString().split("T")[0]}.csv`,
+      );
       link.style.visibility = "hidden";
 
       document.body.appendChild(link);
@@ -75,7 +112,7 @@ const RevenueByCountryTable = () => {
   };
 
   return (
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 max-h-[450px] overflow-y-auto [scrollbar-width:thin]">
+    <div className="bg-white rounded-lg p-6 shadow-sm border border-gray-100 max-h-[450px] overflow-y-auto [scrollbar-width:thin]">
       <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="text-lg font-bold text-gray-900 mb-2">
@@ -171,7 +208,10 @@ const RevenueByCountryTable = () => {
                 className="border-x-8 border-transparent bg-[#F9F9F9] rounded-lg hover:bg-[#F5F5F5] transition-colors"
               >
                 <TableCell className="py-4 px-5 font-satoshi-500 font-medium text-[1rem] leading-tight text-[#000000] first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
-                  {row.country?.slice(0,32)}
+                  {row.country?.slice(0, 32)}
+                </TableCell>
+                <TableCell className="py-4 px-5 font-satoshi-500 font-medium text-[1rem] leading-tight text-[#000000] first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
+                  {getActiveUsersCount(row)}
                 </TableCell>
                 <TableCell className="py-4 px-5 font-satoshi-500 font-medium text-[1rem] leading-tight text-[#000000] first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
                   {row.count}
@@ -191,6 +231,9 @@ const RevenueByCountryTable = () => {
                 <TableRow className="border-x-8 border-transparent bg-[#FFE8E8] rounded-lg">
                   <TableCell className="py-4 px-5 font-satoshi-700 font-bold text-[1rem] leading-tight text-[#000000] first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
                     {tableData.grandTotal.country}
+                  </TableCell>
+                    <TableCell className="py-4 px-5 font-satoshi-700 font-bold text-[1rem] leading-tight text-[#000000] first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
+                    {totalActiveUsers}
                   </TableCell>
                   <TableCell className="py-4 px-5 font-satoshi-700 font-bold text-[1rem] leading-tight text-[#000000] first:rounded-tl-lg first:rounded-bl-lg last:rounded-tr-lg last:rounded-br-lg">
                     {tableData.grandTotal.count}

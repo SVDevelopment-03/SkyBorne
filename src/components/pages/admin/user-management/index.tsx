@@ -110,6 +110,8 @@ const UserManagement = () => {
     city: u.city || u?.address?.city || "N/A",
     countryCode: u.countryCode || "N/A",
     plan: u.plan || "N/A",
+    subscriptionStatus:
+      u?.subscription?.status || u?.subscriptionStatus || "N/A",
     status: u.isActive ? "active" : "inactive",
     createdAt: u.createdAt,
   }));
