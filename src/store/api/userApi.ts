@@ -8,6 +8,8 @@ export interface User {
   email: string;
   phoneNumber?: string;
   country?: string;
+  state?: string;
+  city?: string;
   countryCode?: string;
   plan?: string;
   isActive: boolean;
@@ -40,12 +42,14 @@ export interface GetUsersParams {
   limit?: number;
   search?: string;
   country?: string;
+  state?: string;
   plan?: string;
 }
 
 export interface ExportUsersParams {
   search?: string;
   country?: string;
+  state?: string;
   plan?: string;
 }
 
@@ -59,7 +63,7 @@ export const userApi = createApi({
         // Filter out undefined/null/empty values from params
         const filteredParams = Object.fromEntries(
           Object.entries(params || {}).filter(
-            ([_, v]) => v !== undefined && v !== null && v !== ''
+            ([, v]) => v !== undefined && v !== null && v !== ''
           )
         );
 
@@ -80,7 +84,7 @@ export const userApi = createApi({
       query: (params) => {
         const filteredParams = Object.fromEntries(
           Object.entries(params || {}).filter(
-            ([_, v]) => v !== undefined && v !== null && v !== ''
+            ([, v]) => v !== undefined && v !== null && v !== ''
           )
         );
 

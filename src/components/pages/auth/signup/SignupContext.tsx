@@ -6,7 +6,6 @@ import {
   useState,
   ReactNode,
   useEffect,
-  useRef,
 } from "react";
 import { SignupFormData } from "./SignupTypes";
 import { decrypt, encrypt } from "@/lib/crypto";
@@ -32,7 +31,7 @@ const defaultData: SignupFormData = {
     agreeTerms: false,
     authProvider: "email",
   },
-  step3: { phoneNumber: "" },
+  step3: { phoneNumber: "", country: "", state: "", city: "" },
   step4: { otp: "", tempUserId: "" },
   step5: { ageGroup: "", wellnessRole: "" },
   step6: { goal: "" },

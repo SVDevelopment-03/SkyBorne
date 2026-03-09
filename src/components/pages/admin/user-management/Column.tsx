@@ -4,7 +4,6 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Toggle2 } from "@/components/ui/Toggle2";
-import { ro } from "date-fns/locale";
 
 const formatDate = (isoDate?: string) => {
   if (!isoDate) return "—";
@@ -27,6 +26,8 @@ export interface UserRowData {
   plan?: string;
   phone?: string;
   country?: string;
+  state?: string;
+  city?: string;
   status: "active" | "inactive";
   createdAt : string;
 }
@@ -91,6 +92,24 @@ export const columns = (
     ),
   },
   {
+    accessorKey: "state",
+    header: "State",
+    cell: ({ row }) => (
+      <div className="text-[16px] font-satoshi-500 text-[#666666]">
+        {row.original.state || "—"}
+      </div>
+    ),
+  },
+  {
+    accessorKey: "city",
+    header: "City",
+    cell: ({ row }) => (
+      <div className="text-[16px] font-satoshi-500 text-[#666666]">
+        {row.original.city || "—"}
+      </div>
+    ),
+  },
+  {
     accessorKey: "plan",
     header: "Plan",
     cell: ({ row }) => (
@@ -123,7 +142,6 @@ export const columns = (
     ),
   },
 ];
-
 
 
 

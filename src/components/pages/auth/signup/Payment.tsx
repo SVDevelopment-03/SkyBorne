@@ -51,6 +51,10 @@ export function Payment({ selectedPackage, onPayment, onBack, billingType = "mon
         billingType: billingType,
       }).unwrap();
 
+      localStorage.setItem("orderRef", res?.orderRef || "");
+      localStorage.setItem("paymentAmount", String(price));
+      localStorage.setItem("paymentCurrency", "USD");
+
       window.location.href = res.paymentLink;
     } catch (err) {
       console.error(err);

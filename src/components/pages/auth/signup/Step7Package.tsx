@@ -45,6 +45,8 @@ const Page = () => {
       }).unwrap();
 
       localStorage.setItem("orderRef", res?.orderRef);
+      localStorage.setItem("paymentAmount", String(price));
+      localStorage.setItem("paymentCurrency", "USD");
 
       setTimeout(() => {
         window.location.href = res.paymentLink;
@@ -117,5 +119,4 @@ const Page = () => {
 };
 
 export default Page;
-
 

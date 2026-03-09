@@ -15,6 +15,9 @@ export interface Step2Data {
 
 export interface Step3Data {
   phoneNumber: string;
+  country: string;
+  state: string;
+  city: string;
 }
 
 export interface Step4Data {
@@ -58,6 +61,9 @@ export interface SignupFormValidation {
   password: string;
   agreeTerms: boolean;
   phoneNumber: string;
+  country: string;
+  state: string;
+  city: string;
   otp: string;
   tempUserId: string;
   ageGroup: string;

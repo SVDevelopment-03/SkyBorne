@@ -131,11 +131,6 @@ export default function Page() {
   } | null>(null);
 
   const { region, timezone } = useUserRegionFromStore();
-
-  
-
-
-
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 

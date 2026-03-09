@@ -10,14 +10,87 @@ import { Calendar, CheckCircle, LayoutDashboard, Loader } from 'lucide-react';
 
 interface PaymentData {
   orderRef: string;
-  amount: number;
-  currency: string;
+  amount?: number;
+  currency?: string;
   status: string;
   success: boolean;
   user?: {
     onboardingCompleted: boolean;
   };
 }
+
+const toNumber = (value: unknown): number | undefined => {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return undefined;
+};
+
+const normalizePaymentResponse = (response: any): PaymentData => {
+  const nested = response?.data && typeof response.data === "object"
+    ? response.data
+    : {};
+
+  const user = response?.user || nested?.user;
+  const status = String(response?.status || nested?.status || "");
+  const amount =
+    toNumber(response?.amount) ??
+    toNumber(response?.localAmount) ??
+    toNumber(response?.amountTotal) ??
+    toNumber(response?.totalAmount) ??
+    toNumber(response?.payment?.amount) ??
+    toNumber(response?.paymentData?.amount) ??
+    toNumber(response?.transaction?.amount) ??
+    toNumber(nested?.amount) ??
+    toNumber(nested?.localAmount) ??
+    toNumber(nested?.amountTotal) ??
+    toNumber(nested?.totalAmount) ??
+    toNumber(nested?.payment?.amount) ??
+    toNumber(nested?.paymentData?.amount) ??
+    toNumber(nested?.transaction?.amount);
+
+  return {
+    orderRef:
+      response?.orderRef ||
+      response?.order_ref ||
+      response?.payment?.orderRef ||
+      response?.paymentData?.orderRef ||
+      response?.transaction?.orderRef ||
+      nested?.orderRef ||
+      nested?.order_ref ||
+      nested?.payment?.orderRef ||
+      nested?.paymentData?.orderRef ||
+      nested?.transaction?.orderRef ||
+      "",
+    amount,
+    currency:
+      response?.currency ||
+      response?.currencyCode ||
+      response?.payment?.currency ||
+      response?.paymentData?.currency ||
+      response?.transaction?.currency ||
+      nested?.currency ||
+      nested?.currencyCode ||
+      nested?.payment?.currency ||
+      nested?.paymentData?.currency ||
+      nested?.transaction?.currency,
+    status,
+    success: Boolean(response?.success ?? nested?.success ?? status === "COMPLETED"),
+    user,
+  };
+};
+
+const formatAmount = (amount?: number, currency = "USD"): string => {
+  if (typeof amount !== "number" || Number.isNaN(amount)) return "N/A";
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: currency || "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+};
 
  function PaymentSuccess() {
   const searchParams = useSearchParams();
@@ -41,6 +114,8 @@ interface PaymentData {
     if (!searchParams) return;
     
     const orderRef = localStorage.getItem("orderRef");
+    const fallbackAmount = toNumber(localStorage.getItem("paymentAmount"));
+    const fallbackCurrency = localStorage.getItem("paymentCurrency") || "USD";
     const reference = searchParams.get('ref');
     const sessionId = searchParams.get('sessionId');
 
@@ -66,37 +141,44 @@ interface PaymentData {
 
         const response: any = await verifyPayment(verifyPayload).unwrap();
 
+        const normalized = normalizePaymentResponse(response);
+        const resolvedData: PaymentData = {
+          ...normalized,
+          amount: normalized.amount ?? fallbackAmount,
+          currency: normalized.currency || fallbackCurrency,
+        };
+
         // ✅ NEW LOGIC: Check user.onboardingCompleted instead of response.success
-        if (response?.user?.onboardingCompleted === true) {
+        if (resolvedData.user?.onboardingCompleted === true) {
           // Payment succeeded and subscription is activated
-          setPaymentData(response);
+          setPaymentData(resolvedData);
           setLoading(false);
           setAutoRetrying(false);
-        } else if (response?.status === "PENDING" && retryCount < 5) {
+        } else if (resolvedData.status === "PENDING" && retryCount < 5) {
           // Still processing, retry after 2 seconds
           setAutoRetrying(true);
-          setPaymentData(response);
+          setPaymentData(resolvedData);
           
           retryTimeoutRef.current = setTimeout(() => {
             setRetryCount(prev => prev + 1);
             handleVerify();
           }, 2000);
-        } else if (response?.status === "PENDING") {
+        } else if (resolvedData.status === "PENDING") {
           // Max retries reached but still pending
-          setPaymentData(response);
+          setPaymentData(resolvedData);
           setError("Payment is still processing. Please check back shortly.");
           setLoading(false);
           setAutoRetrying(false);
         } else {
           // Payment failed or other status
-          setPaymentData(response);
+          setPaymentData(resolvedData);
           setLoading(false);
           setAutoRetrying(false);
           
           // Show error if payment failed
-          if (response?.status !== "COMPLETED") {
+          if (resolvedData.status !== "COMPLETED") {
             setError(
-              `Payment ${response?.status?.toLowerCase() || "failed"}. Please try again.`
+              `Payment ${resolvedData.status?.toLowerCase() || "failed"}. Please try again.`
             );
           }
         }
@@ -218,7 +300,8 @@ interface PaymentData {
               <span className="font-semibold">Order Ref:</span> {paymentData.orderRef}
             </p>
             <p className="text-sm text-gray-600 mt-1">
-              <span className="font-semibold">Amount:</span> {paymentData.currency} {paymentData.amount}
+              <span className="font-semibold">Amount:</span>{" "}
+              {formatAmount(paymentData.amount, paymentData.currency || "USD")}
             </p>
             <p className="text-sm text-gray-600 mt-1">
               <span className="font-semibold">Status:</span> {paymentData.status}
@@ -272,8 +355,8 @@ interface PaymentData {
                 </p>
                 {paymentData && (
                   <p className="text-xs text-gray-500 mt-2">
-                    Order: {paymentData.orderRef} | Amount: {paymentData.currency}{" "}
-                    {paymentData.amount}
+                    Order: {paymentData.orderRef} | Amount:{" "}
+                    {formatAmount(paymentData.amount, paymentData.currency || "USD")}
                   </p>
                 )}
               </div>

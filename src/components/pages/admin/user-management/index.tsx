@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { CommonSelect } from "@/components/ui/CountrySelect";
 import CustomPagination from "@/components/ui/CustromPagination";
 import countryList from "react-select-country-list";
-import { set } from "lodash";
+import { State } from "country-state-city";
 
 export interface DisplayUser extends UserRowData {
   countryCode?: string;
@@ -39,6 +39,7 @@ const planOptions = [
 const UserManagement = () => {
   const [search, setSearch] = useState("");
   const [filterCountry, setFilterCountry] = useState("all");
+  const [filterState, setFilterState] = useState("all");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
 
@@ -68,12 +69,35 @@ const UserManagement = () => {
     limit,
     search: search,
     country: filterCountry !== "all" ? filterCountry : undefined,
+    state: filterState !== "all" ? filterState : undefined,
     plan: filterPlan !== "all" ? filterPlan : undefined,
   });
-
-
-  const users: any = data?.data?.users || [];
+  const users: any[] = useMemo(() => data?.data?.users || [], [data]);
   const pagination :any= data?.data?.pagination || {};
+
+  const stateOptions = useMemo(() => {
+    const uniqueStates = new Set<string>();
+
+    if (filterCountry !== "all") {
+      const countryStates = State.getStatesOfCountry(filterCountry.toUpperCase());
+      countryStates.forEach((item) => {
+        const stateName = String(item?.name || "").trim();
+        if (stateName) uniqueStates.add(stateName);
+      });
+    } else {
+      users.forEach((user: any) => {
+        const stateName = String(user?.state || user?.address?.state || "").trim();
+        if (stateName) uniqueStates.add(stateName);
+      });
+    }
+
+    return [
+      { value: "all", label: "All States" },
+      ...Array.from(uniqueStates)
+        .sort((a, b) => a.localeCompare(b))
+        .map((stateName) => ({ value: stateName, label: stateName })),
+    ];
+  }, [filterCountry, users]);
 
   // Backend → UI mapping with country code
   const mappedUsers: DisplayUser[] = users.map((u: any) => ({
@@ -82,6 +106,8 @@ const UserManagement = () => {
     email: u.email || "N/A",
     phone: u.phoneNumber || "N/A",
     country: u.country || "N/A",
+    state: u.state || u?.address?.state || "N/A",
+    city: u.city || u?.address?.city || "N/A",
     countryCode: u.countryCode || "N/A",
     plan: u.plan || "N/A",
     status: u.isActive ? "active" : "inactive",
@@ -95,6 +121,12 @@ const UserManagement = () => {
 
   const handleCountryFilter = (value: string) => {
     setFilterCountry(value);
+    setFilterState("all");
+    setPage(1);
+  };
+
+  const handleStateFilter = (value: string) => {
+    setFilterState(value);
     setPage(1);
   };
 
@@ -110,7 +142,7 @@ const UserManagement = () => {
       }).unwrap();
       toast.success(`User status updated to ${newStatus}`);
       refetch();
-    } catch (error) {
+    } catch {
       toast.error("Failed to update status");
     }
   };
@@ -121,6 +153,7 @@ const downloadCSV = async () => {
     const params: ExportUsersParams = {
       search: search || undefined,
       country: filterCountry !== "all" ? filterCountry : undefined,
+      state: filterState !== "all" ? filterState : undefined,
       plan: filterPlan !== "all" ? filterPlan : undefined,
     };
 
@@ -203,6 +236,18 @@ const downloadCSV = async () => {
               onChange={handlePlanFilter}
             />
           </div>
+
+          {/* State Filter */}
+          <div className="w-full md:w-auto">
+            <CommonSelect
+              label="All States"
+              showLabel={false}
+              options={stateOptions}
+              cssProp="min-h-[45px]! md:min-w-[170px]!"
+              value={filterState}
+              onChange={handleStateFilter}
+            />
+          </div>
         </div>
 
         {/* RIGHT SIDE — Action Button (isolated, never overlaps) */}
@@ -211,11 +256,16 @@ const downloadCSV = async () => {
           <Button
             onClick={downloadCSV}
             variant="themeRegular"
+            disabled={isExporting}
             // className="rounded-[10px] py-3!"
             className="rounded-[10px] py-3! w-full sm:w-auto "
           >
-            <FileDown className="w-4 h-4" />
-            Download CSV
+            {isExporting ? (
+              <Loader className="w-4 h-4 animate-spin" />
+            ) : (
+              <FileDown className="w-4 h-4" />
+            )}
+            {isExporting ? "Exporting..." : "Download CSV"}
           </Button>
         </div>
       </div>
