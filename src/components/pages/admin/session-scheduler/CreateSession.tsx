@@ -955,7 +955,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                               Local Time
                             </th>
                             <th className="px-4 py-3 text-left text-[#525252]">
-                              Format
+                              Timezone
                             </th>
                             <th className="px-4 py-3 text-left text-[#525252]">
                               Mode
@@ -986,10 +986,7 @@ export function CreateSession({ onSuccess }: ClassSchedulerProps) {
                                 </td>
                                 <td className="px-4 py-3 text-[#737373]">
                                   <div className="flex flex-col">
-                                    <span>{countryPreview.format}</span>
-                                    <span className="text-xs text-[#737373]">
-                                      {countryPreview.timezone}
-                                    </span>
+                                    <span>{countryPreview.timezone}</span>
                                   </div>
                                 </td>
                                 <td className="px-4 py-3">

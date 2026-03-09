@@ -1,4 +1,4 @@
-export const COUNTRY_TIMEZONE_MAP_ALL: Record<string, string[]> = {
+const COUNTRY_TIMEZONE_MAP_ALL_RAW: Record<string, string[]> = {
   AD: [
     "Europe/Andorra",
   ],
@@ -914,8 +914,15 @@ export const COUNTRY_TIMEZONE_MAP_ALL: Record<string, string[]> = {
 };
 
 export const COUNTRY_TIMEZONE_MAP: Record<string, string> = Object.fromEntries(
-  Object.entries(COUNTRY_TIMEZONE_MAP_ALL).map(([countryCode, timezones]) => [
+  Object.entries(COUNTRY_TIMEZONE_MAP_ALL_RAW).map(([countryCode, timezones]) => [
     countryCode,
     timezones[0],
-  ])
+  ]),
 ) as Record<string, string>;
+
+export const COUNTRY_TIMEZONE_MAP_ALL: Record<string, string[]> = Object.fromEntries(
+  Object.entries(COUNTRY_TIMEZONE_MAP).map(([countryCode, timezone]) => [
+    countryCode,
+    [timezone],
+  ]),
+) as Record<string, string[]>;
