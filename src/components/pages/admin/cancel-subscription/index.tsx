@@ -47,6 +47,8 @@ const CancelSubscriptionPage = () => {
       name: `${s.firstName || ""} ${s.lastName || ""}`.trim(),
       email: s.email || "N/A",
       phoneNumber: s.phoneNumber || "N/A",
+      country: s.country || "N/A",
+      subscribedAt: s.subscribedAt || undefined,
       userId:s.userId || "",
       cancelledAt: s.cancelledAt || null,
       description: s.description || "",
@@ -123,7 +125,7 @@ const CancelSubscriptionPage = () => {
           <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
             <div className="relative">
               <Input2
-                placeholder="Search by name, email or phone"
+                placeholder="Search by name, email, phone or country"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full sm:w-[260px] md:w-[300px] h-11 rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"

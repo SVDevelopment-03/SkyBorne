@@ -19,6 +19,8 @@ export interface CancelSubscriptionRow {
   name: string;
   email: string;
   phoneNumber: string;
+  country: string;
+  subscribedAt?: string;
   description: string;
   adminComment?: string;
   createdAt: string;
@@ -51,6 +53,16 @@ export const columns = (
     accessorKey: "phoneNumber",
     header: "Phone Number",
     cell: ({ row }) => <span>{row.original.phoneNumber || "N/A"}</span>,
+  },
+  {
+    accessorKey: "country",
+    header: "Country",
+    cell: ({ row }) => <span>{row.original.country || "N/A"}</span>,
+  },
+  {
+    accessorKey: "subscribedAt",
+    header: "Subscribed At",
+    cell: ({ row }) => <span>{row.original.subscribedAt ? formatDate(row.original.subscribedAt) : "—"}</span>,
   },
   {
     accessorKey: "description",

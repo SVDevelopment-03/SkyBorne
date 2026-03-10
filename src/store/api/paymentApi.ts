@@ -75,6 +75,8 @@ interface CancelSubscriptionRecord {
   lastName?: string;
   email?: string;
   phoneNumber?: string;
+  country?: string;
+  subscribedAt?: string;
   userId?: string;
   status: CancelSubscriptionStatus;
   description?: string;
