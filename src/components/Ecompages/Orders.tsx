@@ -180,6 +180,7 @@ export function Orders() {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Order ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Customer</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Mobile</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Total</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Payment</th>
@@ -192,6 +193,7 @@ export function Orders() {
                     <tr key={order._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-[#333]">{order.orderNumber}</td>
                       <td className="px-6 py-4 text-sm text-[#707070]">{getUserName(order)}</td>
+                      <td className="px-6 py-4 text-sm text-[#707070]">{order.shippingAddress?.phone || '-'}</td>
                       <td className="px-6 py-4 text-sm text-[#707070]">{formatDate(order.createdAt)}</td>
                       <td className="px-6 py-4 text-sm font-medium text-[#333]">
                         ${order.totalAmount.toFixed(2)}

@@ -295,7 +295,7 @@ export default function EcomPayments() {
                           <span className="font-bold text-[#111]">
                             ${payment.amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </span>
-                          <span className="text-[10px] text-gray-400 uppercase font-medium">{payment.currency}</span>
+                          {/* <span className="text-[10px] text-gray-400 uppercase font-medium">{payment.currency}</span> */}
                         </div>
                       </td>
 
