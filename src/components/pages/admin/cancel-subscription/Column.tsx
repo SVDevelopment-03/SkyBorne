@@ -18,6 +18,7 @@ export interface CancelSubscriptionRow {
   _id: string;
   name: string;
   email: string;
+  phoneNumber: string;
   description: string;
   adminComment?: string;
   createdAt: string;
@@ -45,6 +46,11 @@ export const columns = (
         <span className="text-sm text-gray-500">{row.original.email}</span>
       </div>
     ),
+  },
+  {
+    accessorKey: "phoneNumber",
+    header: "Phone Number",
+    cell: ({ row }) => <span>{row.original.phoneNumber || "N/A"}</span>,
   },
   {
     accessorKey: "description",
