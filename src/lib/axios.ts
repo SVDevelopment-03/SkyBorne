@@ -44,7 +44,14 @@ API.interceptors.response.use(
       const refreshToken = getRefreshToken();
 
       try {
-        if (!refreshToken) return;
+        if (!refreshToken) {
+          removeTokens();
+          if (typeof window !== "undefined") {
+            window.location.href = "/login";
+          }
+          return Promise.reject(error);
+        }
+
         const refresh = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}refresh-token`,
           { refreshToken: refreshToken },

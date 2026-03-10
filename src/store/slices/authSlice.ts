@@ -44,8 +44,8 @@ const authSlice = createSlice({
       state.refreshToken = null;
 
       localStorage.removeItem(process.env.NEXT_PUBLIC_USER as string);
-      localStorage.removeItem(process.env.NEXT_PUBLIC_ACCESS_Token as string);
-      localStorage.removeItem(process.env.NEXT_PUBLIC_REFRESH_Token as string);
+      localStorage.removeItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string);
+      localStorage.removeItem(process.env.NEXT_PUBLIC_REFRESH_TOKEN as string);
     },
   },
 });

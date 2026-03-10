@@ -1,13 +1,12 @@
-
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { useSelector } from "react-redux";
-import { useGetCountriesQuery } from "@/store/api/countryApi";
+import type { RootState } from "@/store";
+import {
+  useGetCountriesQuery,
+} from "@/store/api/countryApi";
+import type { ICountry, IRegion } from "@/store/api/countryApi";
 
-
-const normalizeCountry = (country: string) => {
-  return country
+const normalizeCountry = (country?: string | null) => {
+  return String(country ?? "")
     .replace(/\s*\(.*?\)\s*/g, "") // remove parentheses + content
     .trim()
     .toLowerCase();
@@ -21,12 +20,9 @@ const normalizeCountry = (country: string) => {
  * @returns Object with region info, user country, and loading state
  */
 export const useUserRegionFromStore = () => {
-  
   // Get user from auth store
-  const user = useSelector((state: any) => state.auth.user);
+  const user = useSelector((state: RootState) => state.auth.user);
   const userCountry = normalizeCountry(user?.country);
-
-  console.log("userCountry", userCountry);
 
   // Fetch countries list (same as CountryManagement)
   const { data: countriesData, isLoading, isError } = useGetCountriesQuery({
@@ -35,23 +31,17 @@ export const useUserRegionFromStore = () => {
     search: "",
   });
 
-    console.log("country data", countriesData);
-
-
-  const countries :any= countriesData?.data?.countries || [];
-  const matchedCountry = countries?.find(
-    (country: any) => normalizeCountry(country.name) === userCountry
+  const countries: ICountry[] = countriesData?.data?.countries || [];
+  const matchedCountry = countries.find(
+    (country) => normalizeCountry(country.name) === userCountry
   );
-    console.log("matchedCountry", matchedCountry);
 
-  const regionObject =
+  const regionObject: IRegion | null =
     matchedCountry?.region && typeof matchedCountry.region === "object"
-      ? matchedCountry.region
+      ? (matchedCountry.region as IRegion)
       : null;
-  const region = regionObject?.name ?? " ";
+  const region = regionObject?.name ?? null;
   const timezone = regionObject?.timezone ?? null;
-  console.log("region", region);
-
 
   return {
     region,
