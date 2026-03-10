@@ -81,6 +81,10 @@ export interface GetAllPaymentsParams {
   status?: string;
 }
 
+export interface DownloadReceiptParams {
+  paymentId: string;
+}
+
 export interface EcomPaymentStatsResponse {
   success: boolean;
   stats: {
@@ -149,6 +153,15 @@ export const ecomPaymentApi = createApi({
       }),
       providesTags: ["EcomPayment"],
     }),
+
+    /** GET /ecom-payments/:paymentId/receipt — admin: download receipt PDF */
+    downloadEcomReceipt: builder.mutation<Blob, DownloadReceiptParams>({
+      query: ({ paymentId }) => ({
+        url: `/ecom-payments/${paymentId}/receipt`,
+        method: "GET",
+        responseType: "blob",
+      }),
+    }),
   }),
 });
 
@@ -158,4 +171,5 @@ export const {
   useGetMyPaymentsQuery,
   useGetAllPaymentsQuery,
   useGetAdminEcomPaymentStatsQuery,
+  useDownloadEcomReceiptMutation,
 } = ecomPaymentApi;

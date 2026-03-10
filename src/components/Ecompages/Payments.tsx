@@ -2,15 +2,25 @@
 "use client";
 
 import { useState } from "react";
-import { Search, CreditCard, ExternalLink, Receipt, DollarSign, Calendar, CheckCircle, Loader2 } from "lucide-react";
+import { Search, CreditCard, Receipt, DollarSign, Calendar, CheckCircle, Loader2 } from "lucide-react";
 import CustomPagination from "@/components/ui/CustromPagination";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import {
   useGetAllPaymentsQuery,
   useGetAdminEcomPaymentStatsQuery,
+  useDownloadEcomReceiptMutation,
   type EcomPayment,
   type EcomPaymentStatus,
   type PopulatedUser,
 } from "@/store/api/EcompaymentApi";
+import toast from "react-hot-toast";
 
 // ── Status Badge ───────────────────────────────────────────────────
 const STATUS_STYLES: Record<EcomPaymentStatus, { pill: string; dot: string }> = {
@@ -53,6 +63,10 @@ export default function EcomPayments() {
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [receiptOpen, setReceiptOpen] = useState(false);
+  const [activePayment, setActivePayment] = useState<EcomPayment | null>(null);
+  const [downloadEcomReceipt, { isLoading: isDownloadingReceipt }] =
+    useDownloadEcomReceiptMutation();
 
   // Debounce search → send to backend like Products does
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,11 +94,46 @@ export default function EcomPayments() {
     totalTransactions: 0,
   };
 
-  const formatCurrency = (amount: number) =>
+  const formatCurrency = (amount: number, currency: string = "USD") =>
     new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: "USD",
+      currency,
     }).format(amount || 0);
+
+  const openReceipt = (payment: EcomPayment) => {
+    setActivePayment(payment);
+    setReceiptOpen(true);
+  };
+
+  const closeReceipt = () => {
+    setReceiptOpen(false);
+    setActivePayment(null);
+  };
+
+  const downloadReceipt = async (payment: EcomPayment | null) => {
+    if (!payment?._id) return;
+    try {
+      const fileData = await downloadEcomReceipt({ paymentId: payment._id }).unwrap();
+      const blob =
+        fileData instanceof Blob
+          ? fileData
+          : new Blob([fileData as BlobPart], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+
+      const safeRef = (payment.orderRef || payment._id).replace(/[^a-zA-Z0-9_-]/g, "_");
+      link.setAttribute("download", `receipt-${safeRef}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      toast.success("Receipt downloaded successfully");
+    } catch (error) {
+      console.error("Receipt download failed:", error);
+      toast.error("Failed to download receipt");
+    }
+  };
 
   if (isLoading) {
     return (
@@ -258,7 +307,6 @@ export default function EcomPayments() {
                 payments.map((payment) => {
                   const user = typeof payment.userId === "object" ? (payment.userId as PopulatedUser) : null;
                   const fullName = user ? `${user.firstName} ${user.lastName}` : null;
-
                   return (
                     <tr key={payment._id} className="hover:bg-gray-50/60 transition-colors group">
 
@@ -336,16 +384,14 @@ export default function EcomPayments() {
                       {/* Receipt */}
                       <td className="px-4 py-3.5">
                         {payment.receiptUrl ? (
-                          <a
-                            href={payment.receiptUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => openReceipt(payment)}
                             className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-[#B95E82] bg-[#B95E82]/8 rounded-lg hover:bg-[#B95E82]/15 transition-colors"
                             title="View Receipt"
                           >
-                            <ExternalLink className="w-3 h-3" />
                             View
-                          </a>
+                          </button>
                         ) : (
                           <span className="text-gray-300 text-xs">—</span>
                         )}
@@ -376,6 +422,151 @@ export default function EcomPayments() {
           </div>
         )}
       </div>
+
+      <Dialog open={receiptOpen} onOpenChange={(open) => (open ? setReceiptOpen(true) : closeReceipt())}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold">Receipt Details</DialogTitle>
+            <DialogClose />
+          </DialogHeader>
+
+          {!activePayment ? (
+            <div className="py-10 text-center text-sm text-gray-400">No receipt selected</div>
+          ) : (
+            <div className="space-y-6">
+              <div className="border-b pb-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-600 mb-1">Invoice ID</h3>
+                    <p className="font-mono font-semibold text-gray-900">
+                      {activePayment._id}
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-gray-600">Order Ref</p>
+                    <p className="font-mono font-semibold text-gray-900">
+                      {activePayment.orderRef || "—"}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <h3 className="text-sm font-medium text-gray-600 mb-1">Status</h3>
+                    <div className="flex items-center justify-end gap-2">
+                      <StatusBadge status={activePayment.status} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Bill To</h4>
+                  <div className="space-y-1">
+                    <p className="font-medium text-gray-900">
+                      {activePayment.userId && typeof activePayment.userId === "object"
+                        ? `${(activePayment.userId as PopulatedUser).firstName} ${(activePayment.userId as PopulatedUser).lastName}`
+                        : "—"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {activePayment.userId && typeof activePayment.userId === "object"
+                        ? (activePayment.userId as PopulatedUser).email
+                        : "—"}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-700 mb-3">From</h4>
+                  <div className="space-y-1">
+                    <p className="font-medium text-gray-900">SKYBORNE</p>
+                    <p className="text-sm text-gray-600">Skyborne Drop and Tech Investments LLC</p>
+                    <p className="text-sm text-gray-600">Meydan Freezone, Dubai, UAE</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6 bg-gray-50 p-4 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Payment Intent</p>
+                  <p className="font-mono font-semibold text-gray-900 break-all">
+                    {activePayment.stripePaymentIntentId || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Date</p>
+                  <p className="font-semibold text-gray-900">
+                    {new Date(activePayment.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Order Number</p>
+                  <p className="font-semibold text-gray-900">
+                    {typeof activePayment.orderId === "object"
+                      ? (activePayment.orderId as any).orderNumber
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Order Status</p>
+                  <p className="font-semibold text-gray-900 capitalize">
+                    {typeof activePayment.orderId === "object"
+                      ? (activePayment.orderId as any).orderStatus
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Currency</p>
+                  <p className="font-semibold text-gray-900 uppercase">
+                    {activePayment.currency || "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Receipt Link</p>
+                  <p className="font-mono text-xs text-gray-500 break-all">
+                    {activePayment.receiptUrl || "—"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatCurrency(activePayment.amount, (activePayment.currency || "USD").toUpperCase())}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-gray-600">Tax:</span>
+                  <span className="font-semibold text-gray-900">
+                    {(activePayment.currency || "USD").toUpperCase()} 0.00
+                  </span>
+                </div>
+                <div className="flex items-center justify-between bg-gray-50 p-3 rounded border border-gray-200">
+                  <span className="font-semibold text-gray-900">Total:</span>
+                  <span className="text-lg font-bold text-[#b95e82]">
+                    {formatCurrency(activePayment.amount, (activePayment.currency || "USD").toUpperCase())}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
+                <Button
+                  onClick={() => downloadReceipt(activePayment)}
+                  disabled={!activePayment?._id || isDownloadingReceipt}
+                  className="flex-1 flex items-center justify-center gap-2"
+                  variant="themeRegular"
+                >
+                  {isDownloadingReceipt ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                  Download Receipt
+                </Button>
+                <Button onClick={closeReceipt} variant="outline" className="flex-1">
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
