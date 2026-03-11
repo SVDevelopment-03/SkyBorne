@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,9 +17,12 @@ import { useSelector } from "react-redux";
 import { toTitleCase } from "@/utils/Titlecase";
 import UserAvatar from "@/hooks/useAvatar";
 import useGetUser from "@/hooks/useGetUser";
+import LogoutAlert from "@/utils/LogoutAlert";
+import { removeTokens } from "@/lib/token";
 
 const Header = ({ isHero }: { isHero?: boolean }) => {
   const router = useRouter();
+  const [showAlert, setShowAlert] = useState(false);
   const { user } = useGetUser();
   const avatarName = `${user?.firstName?.charAt(0) || "U"}${
     user?.lastName?.charAt(0) || ""
@@ -71,6 +74,11 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
     } else {
       router.push("/dashboard");
     }
+  };
+
+  const handleLogoutConfirm = () => {
+    removeTokens();
+    router.push("/login");
   };
 
   return (
@@ -165,9 +173,26 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
                 <DropdownMenuSeparator />
               </DropdownMenuItem>
             ))}
+            {user && (
+              <DropdownMenuItem
+                onClick={() => setShowAlert(true)}
+                className="hover:bg-[#FFF7DD]! text-[#494949]! hover:text-[#494949]! p-0 cursor-pointer"
+              >
+                <span className="text-[#FFF7DD] font-satoshi-500 font-medium text-base hover:text-[#494949] w-full px-3 py-1.5">
+                  Logout
+                </span>
+                <DropdownMenuSeparator />
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+      {showAlert && (
+        <LogoutAlert
+          onConfirm={handleLogoutConfirm}
+          onClose={() => setShowAlert(false)}
+        />
+      )}
     </div>
   );
 };
