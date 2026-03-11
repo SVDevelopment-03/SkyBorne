@@ -50,7 +50,6 @@ export interface AdminPayment {
   currency: string;
   stripeSubscriptionId: string;
   transactionId?: string;
-  paymentIntentId?: string;
   plan: string;
   status: string;
   invoiceId?: string;
@@ -73,7 +72,7 @@ function AdminPayments() {
   // RTK Query hooks
   const {
     data: paymentData,
-    isLoading: isLoadingHistory,
+    isLoading: isLoadingHistory, 
     isFetching,
   } = useGetAllPaymentsQuery({
     search: searchTerm,
@@ -209,10 +208,7 @@ function AdminPayments() {
       header: "Transaction Id",
       cell: ({ row }) => (
         <div className="text-sm font-mono text-[#6B6B6B]">
-          {row.original.paymentIntentId ||
-            row.original.transactionId ||
-            row.original.reference ||
-            "N/A"}
+          {row.original.transactionId || "N/A"}
         </div>
       ),
     },
