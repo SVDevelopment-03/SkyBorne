@@ -25,6 +25,7 @@ export interface UserRowData {
   email: string;
   plan?: string;
   subscriptionStatus?: string;
+  cancelledAt?: string | null;
   phone?: string;
   country?: string;
   state?: string;
@@ -145,6 +146,15 @@ export const columns = (
     },
   },
   {
+    accessorKey: "cancelledAt",
+    header: "Cancelled At",
+    cell: ({ row }) => (
+      <span className="text-[#666666]">
+        {formatDate(row.original.cancelledAt || undefined)}
+      </span>
+    ),
+  },
+  {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => (
@@ -168,4 +178,3 @@ export const columns = (
     ),
   },
 ];
-

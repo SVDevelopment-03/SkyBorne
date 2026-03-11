@@ -16,6 +16,7 @@ export interface User {
     status?: string;
   };
   subscriptionStatus?: string;
+  cancelledAt?: string | null;
   isActive: boolean;
   createdAt: string;
 }
