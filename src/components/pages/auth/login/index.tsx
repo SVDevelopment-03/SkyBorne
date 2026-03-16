@@ -5,11 +5,11 @@ import { Typography } from "@/components/ui/heading";
 import { Input2 } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Formik, Form } from "formik";
+import { Formik, Form, FormikProps } from "formik";
 import * as Yup from "yup";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AppleIcon, Eye, EyeOff, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { GoogleIcon } from "@/icons/helpIcon";
 import { useGoogleLogin } from "@react-oauth/google";
@@ -32,6 +32,7 @@ export interface LoginFormValues {
   agreeTerms: boolean;
 }
 
+
 // ------------------ Yup Schema ------------------
 
 const SignupSchema = Yup.object().shape({
@@ -44,9 +45,39 @@ const Login = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const [showPass, setShowPass] = useState(false);
+  const formikRef = useRef<FormikProps<LoginFormValues>>(null);
   const [login, { isLoading, error }] = useLoginMutation();
   const [socialLogin, { isLoading: isSocialLoading }] =
     useSocialLoginMutation();
+
+  const syncAutofilledValues = () => {
+    const formik = formikRef.current;
+    if (!formik || typeof document === "undefined") return;
+
+    const emailValue =
+      document.querySelector<HTMLInputElement>('input[name="email"]')?.value ||
+      "";
+    const passwordValue =
+      document.querySelector<HTMLInputElement>('input[name="password"]')
+        ?.value || "";
+
+    if (emailValue && emailValue !== formik.values.email) {
+      formik.setFieldValue("email", emailValue, false);
+    }
+    if (passwordValue && passwordValue !== formik.values.password) {
+      formik.setFieldValue("password", passwordValue, false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = window.setTimeout(syncAutofilledValues, 300);
+    window.addEventListener("pageshow", syncAutofilledValues);
+
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("pageshow", syncAutofilledValues);
+    };
+  }, []);
 
   const googleLogin = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
@@ -201,21 +232,37 @@ const Login = () => {
             </div>
             <div className="form h-full overflow-auto [scrollbar-width:none]">
               <Formik
+                innerRef={formikRef}
                 initialValues={initialValues}
                 validationSchema={SignupSchema}
                 onSubmit={handleSubmit}
               >
-                {({ values, errors, touched, handleChange, setFieldValue }) => (
-                  <Form className="space-y-6">
+                {({
+                  values,
+                  errors,
+                  touched,
+                  handleChange,
+                  handleBlur,
+                  setFieldValue,
+                }) => (
+                  <Form className="space-y-6" autoComplete="on">
                     {/* 2 Column Grid */}
                     <div className="grid grid-cols-1 gap-10">
                       {/* Email */}
                       <div className="flex flex-col gap-4.5">
                         <Label>Email Address*</Label>
                         <Input2
+                          id="login-email"
+                          type="email"
                           name="email"
                           value={values?.email}
                           onChange={handleChange}
+                          onInput={handleChange}
+                          onBlur={handleBlur}
+                          autoComplete="email"
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          spellCheck={false}
                           className="bg-[#F3F3F5] min-h-[55px]"
                         />
                         {touched?.email && errors?.email && (
@@ -230,10 +277,14 @@ const Login = () => {
                         <Label>Password*</Label>
                         <div className="relative">
                           <Input2
+                            id="login-password"
                             type={showPass ? "text" : "password"}
                             name="password"
                             value={values?.password}
                             onChange={handleChange}
+                            onInput={handleChange}
+                            onBlur={handleBlur}
+                            autoComplete="current-password"
                             className="bg-[#F3F3F5] min-h-[55px]"
                           />
                           <Typography
@@ -303,6 +354,7 @@ const Login = () => {
                         className="px-12 md:p-3.5! md:min-w-[246px] font-medium"
                         type="submit"
                         disabled={isLoading}
+                        onClick={syncAutofilledValues}
                       >
                         {isLoading && (
                           <Loader2

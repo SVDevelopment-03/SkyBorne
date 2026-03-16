@@ -38,15 +38,24 @@ API.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
+    const requestUrl = String(originalRequest?.url || "");
+    const isAuthRequest =
+      requestUrl.includes("/login") ||
+      requestUrl.includes("/signup") ||
+      requestUrl.includes("/social-login") ||
+      requestUrl.includes("/send-otp") ||
+      requestUrl.includes("/verify-otp") ||
+      requestUrl.includes("/request-password-reset") ||
+      requestUrl.includes("/reset-password");
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {
       originalRequest._retry = true;
       const refreshToken = getRefreshToken();
 
       try {
         if (!refreshToken) {
           removeTokens();
-          if (typeof window !== "undefined") {
+          if (typeof window !== "undefined" && window.location.pathname !== "/login") {
             window.location.href = "/login";
           }
           return Promise.reject(error);
@@ -67,7 +76,7 @@ API.interceptors.response.use(
         return API(originalRequest);
       } catch (refreshError) {
         removeTokens();
-        if (typeof window !== "undefined") {
+        if (typeof window !== "undefined" && window.location.pathname !== "/login") {
           window.location.href = "/login";
         }
 
