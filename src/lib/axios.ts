@@ -20,6 +20,37 @@ const API: AxiosInstance = axios.create({
   withCredentials: true,
 });
 
+const PUBLIC_ROUTES = [
+  "/",
+  "/about-us",
+  "/our-services",
+  "/contact-us",
+  "/blogs",
+  "/faq",
+  "/terms",
+  "/privacy-policy",
+  "/cookie-policy",
+  "/how-works",
+  "/inner-blog",
+  "/packages",
+  "/testimonials",
+  "/yoga-detail",
+  "/zumba-detail",
+  "/diet-detail",
+  "/fitness-detail",
+];
+
+const PUBLIC_ROUTE_PREFIXES = [
+  "/yoga-detail/",
+  "/zumba-detail/",
+  "/diet-detail/",
+  "/fitness-detail/",
+];
+
+const isPublicRoute = (pathname: string) =>
+  PUBLIC_ROUTES.includes(pathname) ||
+  PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+
 // REQUEST INTERCEPTOR
 API.interceptors.request.use(
   (config: CustomAxiosRequestConfig) => {
@@ -55,8 +86,11 @@ API.interceptors.response.use(
       try {
         if (!refreshToken) {
           removeTokens();
-          if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-            window.location.href = "/login";
+          if (typeof window !== "undefined") {
+            const pathname = window.location.pathname;
+            if (pathname !== "/login" && !isPublicRoute(pathname)) {
+              window.location.href = "/login";
+            }
           }
           return Promise.reject(error);
         }
@@ -76,8 +110,11 @@ API.interceptors.response.use(
         return API(originalRequest);
       } catch (refreshError) {
         removeTokens();
-        if (typeof window !== "undefined" && window.location.pathname !== "/login") {
-          window.location.href = "/login";
+        if (typeof window !== "undefined") {
+          const pathname = window.location.pathname;
+          if (pathname !== "/login" && !isPublicRoute(pathname)) {
+            window.location.href = "/login";
+          }
         }
 
         return Promise.reject(refreshError);
