@@ -47,7 +47,7 @@ const PhoneNumberSchema = Yup.object().shape({
     ),
   country: Yup.string().required("Country is required"),
   state: Yup.string().required("State is required"),
-  city: Yup.string().trim(),
+  city: Yup.string().trim().required("City is required"),
 });
 
 const Step3 = () => {
@@ -186,7 +186,7 @@ const Step3 = () => {
                   />
 
                   <div className="flex flex-col gap-3">
-                    <Label>City</Label>
+                    <Label>City *</Label>
                     <Input2
                       name="city"
                       value={values.city}
