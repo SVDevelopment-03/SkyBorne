@@ -394,6 +394,7 @@ export function UpgradePlan({
   const includedSessions = Number(totalClassCredits || 0);
   const renewalDate = formatDate(subscription?.endDate || "");
   const subscriptionStatus = subscription?.status || "inactive";
+  const isSubscriptionActive = subscriptionStatus === "active";
 
   const goldMonthly =
     Number(goldYogaPlan?.monthlyPrice) ||
@@ -496,49 +497,53 @@ export function UpgradePlan({
                     {billingType === "monthly" ? "Monthly" : "Yearly"} Subscription
                   </p>
                 </div>
-                <div className="space-y-2 md:ml-auto w-full md:w-auto">
-                  <div className="flex items-center gap-2">
-                    <Check className="w-5 h-5" />
-                    <span className="break-words">
-                      {sessionsRemaining} of {includedSessions} sessions
-                      remaining
-                    </span>
+                {isSubscriptionActive && (
+                  <div className="space-y-2 md:ml-auto w-full md:w-auto">
+                    <div className="flex items-center gap-2">
+                      <Check className="w-5 h-5" />
+                      <span className="break-words">
+                        {sessionsRemaining} of {includedSessions} sessions
+                        remaining
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-5 h-5" />
+                      <span>Renews on {renewalDate}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    <span>Renews on {renewalDate}</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
 
-          <div className="mt-4">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="font-satoshi-500 text-[16px] text-white/90">
-                Session Usage
-              </span>
-              <span className="text-white/90">
-                {Math.max(0, includedSessions - sessionsRemaining)}/
-                {includedSessions} used
-              </span>
+          {isSubscriptionActive && (
+            <div className="mt-4">
+              <div className="flex items-center justify-between text-sm mb-2">
+                <span className="font-satoshi-500 text-[16px] text-white/90">
+                  Session Usage
+                </span>
+                <span className="text-white/90">
+                  {Math.max(0, includedSessions - sessionsRemaining)}/
+                  {includedSessions} used
+                </span>
+              </div>
+              <div className="w-full bg-white/20 rounded-full h-3 backdrop-blur-sm">
+                <div
+                  className="h-full bg-white rounded-full font-satoshi-500 text-[16px]"
+                  style={{
+                    width:
+                      includedSessions > 0
+                        ? `${(
+                            (Math.max(0, includedSessions - sessionsRemaining) /
+                              includedSessions) *
+                            100
+                          ).toFixed(2)}%`
+                        : "0%",
+                  }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-white/20 rounded-full h-3 backdrop-blur-sm">
-              <div
-                className="h-full bg-white rounded-full font-satoshi-500 text-[16px]"
-                style={{
-                  width:
-                    includedSessions > 0
-                      ? `${(
-                          (Math.max(0, includedSessions - sessionsRemaining) /
-                            includedSessions) *
-                          100
-                        ).toFixed(2)}%`
-                      : "0%",
-                }}
-              />
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
