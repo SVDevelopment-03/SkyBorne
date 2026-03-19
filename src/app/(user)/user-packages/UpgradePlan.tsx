@@ -395,6 +395,10 @@ export function UpgradePlan({
   const renewalDate = formatDate(subscription?.endDate || "");
   const subscriptionStatus = subscription?.status || "inactive";
   const isSubscriptionActive = subscriptionStatus === "active";
+  const displaySessionsRemaining = isSubscriptionActive ? sessionsRemaining : 0;
+  const displayUsedSessions = isSubscriptionActive
+    ? Math.max(0, includedSessions - sessionsRemaining)
+    : 0;
 
   const goldMonthly =
     Number(goldYogaPlan?.monthlyPrice) ||
@@ -497,21 +501,21 @@ export function UpgradePlan({
                     {billingType === "monthly" ? "Monthly" : "Yearly"} Subscription
                   </p>
                 </div>
-                {isSubscriptionActive && (
-                  <div className="space-y-2 md:ml-auto w-full md:w-auto">
-                    <div className="flex items-center gap-2">
-                      <Check className="w-5 h-5" />
-                      <span className="break-words">
-                        {sessionsRemaining} of {includedSessions} sessions
-                        remaining
-                      </span>
-                    </div>
+                <div className="space-y-2 md:ml-auto w-full md:w-auto">
+                  <div className="flex items-center gap-2">
+                    <Check className="w-5 h-5" />
+                    <span className="break-words">
+                      {displaySessionsRemaining} of {includedSessions} sessions
+                      remaining
+                    </span>
+                  </div>
+                  {isSubscriptionActive && (
                     <div className="flex items-center gap-2">
                       <Calendar className="w-5 h-5" />
                       <span>Renews on {renewalDate}</span>
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -523,8 +527,7 @@ export function UpgradePlan({
                   Session Usage
                 </span>
                 <span className="text-white/90">
-                  {Math.max(0, includedSessions - sessionsRemaining)}/
-                  {includedSessions} used
+                  {displayUsedSessions}/{includedSessions} used
                 </span>
               </div>
               <div className="w-full bg-white/20 rounded-full h-3 backdrop-blur-sm">
@@ -533,17 +536,14 @@ export function UpgradePlan({
                   style={{
                     width:
                       includedSessions > 0
-                        ? `${(
-                            (Math.max(0, includedSessions - sessionsRemaining) /
-                              includedSessions) *
-                            100
-                          ).toFixed(2)}%`
+                        ? `${((displayUsedSessions / includedSessions) * 100).toFixed(2)}%`
                         : "0%",
                   }}
                 />
               </div>
             </div>
           )}
+
         </CardContent>
       </Card>
 
