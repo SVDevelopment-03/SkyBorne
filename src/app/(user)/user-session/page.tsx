@@ -16,8 +16,8 @@ import {
   PlayCircle,
 } from "lucide-react";
 import {
-  useGetAllUserMeetingsQuery,
   useGetUpcomingMeetingsQuery,
+  useGetPastUserMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
 } from "@/store/api/meetingApi";
@@ -50,15 +50,15 @@ interface Session {
   maxParticipants: number;
   level: string;
   service: string;
-  joinUrl: string;
-  recordingUrl: string;
-  regions: Array<{
+  joinUrl?: string;
+  recordingUrl?: string;
+  regions?: Array<{
     region: string;
     localTime: string;
     timezone: string;
     mode: "live" | "replay";
   }>;
-  liveRegion: string;
+  liveRegion?: string;
   _id: string;
   joined?: boolean;
 }
@@ -81,18 +81,41 @@ export default function UserSessions() {
 
   // RTK Query hooks
   const {
-    data: meetingsData,
-    isLoading,
-    error: fetchError,
-    refetch,
-  } = useGetAllUserMeetingsQuery({
-    region: userRegion?.region,
+    data: upcomingMeetingsData,
+    isLoading: isLoadingUpcoming,
+    error: upcomingError,
+    refetch: refetchUpcoming,
+  } = useGetUpcomingMeetingsQuery(
+    {
+      region: userRegion?.region,
+      search: searchQuery,
+      skip: 0,
+      limit: 500,
+    },
+    {
+      skip: !userRegion?.region,
+    },
+  );
+
+  const {
+    data: pastMeetingsData,
+    isLoading: isLoadingPast,
+    error: pastError,
+    refetch: refetchPast,
+  } = useGetPastUserMeetingsQuery({
     search: searchQuery,
-    limit:500
+    skip: 0,
+    limit: 500,
   });
 
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
+  const isLoading = isLoadingUpcoming || isLoadingPast;
+  const fetchError = upcomingError || pastError;
+  const refetchAll = () => {
+    refetchUpcoming();
+    refetchPast();
+  };
 
   useEffect(() => {
     console.log("User region data:", userRegion);
@@ -181,9 +204,20 @@ export default function UserSessions() {
     }
   };
 
-// Transform and filter meetings
-const sessions: Session[] = (meetingsData?.meetings || []).map(
-  (meeting: any) => {
+  const upcomingMeetings = upcomingMeetingsData?.meetings || [];
+  const pastMeetings = pastMeetingsData?.meetings || [];
+
+  const uniqueMeetings = Array.from(
+    new Map(
+      [...pastMeetings, ...upcomingMeetings].map((meeting: any) => [
+        String(meeting?._id),
+        meeting,
+      ]),
+    ).values(),
+  );
+
+  // Transform and filter meetings
+  const sessions: Session[] = uniqueMeetings.map((meeting: any) => {
     const meetingTime = new Date(meeting.localTime);
     const oneHourAfterMeeting = new Date(
       meetingTime.getTime() + 60 * 60 * 1000
@@ -216,8 +250,7 @@ const sessions: Session[] = (meetingsData?.meetings || []).map(
       _id: meeting._id,
       joined: meeting.joined || false,
     };
-  }
-);
+  });
 
 
   const filteredSessions = sessions.filter((session) => {
@@ -229,10 +262,8 @@ const sessions: Session[] = (meetingsData?.meetings || []).map(
     return matchesFilter && matchesSearch;
   });
 
-  const upcomingCount = sessions.filter((s) => s.status === "upcoming").length;
-  const completedCount = sessions.filter(
-    (s) => s.status === "completed",
-  ).length;
+  const upcomingCount = upcomingMeetings.length;
+  const completedCount = pastMeetings.length;
 
   const handleJoinClass = (session: Session) => {
     const formattedDate = formatDateWithTimezone(session?.localTime);
@@ -259,8 +290,12 @@ const sessions: Session[] = (meetingsData?.meetings || []).map(
   };
 
 const handleJoinMeeting = async (session: Session) => {
-  if (!session._id || !user?.id || !session.liveRegion) {
+  if (!session._id || !user?.id) {
     toast.error("Missing meeting or user information");
+    return;
+  }
+  if (!userRegion?.region) {
+    toast.error("User region not available");
     return;
   }
 
@@ -308,8 +343,12 @@ const handleJoinMeeting = async (session: Session) => {
 };
 
   const handleViewRecording = async (session: Session) => {
-    if (!session._id || !user?.id || !session.liveRegion) {
+    if (!session._id || !user?.id) {
       toast.error("Missing meeting or user information");
+      return;
+    }
+    if (!userRegion?.region) {
+      toast.error("User region not available");
       return;
     }
     try {
@@ -375,7 +414,7 @@ const handleJoinMeeting = async (session: Session) => {
               </p>
             </div>
             <Button
-              onClick={() => refetch()}
+              onClick={() => refetchAll()}
               className="ml-auto bg-red-600 hover:bg-red-700"
             >
               Retry
