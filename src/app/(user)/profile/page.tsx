@@ -23,6 +23,9 @@ import PhoneInput, {
   parsePhoneNumber,
 } from "react-phone-number-input";
 import toast from "react-hot-toast";
+import { Country, State } from "country-state-city";
+import { CommonSelect, SelectOptionItem } from "@/components/ui/CountrySelect";
+import { Input2 } from "@/components/ui/input";
 
 interface UserProp {
   firstName: string;
@@ -30,6 +33,8 @@ interface UserProp {
   email: string;
   phone: string;
   country: string;
+  state: string;
+  city: string;
 }
 
 const isValidEmail = (email: string) => {
@@ -37,6 +42,34 @@ const isValidEmail = (email: string) => {
          && !/\.\./.test(email)  
          && !/^\./.test(email)    
          && !/\.$/.test(email);   
+};
+
+const ALL_COUNTRIES = Country.getAllCountries();
+const COUNTRY_OPTIONS: SelectOptionItem[] = ALL_COUNTRIES.map((country) => ({
+  label: country.name,
+  value: country.isoCode,
+}));
+const COUNTRY_NAME_BY_CODE = new Map(
+  ALL_COUNTRIES.map((country) => [country.isoCode, country.name])
+);
+const COUNTRY_CODE_BY_NAME = new Map(
+  ALL_COUNTRIES.map((country) => [country.name.toLowerCase(), country.isoCode])
+);
+
+const resolveCountryCode = (value: string, fallback = "") => {
+  if (!value) return fallback;
+  const trimmed = value.trim();
+  if (/^[a-z]{2}$/i.test(trimmed)) return trimmed.toUpperCase();
+  return COUNTRY_CODE_BY_NAME.get(trimmed.toLowerCase()) || fallback || "";
+};
+
+const resolveCountryName = (value: string) => {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (/^[a-z]{2}$/i.test(trimmed)) {
+    return COUNTRY_NAME_BY_CODE.get(trimmed.toUpperCase()) || trimmed;
+  }
+  return trimmed;
 };
 
 export default function UserProfile() {
@@ -51,11 +84,14 @@ export default function UserProfile() {
     email: "",
     phone: "",
     country: "",
+    state: "",
+    city: "",
   });
 
   const [errors, setErrors] = useState<{
     email?: string;
     phone?: string;
+    city?: string;
   }>({});
 
   const [updateError, setUpdateError] = useState<string>("");
@@ -64,13 +100,20 @@ export default function UserProfile() {
   // Initialize form data when user data loads
   useEffect(() => {
     if (user) {
+      const resolvedCountryCode = resolveCountryCode(
+        user.country || "",
+        user.countryCode || ""
+      );
+
       setTimeout(() => {
         setFormData({
           firstName: user.firstName || "",
           lastName: user.lastName || "",
           email: user.email || "",
           phone: user.phoneNumber || "",
-          country: user.country || "",
+          country: resolvedCountryCode,
+          state: user.state || "",
+          city: user.city || "",
         });
       }, 0);
     }
@@ -131,14 +174,31 @@ export default function UserProfile() {
       return;
     }
 
+    // CITY VALIDATION
+    if (!formData.city || !formData.city.trim()) {
+      setErrors({ city: "City is required" });
+      toast.error("City is required");
+      return;
+    }
+
     try {
       setUpdateError("");
       setUpdateSuccess("");
 
       // Only send changed fields
+      const userCountryCode = resolveCountryCode(
+        user?.country || "",
+        user?.countryCode || ""
+      );
+
       const updatePayload: Partial<UserProp> = {};
       (Object.keys(formData) as (keyof UserProp)[]).forEach((key) => {
-        const userValue = key === "phone" ? user?.phoneNumber : user?.[key];
+        const userValue =
+          key === "phone"
+            ? user?.phoneNumber
+            : key === "country"
+              ? userCountryCode
+              : user?.[key];
 
         if (formData[key] !== userValue) {
           updatePayload[key] = formData[key];
@@ -168,17 +228,31 @@ export default function UserProfile() {
   const handleCancel = () => {
     // Reset form to original user data
     if (user) {
+      const resolvedCountryCode = resolveCountryCode(
+        user.country || "",
+        user.countryCode || ""
+      );
+
       setFormData({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         email: user.email || "",
         phone: user.phoneNumber || "",
-        country: user.location || "",
+        country: resolvedCountryCode,
+        state: user.state || "",
+        city: user.city || "",
       });
     }
     setIsEditing(false);
     setUpdateError("");
   };
+
+  const stateOptions: SelectOptionItem[] = formData.country
+    ? State.getStatesOfCountry(formData.country).map((region) => ({
+        label: region.name,
+        value: region.name,
+      }))
+    : [];
 
   if (!user) {
     return (
@@ -369,6 +443,89 @@ export default function UserProfile() {
                 </>
               )}
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              {isEditing ? (
+                <CommonSelect
+                  options={COUNTRY_OPTIONS}
+                  label="Country"
+                  value={formData.country}
+                  onChange={(value) => {
+                    handleInputChange("country", value);
+                    if (value !== formData.country) {
+                      handleInputChange("state", "");
+                    }
+                  }}
+                />
+              ) : (
+                <>
+                  <label className="text-sm text-[#6B6B6B] mb-2 block">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    value={resolveCountryName(formData.country) || ""}
+                    disabled
+                    className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed"
+                  />
+                </>
+              )}
+            </div>
+            <div>
+              {isEditing ? (
+                <CommonSelect
+                  options={stateOptions}
+                  label="State"
+                  value={formData.state}
+                  onChange={(value) => handleInputChange("state", value)}
+                />
+              ) : (
+                <>
+                  <label className="text-sm text-[#6B6B6B] mb-2 block">
+                    State
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.state || ""}
+                    disabled
+                    className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed"
+                  />
+                </>
+              )}
+            </div>
+          </div>
+
+          <div>
+            {isEditing ? (
+              <div className="flex flex-col gap-3">
+                <label className="text-sm text-[#6B6B6B] mb-1">
+                  City *
+                </label>
+                <Input2
+                  name="city"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange("city", e.target.value)}
+                  className="bg-[#F3F3F5] min-h-[55px]"
+                />
+                {errors.city && (
+                  <p className="text-xs text-red-500">{errors.city}</p>
+                )}
+              </div>
+            ) : (
+              <>
+                <label className="text-sm text-[#6B6B6B] mb-2 block">
+                  City
+                </label>
+                <input
+                  type="text"
+                  value={formData.city || ""}
+                  disabled
+                  className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed"
+                />
+              </>
+            )}
           </div>
 
           {isEditing && (

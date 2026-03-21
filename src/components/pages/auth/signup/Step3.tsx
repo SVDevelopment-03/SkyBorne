@@ -24,6 +24,7 @@ export interface PhoneNumberFormValues {
 }
 
 const COUNTRY_OPTIONS: SelectOptionItem[] = Country.getAllCountries().map(
+  
   (country) => ({
     label: country.name,
     value: country.isoCode,
