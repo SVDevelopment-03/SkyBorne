@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { getAccessToken } from "@/lib/token";
 import useGetUser from "@/hooks/useGetUser";
 import useFetchUser from "@/hooks/useFetchUser";
@@ -19,6 +19,7 @@ export default function UserLayout({ children }: AuthLayoutProps) {
   useFetchUser();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { user } = useGetUser();
   const [checking, setChecking] = useState(true);
   const avatarName = `${user?.firstName?.charAt(0) || "U"}${
@@ -30,11 +31,13 @@ export default function UserLayout({ children }: AuthLayoutProps) {
 
   useEffect(() => {
     const token = getAccessToken();
+    const search = searchParams.toString();
+    const nextPath = `${pathname}${search ? `?${search}` : ""}`;
 
     // if (!user?.onboardingCompleted) {
     if (!token) {
       setTimeout(() => {
-        router.replace("/login");
+        router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
       }, 0);
     } else if (token && !user?.onboardingCompleted) {
       setTimeout(() => {
@@ -45,7 +48,7 @@ export default function UserLayout({ children }: AuthLayoutProps) {
         setChecking(false);
       }, 0);
     }
-  }, [router]);
+  }, [router, pathname, searchParams, user?.onboardingCompleted]);
 
   if (checking) return null;
 

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -33,6 +33,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
 import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow";
+import { useSearchParams } from "next/navigation";
 import { useUserRegionFromStore } from "@/utils/timezone";
 
 interface Session {
@@ -64,6 +65,9 @@ interface Session {
 }
 
 export default function UserSessions() {
+  const searchParams = useSearchParams();
+  const autoMeetingId = searchParams.get("meetingId");
+  const autoJoinTriggered = useRef(false);
   const { user } = useGetUser();
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -128,6 +132,46 @@ export default function UserSessions() {
       });
     }, 0);
   }, [region, timezone]);
+
+
+  useEffect(() => {
+    if (!autoMeetingId) return;
+    if (autoJoinTriggered.current) return;
+    if (!user?.id || !userRegion?.region) return;
+
+    autoJoinTriggered.current = true;
+
+    const autoJoin = async () => {
+      try {
+        const res = await joinMeeting({
+          meetingId: autoMeetingId,
+          userId: user.id,
+          region: userRegion.region,
+        }).unwrap();
+        const { accessUrl: joinUrl, mode } = res?.data || {};
+
+        if (!joinUrl) {
+          toast.error("Access URL not found");
+          return;
+        }
+
+        if (mode === "live") {
+          toast.success("Redirecting to session...");
+          window.location.href = joinUrl;
+        } else {
+          setVideoUrl(joinUrl);
+          setShowVideoPlayer(true);
+        }
+      } catch (err: any) {
+        console.error("Auto-join meeting error:", err);
+        toast.error(
+          err?.data?.message || err?.message || "Failed to join meeting",
+        );
+      }
+    };
+
+    autoJoin();
+  }, [autoMeetingId, user?.id, userRegion?.region, joinMeeting]);
 
   const formatDateWithTimezone = (isoString: string) => {
     if (!isoString) return "N/A";

@@ -3,6 +3,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import {
+  useCreateMeetingShareLinkMutation,
   useDeleteMeetingMutation,
   useGetMeetingsQuery,
   useUpdateMeetingMutation,
@@ -12,7 +13,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
-import { Trash2Icon, Eye, Edit } from "lucide-react";
+import { Trash2Icon, Edit, Copy } from "lucide-react";
 import toast from "react-hot-toast";
 import { IMeeting } from "@/store/api/meetingApi";
 import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
@@ -63,6 +64,7 @@ const ClassListManagement = () => {
     Array<{ label: string; value: string }>
   >([]);
   const [deleteMeeting] = useDeleteMeetingMutation();
+  const [createMeetingShareLink] = useCreateMeetingShareLinkMutation();
 
   // Fetch services for dropdown
   const { data: servicesData, isLoading: servicesLoading } =
@@ -112,6 +114,59 @@ const ClassListManagement = () => {
 
   const handleDelete = async (meetingId: string) => {
     handleDeleteTrainer(meetingId, deleteMeeting, refetch, "Class");
+  };
+
+  const copyToClipboard = async (text: string) => {
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return true;
+    }
+
+    if (typeof document !== "undefined") {
+      const textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const success = document.execCommand("copy");
+      document.body.removeChild(textarea);
+      return success;
+    }
+
+    return false;
+  };
+
+  const handleCopyLink = async (meetingId: string) => {
+    try {
+      const res = await createMeetingShareLink({ meetingId }).unwrap();
+      const token = res?.data?.token;
+      const shareUrl = res?.data?.shareUrl || "";
+      const baseUrl =
+        typeof window !== "undefined" ? window.location.origin : "";
+
+      const link =
+        shareUrl ||
+        (token && baseUrl
+          ? `${baseUrl}/zoom-redirect?token=${encodeURIComponent(token)}`
+          : "");
+
+      if (!link) {
+        toast.error("Unable to create share link");
+        return;
+      }
+
+      const success = await copyToClipboard(link);
+      if (!success) {
+        throw new Error("Clipboard unavailable");
+      }
+      toast.success("Session link copied");
+    } catch (error: any) {
+      toast.error(
+        error?.data?.message || error?.message || "Failed to copy session link",
+      );
+    }
   };
 
   const handleServiceFilterChange = (value: string) => {
@@ -209,6 +264,15 @@ const ClassListManagement = () => {
 
         return (
           <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleCopyLink(row.original._id)}
+              className="rounded-lg"
+              title="Copy link"
+            >
+              <Copy className="w-4 h-4" />
+            </Button>
             <Button
               variant="theme"
               size="sm"

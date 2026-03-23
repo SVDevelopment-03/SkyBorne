@@ -47,6 +47,14 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/fitness-detail/",
 ];
 
+const buildLoginUrl = () => {
+  if (typeof window === "undefined") return "/login";
+  const pathname = window.location.pathname;
+  const search = window.location.search;
+  const next = `${pathname}${search}`;
+  return `/login?next=${encodeURIComponent(next)}`;
+};
+
 const isPublicRoute = (pathname: string) =>
   PUBLIC_ROUTES.includes(pathname) ||
   PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
@@ -89,7 +97,7 @@ API.interceptors.response.use(
           if (typeof window !== "undefined") {
             const pathname = window.location.pathname;
             if (pathname !== "/login" && !isPublicRoute(pathname)) {
-              window.location.href = "/login";
+              window.location.href = buildLoginUrl();
             }
           }
           return Promise.reject(error);
@@ -113,7 +121,7 @@ API.interceptors.response.use(
         if (typeof window !== "undefined") {
           const pathname = window.location.pathname;
           if (pathname !== "/login" && !isPublicRoute(pathname)) {
-            window.location.href = "/login";
+            window.location.href = buildLoginUrl();
           }
         }
 

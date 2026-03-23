@@ -19,7 +19,7 @@ import { useLoginMutation, useSocialLoginMutation } from "@/store/api/authApi";
 import { storage } from "@/lib/storage";
 import { setCredentials } from "@/store/slices/authSlice";
 import { useDispatch } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import HomeIcon from "@/utils/homeIcon";
 import AppleSignInButton from "react-apple-signin-auth";
 interface LoginError {
@@ -43,12 +43,36 @@ const SignupSchema = Yup.object().shape({
 
 const Login = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const [showPass, setShowPass] = useState(false);
   const formikRef = useRef<FormikProps<LoginFormValues>>(null);
   const [login, { isLoading, error }] = useLoginMutation();
   const [socialLogin, { isLoading: isSocialLoading }] =
     useSocialLoginMutation();
+
+  const getSafeNext = () => {
+    const nextParam = searchParams.get("next");
+    if (!nextParam) return null;
+    if (!nextParam.startsWith("/") || nextParam.startsWith("//")) return null;
+    return nextParam;
+  };
+
+  const redirectAfterLogin = (role?: string) => {
+    const nextPath = getSafeNext();
+    if (nextPath) {
+      router.push(nextPath);
+      return;
+    }
+
+    if (role === "admin") {
+      router.push("/admin-dashboard");
+    } else if (role === "trainer") {
+      router.push("/trainer-dashboard");
+    } else {
+      router.push("/dashboard");
+    }
+  };
 
   const syncAutofilledValues = () => {
     const formik = formikRef.current;
@@ -114,7 +138,7 @@ const Login = () => {
         dispatch(setCredentials({ user, accessToken, refreshToken }));
 
         toast.success("Logged in successfully!");
-        router.push("/dashboard");
+        redirectAfterLogin(user?.role);
       } catch (err: any) {
         toast.error(err?.data?.message || "Google login failed");
       }
@@ -150,7 +174,7 @@ const Login = () => {
       dispatch(setCredentials({ user, accessToken, refreshToken }));
 
       toast.success("Logged in successfully!");
-      router.push("/dashboard");
+      redirectAfterLogin(user?.role);
     } catch (err: any) {
       toast.error(err?.data?.message || "Apple login failed");
     }
@@ -195,15 +219,7 @@ const Login = () => {
         );
 
         toast.success(res?.message || "Login successful!");
-        if (data?.user?.role == "admin") {
-          router.push("/admin-dashboard");
-        } 
-        else if (data?.user?.role == "trainer") {
-          router.push("/trainer-dashboard");
-        } 
-        else {
-          router.push("/dashboard");
-        }
+        redirectAfterLogin(data?.user?.role);
       }
     } catch (err: any) {
 

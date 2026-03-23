@@ -121,6 +121,20 @@ export const meetingApi = createApi({
     }),
 
     // ---------------------------------------
+    // CREATE MEETING SHARE LINK (Admin)
+    // ---------------------------------------
+    createMeetingShareLink: builder.mutation<
+      { success: boolean; data: { token: string; expiresAt?: string; shareUrl?: string | null } },
+      { meetingId: string }
+    >({
+      query: (body) => ({
+        url: "/meetings/share-link",
+        method: "POST",
+        data: body,
+      }),
+    }),
+
+    // ---------------------------------------
     // UPCOMING MEETINGS
     // ---------------------------------------
     getUpcomingMeetings: builder.query({
@@ -342,4 +356,5 @@ export const {
   useGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
+  useCreateMeetingShareLinkMutation,
 } = meetingApi;
