@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, ReactNode } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/token";
 import useGetUser from "@/hooks/useGetUser";
 
@@ -11,7 +11,6 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [checking, setChecking] = useState(true);
   const {user} = useGetUser();
 
@@ -19,7 +18,10 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     const token = typeof window !== "undefined"
       ? getAccessToken()
       : null;      
-    const nextParam = searchParams.get("next");
+    const nextParam =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("next")
+        : null;
     const safeNext =
       nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//")
         ? nextParam
@@ -47,7 +49,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
             setChecking(false);
         }, 0);
     }
-  }, [router, searchParams, user?.onboardingCompleted, user?.role]);
+  }, [router, user?.onboardingCompleted, user?.role]);
 
   if (checking) return null; 
 
