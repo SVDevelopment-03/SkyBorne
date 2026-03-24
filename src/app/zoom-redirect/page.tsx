@@ -38,12 +38,16 @@ export default function Page() {
     const trigger = async () => {
       try {
         const res = await redirect({ token }).unwrap();
+        const meetingId = res?.meetingId || res?.data?.meetingId;
 
-        if (res?.joinUrl) {
-          window.location.href = res.joinUrl;
-        } else {
-          console.error("Zoom join URL missing.");
+        if (meetingId) {
+          router.replace(
+            `/user-session?meetingId=${encodeURIComponent(String(meetingId))}`,
+          );
+          return;
         }
+
+        console.error("Meeting ID missing.");
       } catch (error: any) {
         const status = error?.status || error?.data?.status;
         if (status === 401) {
@@ -57,5 +61,5 @@ export default function Page() {
     trigger();
   }, [token, redirect, router]);
 
-  return <p>Redirecting to meeting...</p>;
+  return <p>Redirecting to session...</p>;
 }

@@ -66,8 +66,10 @@ interface Session {
 
 export default function UserSessions() {
   const searchParams = useSearchParams();
-  const autoMeetingId = searchParams.get("meetingId");
+  const meetingIdParam = searchParams.get("meetingId");
+  const autoJoin = searchParams.get("autoJoin") === "1";
   const autoJoinTriggered = useRef(false);
+  const focusApplied = useRef(false);
   const { user } = useGetUser();
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -135,16 +137,17 @@ export default function UserSessions() {
 
 
   useEffect(() => {
-    if (!autoMeetingId) return;
+    if (!autoJoin) return;
+    if (!meetingIdParam) return;
     if (autoJoinTriggered.current) return;
     if (!user?.id || !userRegion?.region) return;
 
     autoJoinTriggered.current = true;
 
-    const autoJoin = async () => {
+    const triggerAutoJoin = async () => {
       try {
         const res = await joinMeeting({
-          meetingId: autoMeetingId,
+          meetingId: meetingIdParam,
           userId: user.id,
           region: userRegion.region,
         }).unwrap();
@@ -170,8 +173,8 @@ export default function UserSessions() {
       }
     };
 
-    autoJoin();
-  }, [autoMeetingId, user?.id, userRegion?.region, joinMeeting]);
+    triggerAutoJoin();
+  }, [autoJoin, meetingIdParam, user?.id, userRegion?.region, joinMeeting]);
 
   const formatDateWithTimezone = (isoString: string) => {
     if (!isoString) return "N/A";
@@ -296,6 +299,27 @@ export default function UserSessions() {
     };
   });
 
+  useEffect(() => {
+    if (!meetingIdParam) return;
+    if (autoJoin) return;
+    if (focusApplied.current) return;
+    if (!userRegion?.region) return;
+    if (isLoading) return;
+
+    const matchedSession = sessions.find(
+      (session) => session._id === meetingIdParam || session.id === meetingIdParam,
+    );
+
+    if (!matchedSession) {
+      focusApplied.current = true;
+      toast.error("Session not found");
+      return;
+    }
+
+    focusApplied.current = true;
+    setFilter("all");
+    setSearchQuery(matchedSession.name);
+  }, [meetingIdParam, autoJoin, isLoading, sessions, userRegion?.region]);
 
   const filteredSessions = sessions.filter((session) => {
     const matchesFilter = filter === "all" || session.status === filter;
