@@ -1,7 +1,5 @@
 import { PackageType } from "./PackageSelection";
 import { ChevronLeft, Check, Loader2 } from "lucide-react";
-import useGetUser from "@/hooks/useGetUser";
-import { calculateVatFromBase, getVatRateForCountry } from "@/utils/vat";
 
 interface SelectedPlanMeta {
   planKey: string;
@@ -100,11 +98,6 @@ export function ReviewConfirm({
       }
     : getPackageInfo(selectedPackage, billingType);
 
-  const { user } = useGetUser();
-  const vatRate = getVatRateForCountry(user?.country, user?.countryCode);
-  const vatBreakdown = calculateVatFromBase(packageInfo.price, vatRate);
-  const showVat = vatRate > 0;
-
   return (
     <div className="animate-fade-in">
       <button
@@ -156,24 +149,9 @@ export function ReviewConfirm({
                 <span className="text-green-700 font-semibold">{packageInfo.discount}</span>
               </div>
             )}
-
-            {showVat && (
-              <div className="flex justify-between items-center py-3 px-4 bg-[#fcf6ef] rounded-xl">
-                <span className="text-gray-600">Subtotal:</span>
-                <span className="text-gray-900">${vatBreakdown.subtotal.toFixed(2)}</span>
-              </div>
-            )}
-
-            {showVat && (
-              <div className="flex justify-between items-center py-3 px-4 bg-[#fcf6ef] rounded-xl">
-                <span className="text-gray-600">VAT ({Math.round(vatRate * 100)}%):</span>
-                <span className="text-gray-900">${vatBreakdown.vatAmount.toFixed(2)}</span>
-              </div>
-            )}
-
             <div className="flex justify-between items-center py-4 px-4 bg-[#B95E82] text-white rounded-xl">
               <span className="text-lg">Total:</span>
-              <span className="text-2xl">${showVat ? vatBreakdown.total.toFixed(2) : packageInfo.price}</span>
+              <span className="text-2xl">${packageInfo.price}</span>
             </div>
 
             {/* Auto-Renew Checkbox */}

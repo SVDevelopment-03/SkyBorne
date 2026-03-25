@@ -10,7 +10,6 @@ import { Payment } from "@/components/pages/auth/signup/Payment";
 import { Confirmation } from "@/components/pages/auth/signup/Confirmation";
 import { useCreatePaymentOrderMutation } from "@/store/api/paymentApi";
 import toast from "react-hot-toast";
-import { calculateVatFromBase, getVatRateForCountry } from "@/utils/vat";
 import { SelectedPlanMeta, UpgradePlan } from "@/app/(user)/user-packages/UpgradePlan";
 
 export interface CheckoutState {
@@ -34,10 +33,6 @@ const Page = () => {
     billingType === "yearly"
       ? selectedPlanData?.yearlyPrice || 0
       : selectedPlanData?.monthlyPrice || 0;
-  const vatRate = getVatRateForCountry(user?.country, user?.countryCode);
-  const vatBreakdown = calculateVatFromBase(price, vatRate);
-  const showVat = vatRate > 0;
-
   const handlePaymentTransaction = async () => {
     try {
       const res = await createPaymentOrder({
@@ -49,8 +44,7 @@ const Page = () => {
       }).unwrap();
 
       localStorage.setItem("orderRef", res?.orderRef);
-      const totalAmount = showVat ? vatBreakdown.total : price;
-      localStorage.setItem("paymentAmount", String(totalAmount));
+      localStorage.setItem("paymentAmount", String(price));
       localStorage.setItem("paymentCurrency", "USD");
 
       setTimeout(() => {

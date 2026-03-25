@@ -5,7 +5,6 @@ import { useMemo, useState } from "react";
 import { useGetPlansQuery } from "@/store/api/publicApi";
 import { IPlan } from "@/types/home.type";
 import useGetUser from "@/hooks/useGetUser";
-import { calculateVatFromBase, getVatRateForCountry } from "@/utils/vat";
 
 export type PackageType =
   | "gold-yoga"
@@ -315,17 +314,6 @@ export function UpgradePlan({
   );
   const { data } = useGetPlansQuery(undefined);
   const { user } = useGetUser();
-  const vatRate = getVatRateForCountry(user?.country, user?.countryCode);
-  const showVat = vatRate > 0;
-
-  const getVatSummary = (amount: number) => {
-    const { vatAmount, total } = calculateVatFromBase(amount, vatRate);
-    return {
-      vatAmount,
-      total,
-      rateLabel: `${Math.round(vatRate * 100)}%`,
-    };
-  };
 
   const plansWithMeta = useMemo(() => {
     const plans: IPlan[] = data?.data || [];
@@ -677,16 +665,7 @@ export function UpgradePlan({
                       ✓ Save 5% vs Monthly
                     </p>
                   )}
-                  {showVat && (() => {
-                    const baseAmount = billingType === "monthly" ? goldMonthly : goldYearly;
-                    const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
-                    return (
-                      <p className="text-xs text-gray-600 mt-2">
-                        VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
-                      </p>
-                    );
-                  })()}
-                </div>
+                                  </div>
 
                 <div className="">
                   <p className="text-sm text-gray-700 mb-3">Choose Class Type:</p>
@@ -767,16 +746,7 @@ export function UpgradePlan({
                       ✓ Save 5% vs Monthly
                     </p>
                   )}
-                  {showVat && (() => {
-                    const baseAmount = billingType === "monthly" ? diamondMonthly : diamondYearly;
-                    const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
-                    return (
-                      <p className="text-xs text-gray-600 mt-2">
-                        VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
-                      </p>
-                    );
-                  })()}
-                </div>
+                                  </div>
 
                 <div className="bg-[#fcf6ef] rounded-2xl p-5 mb-6">
                   <ul className="space-y-3">
@@ -840,16 +810,7 @@ export function UpgradePlan({
                         ✓ Save 5% vs Monthly
                       </p>
                     )}
-                    {showVat && (() => {
-                      const baseAmount = billingType === "monthly" ? platinumMonthly : platinumYearly;
-                      const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
-                      return (
-                        <p className="text-xs opacity-75 mt-2">
-                          VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
-                        </p>
-                      );
-                    })()}
-                  </div>
+                                      </div>
 
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 mb-6 border border-white/20">
                     <ul className="space-y-3">
@@ -925,16 +886,7 @@ export function UpgradePlan({
                       ✓ Save 5% vs Monthly
                     </p>
                   )}
-                  {showVat && (() => {
-                    const baseAmount = billingType === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
-                    const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
-                    return (
-                      <p className="text-xs text-gray-600 mt-2">
-                        VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
-                      </p>
-                    );
-                  })()}
-                </div>
+                                  </div>
 
                 {getServiceClassLines(plan, billingType).length > 0 && (
                   <div className="bg-[#fcf6ef] rounded-2xl p-5 mb-6">
