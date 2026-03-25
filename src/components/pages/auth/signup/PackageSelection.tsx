@@ -4,6 +4,8 @@ import { Calendar, Check, Package } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useGetPlansQuery } from "@/store/api/publicApi";
 import { IPlan } from "@/types/home.type";
+import useGetUser from "@/hooks/useGetUser";
+import { calculateVatFromBase, getVatRateForCountry } from "@/utils/vat";
 
 export type PackageType =
   | "gold-yoga"
@@ -62,11 +64,23 @@ const formatDate = (date: string | Date): string => {
   });
 };
 
+const toNumber = (value: unknown): number => {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : 0;
+};
+
+const formatCount = (value: number): string => {
+  if (!Number.isFinite(value)) return "0";
+  const rounded = Math.round(value);
+  if (Math.abs(value - rounded) < 1e-6) return String(rounded);
+  return Number(value.toFixed(2)).toString();
+};
+
 const calculateTotalRemainingClasses = (classCredits?: ClassCredits): number => {
   return (
-    (classCredits?.yoga || 0) +
-    (classCredits?.zumba || 0) +
-    (classCredits?.specialty || 0)
+    toNumber(classCredits?.yoga) +
+    toNumber(classCredits?.zumba) +
+    toNumber(classCredits?.specialty)
   );
 };
 
@@ -135,6 +149,29 @@ const BASE_PLAN_KEYS = new Set([
   "platinum",
 ]);
 
+const FALLBACK_CLASSES_TEXT: Record<
+  string,
+  { monthly: string; yearly: string }
+> = {
+  "gold-yoga": { monthly: "2 Yoga", yearly: "24 Yoga" },
+  "gold-zumba": { monthly: "2 Zumba", yearly: "24 Zumba" },
+  "gold-mixed": { monthly: "1 Yoga + 1 Zumba", yearly: "12 Yoga + 12 Zumba" },
+  diamond: { monthly: "2 Yoga + 2 Zumba", yearly: "24 Yoga + 24 Zumba" },
+  platinum: {
+    monthly: "2 Yoga + 2 Zumba + 1 Specialized",
+    yearly: "24 Yoga + 24 Zumba + 12 Specialized",
+  },
+};
+
+const getFallbackClassesText = (
+  planKey: string,
+  billingType: "monthly" | "yearly",
+): string => {
+  const entry = FALLBACK_CLASSES_TEXT[planKey];
+  if (!entry) return "";
+  return billingType === "yearly" ? entry.yearly : entry.monthly;
+};
+
 const getPaymentPlanRef = (plan: IPlan, normalizedKey: string): string => {
   if (BASE_PLAN_KEYS.has(normalizedKey)) {
     return normalizedKey;
@@ -149,13 +186,42 @@ const getPaymentPlanRef = (plan: IPlan, normalizedKey: string): string => {
 };
 
 const getClassesText = (plan: IPlan, billingType: "monthly" | "yearly") => {
-  const count = Number(plan.classCountPerMonth || 0);
+  const serviceCounts = Array.isArray(plan.serviceClassCounts)
+    ? plan.serviceClassCounts.filter(
+        (entry) => String(entry.service || "").trim().length > 0,
+      )
+    : [];
+  const totalServiceCount = serviceCounts.reduce(
+    (sum, entry) => sum + toNumber(entry.classCountPerMonth),
+    0,
+  );
+  const count = toNumber(plan.classCountPerMonth) || totalServiceCount;
+
+  const serviceSummary = serviceCounts
+    .map((entry) => {
+      const service = String(entry.service || "").trim();
+      const serviceCount = Math.max(0, toNumber(entry.classCountPerMonth));
+      if (!service) return "";
+      const displayCount =
+        billingType === "yearly" ? serviceCount * 12 : serviceCount;
+      return `${formatCount(displayCount)} ${service}`;
+    })
+    .filter(Boolean)
+    .join(" + ");
+
   const services = (plan.services || []).join(" + ");
-  if (count <= 0) return "Custom classes";
-  if (billingType === "yearly") {
-    return `${count * 12} Classes per Year`;
+  if (serviceSummary) return serviceSummary;
+
+  if (count <= 0) {
+    const fallback = getFallbackClassesText(normalizePlanKey(plan), billingType);
+    return fallback || "Custom classes";
   }
-  return services ? `${count} Classes (${services})` : `${count} Classes`;
+  if (billingType === "yearly") {
+    return `${formatCount(count * 12)} Classes per Year`;
+  }
+  return services
+    ? `${formatCount(count)} Classes (${services})`
+    : `${formatCount(count)} Classes`;
 };
 
 const getServiceClassLines = (
@@ -171,7 +237,7 @@ const getServiceClassLines = (
         )
         .map((entry) => ({
           service: String(entry.service).trim(),
-          classCountPerMonth: Math.floor(Number(entry.classCountPerMonth || 0)),
+          classCountPerMonth: Math.max(0, toNumber(entry.classCountPerMonth)),
         }))
     : [];
 
@@ -181,13 +247,13 @@ const getServiceClassLines = (
         billingType === "yearly"
           ? entry.classCountPerMonth * 12
           : entry.classCountPerMonth;
-      return `${displayCount} ${entry.service} Classes`;
+      return `${formatCount(displayCount)} ${entry.service} Classes`;
     });
   }
 
   return (plan.services || [])
     .filter((service) => String(service || "").trim().length > 0)
-    .map((service) => `${String(service).trim()} Classes`);
+    .map((service) => `${formatCount(0)} ${String(service).trim()} Classes`);
 };
 
 const getCustomPlanIcon = (monthlyPrice: number): string => {
@@ -226,6 +292,18 @@ export function PackageSelection({
     "monthly",
   );
   const { data } = useGetPlansQuery(undefined);
+  const { user } = useGetUser();
+  const vatRate = getVatRateForCountry(user?.country, user?.countryCode);
+  const showVat = vatRate > 0;
+
+  const getVatSummary = (amount: number) => {
+    const { vatAmount, total } = calculateVatFromBase(amount, vatRate);
+    return {
+      vatAmount,
+      total,
+      rateLabel: `${Math.round(vatRate * 100)}%`,
+    };
+  };
 
   const plansWithMeta = useMemo(() => {
     const plans: IPlan[] = data?.data || [];
@@ -569,6 +647,15 @@ export function PackageSelection({
                       ✓ Save 5% vs Monthly
                     </p>
                   )}
+                  {showVat && (() => {
+                    const baseAmount = billingType === "monthly" ? goldMonthly : goldYearly;
+                    const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
+                    return (
+                      <p className="text-xs text-gray-600 mt-2">
+                        VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
+                      </p>
+                    );
+                  })()}
                 </div>
 
                 <div className="">
@@ -650,6 +737,15 @@ export function PackageSelection({
                       ✓ Save 5% vs Monthly
                     </p>
                   )}
+                  {showVat && (() => {
+                    const baseAmount = billingType === "monthly" ? diamondMonthly : diamondYearly;
+                    const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
+                    return (
+                      <p className="text-xs text-gray-600 mt-2">
+                        VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
+                      </p>
+                    );
+                  })()}
                 </div>
 
                 <div className="bg-[#fcf6ef] rounded-2xl p-5 mb-6">
@@ -714,6 +810,15 @@ export function PackageSelection({
                         ✓ Save 5% vs Monthly
                       </p>
                     )}
+                    {showVat && (() => {
+                      const baseAmount = billingType === "monthly" ? platinumMonthly : platinumYearly;
+                      const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
+                      return (
+                        <p className="text-xs opacity-75 mt-2">
+                          VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
+                        </p>
+                      );
+                    })()}
                   </div>
 
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 mb-6 border border-white/20">
@@ -790,6 +895,15 @@ export function PackageSelection({
                       ✓ Save 5% vs Monthly
                     </p>
                   )}
+                  {showVat && (() => {
+                    const baseAmount = billingType === "monthly" ? plan.monthlyPrice : plan.yearlyPrice;
+                    const { vatAmount, total, rateLabel } = getVatSummary(baseAmount);
+                    return (
+                      <p className="text-xs text-gray-600 mt-2">
+                        VAT ({rateLabel}): ${vatAmount.toFixed(2)} - Total: ${total.toFixed(2)}
+                      </p>
+                    );
+                  })()}
                 </div>
 
                 {getServiceClassLines(plan, billingType).length > 0 && (

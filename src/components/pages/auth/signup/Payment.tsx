@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useCreatePaymentOrderMutation } from "@/store/api/paymentApi";
 import useGetUser from "@/hooks/useGetUser";
+import { calculateVatFromBase, getVatRateForCountry } from "@/utils/vat";
 import Link from "next/link";
 
 interface PaymentProps {
@@ -39,6 +40,9 @@ export function Payment({ selectedPackage, onPayment, onBack, billingType = "mon
   const price = getPackagePrice(selectedPackage, billingType);
   const billingPeriod = getBillingPeriodText(billingType);
   const { user } = useGetUser();
+  const vatRate = getVatRateForCountry(user?.country, user?.countryCode);
+  const vatBreakdown = calculateVatFromBase(price, vatRate);
+  const showVat = vatRate > 0;
 
   const [createPaymentOrder, { isLoading }] = useCreatePaymentOrderMutation();
 
@@ -52,7 +56,8 @@ export function Payment({ selectedPackage, onPayment, onBack, billingType = "mon
       }).unwrap();
 
       localStorage.setItem("orderRef", res?.orderRef || "");
-      localStorage.setItem("paymentAmount", String(price));
+      const totalAmount = showVat ? vatBreakdown.total : price;
+      localStorage.setItem("paymentAmount", String(totalAmount));
       localStorage.setItem("paymentCurrency", "USD");
 
       window.location.href = res.paymentLink;
@@ -188,8 +193,20 @@ export function Payment({ selectedPackage, onPayment, onBack, billingType = "mon
               <span className="text-sm opacity-90">Total Amount</span>
               <span className="text-xs opacity-75">Due today</span>
             </div>
+            {showVat && (
+              <div className="flex justify-between items-center text-sm opacity-90 mb-2">
+                <span>Subtotal</span>
+                <span>${vatBreakdown.subtotal.toFixed(2)}</span>
+              </div>
+            )}
+            {showVat && (
+              <div className="flex justify-between items-center text-sm opacity-90 mb-3">
+                <span>VAT ({Math.round(vatRate * 100)}%)</span>
+                <span>${vatBreakdown.vatAmount.toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-center">
-              <span className="text-2xl">${price}</span>
+              <span className="text-2xl">${showVat ? vatBreakdown.total.toFixed(2) : price}</span>
               <span className="text-sm opacity-90">/{billingPeriod}</span>
             </div>
           </div>
