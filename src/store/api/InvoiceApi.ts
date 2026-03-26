@@ -16,6 +16,11 @@ interface InvoiceDetails {
   billingType: string;
   date: string;
   subscriptionEndDate: string;
+  taxRate?: number;
+  subtotal?: number;
+  vatAmount?: number;
+  total?: number;
+  taxLabel?: string;
 }
 
 interface InvoiceDetailsResponse {

@@ -21,6 +21,35 @@ interface InvoiceViewerModalProps {
   onClose: () => void;
 }
 
+const roundCurrency = (value: number): number => {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round((value + Number.EPSILON) * 100) / 100;
+};
+
+const calculateVatFromTotal = (totalAmount: number, vatRate: number) => {
+  const safeRate = Number.isFinite(vatRate) ? vatRate : 0;
+  const total = roundCurrency(totalAmount);
+
+  if (!safeRate) {
+    return {
+      subtotal: total,
+      vatAmount: 0,
+      total,
+      vatRate: 0,
+    };
+  }
+
+  const subtotal = roundCurrency(total / (1 + safeRate));
+  const vatAmount = roundCurrency(total - subtotal);
+
+  return {
+    subtotal,
+    vatAmount,
+    total,
+    vatRate: safeRate,
+  };
+};
+
 export function InvoiceViewerModal({
   isOpen,
   invoiceId,
@@ -44,6 +73,26 @@ export function InvoiceViewerModal({
   
   const resolvedInvoiceId = invoice?.invoiceId || invoiceId || null;
   const resolvedTransactionId = invoice?.transactionId || transactionId || "N/A";
+  const currencyCode = invoice?.currency || "USD";
+  const vatRate =
+    typeof invoice?.taxRate === "number" && Number.isFinite(invoice.taxRate)
+      ? invoice.taxRate
+      : 0;
+  const totals = invoice
+    ? typeof invoice.subtotal === "number" &&
+      typeof invoice.vatAmount === "number" &&
+      typeof invoice.total === "number"
+      ? {
+          subtotal: invoice.subtotal,
+          vatAmount: invoice.vatAmount,
+          total: invoice.total,
+          vatRate,
+        }
+      : calculateVatFromTotal(invoice.amount, vatRate)
+    : { subtotal: 0, vatAmount: 0, total: 0, vatRate };
+  const taxLabel =
+    invoice?.taxLabel ||
+    (vatRate > 0 ? `VAT (${Math.round(vatRate * 100)}%)` : "Tax (0%)");
 
   const handleDownload = async () => {
     if (!resolvedInvoiceId) return;
@@ -95,6 +144,7 @@ export function InvoiceViewerModal({
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
+      currencyDisplay: "code",
     }).format(amount);
   };
 
@@ -226,19 +276,19 @@ export function InvoiceViewerModal({
               <div className="flex items-center justify-between mb-2">
                 <span className="text-gray-600">Subtotal:</span>
                 <span className="font-semibold text-gray-900">
-                  {formatCurrency(invoice.amount, invoice.currency)}
+                  {formatCurrency(totals.subtotal, currencyCode)}
                 </span>
               </div>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-600">Tax:</span>
+                <span className="text-gray-600">{taxLabel}:</span>
                 <span className="font-semibold text-gray-900">
-                  {invoice.currency} 0.00
+                  {formatCurrency(totals.vatAmount, currencyCode)}
                 </span>
               </div>
               <div className="flex items-center justify-between bg-gray-50 p-3 rounded border border-gray-200">
                 <span className="font-semibold text-gray-900">Total:</span>
                 <span className="text-lg font-bold text-[#b95e82]">
-                  {formatCurrency(invoice.amount, invoice.currency)}
+                  {formatCurrency(totals.total, currencyCode)}
                 </span>
               </div>
             </div>
