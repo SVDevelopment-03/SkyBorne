@@ -278,7 +278,7 @@ export default function CheckoutPage() {
                   Redirecting to Stripe…
                 </>
               ) : (
-                `Pay $${total.toFixed(2)} with Stripe`
+                `Pay $${total.toFixed(2)}`
               )}
             </button>
           </form>
@@ -347,7 +347,7 @@ export default function CheckoutPage() {
                     Redirecting to Stripe…
                   </>
                 ) : (
-                  `Pay $${total.toFixed(2)} with Stripe`
+                  `Pay $${total.toFixed(2)}`
                 )}
               </button>
             </div>
