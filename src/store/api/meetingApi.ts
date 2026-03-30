@@ -3,6 +3,7 @@ export interface UpdateMeetingPayload {
   service?: string; // service ID only
   trainer?: string; // trainer ID only
   title?: string;
+  status?: "pending" | "completed" | "failed" | string;
   regions?: IMeeting["regions"];
   liveRegion?: string;
   liveTime?: string;
@@ -53,7 +54,7 @@ export interface IMeeting {
   startUrl: string;
   recordingUrl: string;
   createdBy: string;
-  status: "active" | "inactive";
+  status: "active" | "inactive" | "pending" | "completed" | "failed" | string;
   recurringClass?: boolean;
   recurrenceType?: "weekly" | "monthly" | "custom" | "bi-weekly" | null;
   customDays?: number[] | null;

@@ -13,12 +13,15 @@ import {
   Loader,
   AlertCircle,
   PlayCircle,
+  Square,
+  CheckSquare,
 } from "lucide-react";
 import {
   useGetAllTrainerMeetingsQuery,
   useGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
+  useUpdateMeetingMutation,
 } from "@/store/api/meetingApi";
 import useGetUser from "@/hooks/useGetUser";
 import {
@@ -34,6 +37,7 @@ import toast from "react-hot-toast";
 import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow"; 
 import CustomPagination from "@/components/ui/CustromPagination";
 import { useUserRegionFromStore } from "@/utils/timezone";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 interface Session {
   id: string;
   name: string;
@@ -128,6 +132,15 @@ export default function TrainerSessions() {
   const [showZoomFlow, setShowZoomFlow] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const [markingClassId, setMarkingClassId] = useState<string | null>(null);
+  const [manualCompletedIds, setManualCompletedIds] = useState<Set<string>>(
+    new Set(),
+  );
+  const [showCompleteConfirmModal, setShowCompleteConfirmModal] =
+    useState(false);
+  const [sessionToComplete, setSessionToComplete] = useState<Session | null>(
+    null,
+  );
   const [userRegion, setUserRegion] = useState<{
     region: string | null;
   } | null>(null);
@@ -148,6 +161,7 @@ export default function TrainerSessions() {
   });
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
+  const [updateMeeting] = useUpdateMeetingMutation();
   useEffect(() => {
     setTimeout(() => {
       setUserRegion({ region: region });
@@ -180,6 +194,8 @@ export default function TrainerSessions() {
     (meeting: any) => {
       // ✅ Use the helper function to calculate status
       const calculatedStatus = calculateMeetingStatus(meeting, meeting.status);
+      const isManuallyCompleted = manualCompletedIds.has(meeting._id);
+      const finalStatus = isManuallyCompleted ? "completed" : calculatedStatus;
 
       return {
         id: meeting._id,
@@ -198,7 +214,7 @@ export default function TrainerSessions() {
         duration: meeting.duration,
         localTime: meeting?.localTime,
         type: "Online",
-        status: calculatedStatus, // Use calculated status
+        status: finalStatus, // Use calculated status + manual completed override
         participants: 0,
         maxParticipants: 20,
         level: "Intermediate",
@@ -318,6 +334,51 @@ export default function TrainerSessions() {
         err?.data?.message || err?.message || "Failed to load recording",
       );
     }
+  };
+  const handleMarkClassCompleted = async (session: Session) => {
+    if (!session?._id) return;
+    if (session.status === "completed") {
+      toast("Class is already marked as completed");
+      return;
+    }
+
+    try {
+      setMarkingClassId(session._id);
+      await updateMeeting({
+        id: session._id,
+        body: { status: "completed" },
+      }).unwrap();
+
+      setManualCompletedIds((prev) => {
+        const next = new Set(prev);
+        next.add(session._id);
+        return next;
+      });
+      toast.success("Class marked as completed. Join link is now disabled.");
+      refetch();
+    } catch (err: any) {
+      console.error("Mark completed error:", err);
+      toast.error(
+        err?.data?.message || err?.message || "Failed to mark class completed",
+      );
+    } finally {
+      setMarkingClassId(null);
+    }
+  };
+  const handleOpenCompleteConfirm = (session: Session) => {
+    if (!session?._id || session.status === "completed") return;
+    setSessionToComplete(session);
+    setShowCompleteConfirmModal(true);
+  };
+  const handleConfirmCompleteClass = async () => {
+    if (!sessionToComplete) {
+      setShowCompleteConfirmModal(false);
+      return;
+    }
+    const targetSession = sessionToComplete;
+    setShowCompleteConfirmModal(false);
+    setSessionToComplete(null);
+    await handleMarkClassCompleted(targetSession);
   };
   if (isLoading) {
     return (
@@ -521,6 +582,13 @@ export default function TrainerSessions() {
               const diffMs = startTime.getTime() - now.getTime();
               const diffMinutes = diffMs / 1000 / 60;
               const isJoinDisabled = diffMinutes > 5;
+              const isCompleted = session.status === "completed";
+              const isMarkingThisCard = markingClassId === session._id;
+              const hasMeetingStarted = !Number.isNaN(startTime.getTime())
+                ? startTime.getTime() <= now.getTime()
+                : false;
+              const isCompleteCheckboxDisabled =
+                isCompleted || isMarkingThisCard || !hasMeetingStarted;
             
               return (
                 <Card
@@ -547,6 +615,33 @@ export default function TrainerSessions() {
                               ? "Upcoming"
                               : "Completed"}
                           </Badge>
+                          <button
+                            type="button"
+                            className={`inline-flex items-center justify-center h-6 w-6 rounded-md border transition-colors ${
+                              isCompleted
+                                ? "border-[#27AE60] bg-[#27AE60]/10 text-[#27AE60]"
+                                : isCompleteCheckboxDisabled
+                                  ? "border-[#e3e3e3] bg-[#f7f7f7] text-[#b6b6b6] cursor-not-allowed"
+                                  : "border-[#d7d7d7] bg-white text-[#6B6B6B] hover:border-[#27AE60] hover:text-[#27AE60]"
+                            }`}
+                            disabled={isCompleteCheckboxDisabled}
+                            onClick={() => handleOpenCompleteConfirm(session)}
+                            title={
+                              isCompleted
+                                ? "Class completed"
+                                : !hasMeetingStarted
+                                  ? "Mark class completed"
+                                : isMarkingThisCard
+                                  ? "Saving..."
+                                  : "Mark class completed"
+                            }
+                          >
+                            {isCompleted ? (
+                              <CheckSquare className="w-4 h-4" />
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
                         </div>
                         <p className="text-sm text-[#6B6B6B]">
                           {session?.trainer === "Instructor"
@@ -630,7 +725,7 @@ export default function TrainerSessions() {
               Session Details
             </DialogTitle>
             <DialogDescription>
-              You're all set for {selectedClass?.title}
+              You&apos;re all set for {selectedClass?.title}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -730,6 +825,19 @@ export default function TrainerSessions() {
           </div>
         </div>
       )}
+      <ConfirmModal
+        isOpen={showCompleteConfirmModal}
+        title="Complete Class"
+        message="Are you sure you want to complete the class?"
+        confirmText="Confirm"
+        cancelText="Cancel"
+        onConfirm={handleConfirmCompleteClass}
+        onCancel={() => {
+          setShowCompleteConfirmModal(false);
+          setSessionToComplete(null);
+        }}
+        variant="info"
+      />
     </div>
   );
 }

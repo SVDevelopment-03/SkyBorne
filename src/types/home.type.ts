@@ -65,6 +65,7 @@ export interface SessionProps {
   userId: string;
   startTime: string;
   joined: boolean;
+  meetingStatus?: string;
   trainer: string;
   region: string;
   isLive: boolean;

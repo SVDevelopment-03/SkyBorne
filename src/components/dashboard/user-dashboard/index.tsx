@@ -605,6 +605,7 @@ export default function Page() {
                         key={index}
                         meetingId={meeting?._id}
                         userId={user?.id}
+                        meetingStatus={meeting?.status}
                         isLive={true}
                         // isLive={regionInfo?.mode === "live"}
                         trainer={trainer}

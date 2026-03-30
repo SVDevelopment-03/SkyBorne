@@ -62,6 +62,7 @@ interface Session {
   liveRegion?: string;
   _id: string;
   joined?: boolean;
+  meetingStatus?: string;
 }
 
 export default function UserSessions() {
@@ -269,6 +270,7 @@ export default function UserSessions() {
     const oneHourAfterMeeting = new Date(
       meetingTime.getTime() + 60 * 60 * 1000
     );
+    const meetingStatus = String(meeting?.status || "").toLowerCase();
 
     return {
       id: meeting._id,
@@ -285,7 +287,12 @@ export default function UserSessions() {
       duration: meeting.duration,
       localTime: meeting?.localTime,
       type: "Online",
-      status: new Date() < oneHourAfterMeeting ? "upcoming" : "completed",
+      status:
+        meetingStatus === "completed"
+          ? "completed"
+          : new Date() < oneHourAfterMeeting
+            ? "upcoming"
+            : "completed",
       participants: 0,
       maxParticipants: 20,
       level: "Intermediate",
@@ -296,6 +303,7 @@ export default function UserSessions() {
       liveRegion: meeting.liveRegion,
       _id: meeting._id,
       joined: meeting.joined || false,
+      meetingStatus,
     };
   });
 
@@ -334,6 +342,11 @@ export default function UserSessions() {
   const completedCount = pastMeetings.length;
 
   const handleJoinClass = (session: Session) => {
+    if (String(session?.meetingStatus || "").toLowerCase() === "completed") {
+      toast.error("meeting is completed by trainer please watch recording");
+      return;
+    }
+
     const formattedDate = formatDateWithTimezone(session?.localTime);
     const formattedTime = formatTimeWithTimezone(session?.localTime);
 
@@ -358,6 +371,11 @@ export default function UserSessions() {
   };
 
 const handleJoinMeeting = async (session: Session) => {
+  if (String(session?.meetingStatus || "").toLowerCase() === "completed") {
+    toast.error("meeting is completed by trainer please watch recording");
+    return;
+  }
+
   if (!session._id || !user?.id) {
     toast.error("Missing meeting or user information");
     return;

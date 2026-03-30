@@ -13,7 +13,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
-import { Trash2Icon, Edit, Copy } from "lucide-react";
+import { Trash2Icon, Edit, Copy, CheckSquare, Square } from "lucide-react";
 import toast from "react-hot-toast";
 import { IMeeting } from "@/store/api/meetingApi";
 import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
@@ -24,6 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { handleDeleteTrainer } from "@/utils/handleDeleteAlert";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import { CommonSelect } from "@/components/ui/CountrySelect";
+import { ConfirmModal } from "@/components/ui/ConfirmModal";
 
 type Status = "Upcoming" | "Live" | "Completed";
 
@@ -64,7 +65,14 @@ const ClassListManagement = () => {
     Array<{ label: string; value: string }>
   >([]);
   const [deleteMeeting] = useDeleteMeetingMutation();
+  const [updateMeeting] = useUpdateMeetingMutation();
   const [createMeetingShareLink] = useCreateMeetingShareLinkMutation();
+  const [markingMeetingId, setMarkingMeetingId] = useState<string | null>(null);
+  const [showCompleteConfirmModal, setShowCompleteConfirmModal] =
+    useState(false);
+  const [meetingToComplete, setMeetingToComplete] = useState<ClassRowData | null>(
+    null,
+  );
 
   // Fetch services for dropdown
   const { data: servicesData, isLoading: servicesLoading } =
@@ -174,6 +182,35 @@ const ClassListManagement = () => {
     setPage(1);
   };
 
+  const handleOpenCompleteConfirm = (meeting: ClassRowData) => {
+    if (!meeting?._id || meeting.status === "completed") return;
+    setMeetingToComplete(meeting);
+    setShowCompleteConfirmModal(true);
+  };
+
+  const handleConfirmComplete = async () => {
+    if (!meetingToComplete?._id) return;
+
+    try {
+      setMarkingMeetingId(meetingToComplete._id);
+      await updateMeeting({
+        id: meetingToComplete._id,
+        body: { status: "completed" },
+      }).unwrap();
+
+      toast.success("Class marked as completed. Join link is now disabled.");
+      setShowCompleteConfirmModal(false);
+      setMeetingToComplete(null);
+      refetch();
+    } catch (error: any) {
+      toast.error(
+        error?.data?.message || error?.message || "Failed to mark class completed",
+      );
+    } finally {
+      setMarkingMeetingId(null);
+    }
+  };
+
   const handleClearFilters = () => {
     setSearch("");
     setServiceFilter("");
@@ -252,16 +289,53 @@ const ClassListManagement = () => {
     //   },
     // },
     {
+      id: "markCompleted",
+      header: "Mark Completed",
+      cell: ({ row }) => {
+        const startTime = new Date(row.original.localTime as string);
+        const now = new Date();
+        const hasMeetingStarted = !Number.isNaN(startTime.getTime())
+          ? startTime.getTime() <= now.getTime()
+          : false;
+        const isCompleted = row.original.status === "completed";
+        const isMarkingThisRow = markingMeetingId === row.original._id;
+        const isDisabled = isCompleted || isMarkingThisRow || !hasMeetingStarted;
+
+        return (
+          <button
+            type="button"
+            className={`inline-flex items-center justify-center h-8 w-8 rounded-md border transition-colors ${
+              isCompleted
+                ? "border-[#27AE60] bg-[#27AE60]/10 text-[#27AE60]"
+                : isDisabled
+                  ? "border-[#e3e3e3] bg-[#f7f7f7] text-[#b6b6b6] cursor-not-allowed"
+                  : "border-[#d7d7d7] bg-white text-[#6B6B6B] hover:border-[#27AE60] hover:text-[#27AE60]"
+            }`}
+            disabled={isDisabled}
+            onClick={() => handleOpenCompleteConfirm(row.original)}
+            title={
+              isCompleted
+                ? "Class completed"
+                : !hasMeetingStarted
+                  ? "Mark class completed"
+                  : isMarkingThisRow
+                    ? "Saving..."
+                    : "Mark class completed"
+            }
+          >
+            {isCompleted ? (
+              <CheckSquare className="w-4 h-4" />
+            ) : (
+              <Square className="w-4 h-4" />
+            )}
+          </button>
+        );
+      },
+    },
+    {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
-        const status = getStatusFromLocalTime(
-          row.original.localTime,
-          row.original.duration
-        );
-
-        // const canEdit = status === "Upcoming" || status === "Live";
-
         return (
           <div className="flex gap-2">
             <Button
@@ -366,6 +440,19 @@ const ClassListManagement = () => {
           </div>
         )}
       </div>
+      <ConfirmModal
+        isOpen={showCompleteConfirmModal}
+        title="Complete Class"
+        message="Are you sure you want to complete the class?"
+        confirmText="Confirm"
+        cancelText="Cancel"
+        onConfirm={handleConfirmComplete}
+        onCancel={() => {
+          setShowCompleteConfirmModal(false);
+          setMeetingToComplete(null);
+        }}
+        variant="info"
+      />
     </div>
   );
 };

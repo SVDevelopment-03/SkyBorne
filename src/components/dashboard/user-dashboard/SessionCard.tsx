@@ -26,6 +26,7 @@ const SessionCard = ({
   userId,
   startTime,
   joined,
+  meetingStatus,
   region, 
   trainer,
   isLive,
@@ -64,6 +65,11 @@ const SessionCard = ({
 
 // ✅ Better - open popup immediately, then do async work
 const handleJoin = async () => {
+  if (String(meetingStatus || "").toLowerCase() === "completed") {
+    toast.error("meeting is completed by trainer please watch recording");
+    return;
+  }
+
   if (!meetingId || !userId || !region) {
     toast.error("Missing meeting or user information");
     return;
@@ -158,7 +164,9 @@ const handleJoin = async () => {
             variant={"outlineGradientRect"}
             className="max-w-[85px]"
             onClick={() => handleJoinClass(classItem)}
-            disabled={isJoining || joined}
+            disabled={
+              isJoining || joined || String(meetingStatus || "").toLowerCase() === "completed"
+            }
           >
             {isJoining ? "Loading..." : joined ? "Joined" : "Join now"}
           </Button>
