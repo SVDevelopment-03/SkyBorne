@@ -10,6 +10,8 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import { ZoomSessionFlow } from "./ZoomSessionFlow";
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { RootState } from "@/store";
 import {
   Dialog,
   DialogContent,
@@ -60,11 +62,14 @@ const SessionCard = ({
   const [showClassModal, setShowClassModal] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  const authUser = useSelector((state: RootState) => state.auth.user);
+  const allowAppJoin =
+    authUser?.role === "admin" || authUser?.role === "trainer";
 
 
 
 // ✅ Better - open popup immediately, then do async work
-const handleJoin = async () => {
+const handleJoin = async (joinMode: "browser" | "app" = "browser") => {
   if (String(meetingStatus || "").toLowerCase() === "completed") {
     toast.error("meeting is completed by trainer please watch recording");
     return;
@@ -89,17 +94,21 @@ const handleJoin = async () => {
 
   try {
     const res = await joinMeeting({ meetingId, userId, region }).unwrap();
-    const { accessUrl: joinUrl, mode } = res?.data;
+    const { accessUrl: joinUrl, appAccessUrl, mode } = res?.data;
+    const targetUrl =
+      joinMode === "app" ? appAccessUrl || joinUrl : joinUrl;
 
-    if (!joinUrl) {
+    if (!targetUrl) {
       toast.error("Access URL not found");
       popup.close();
       return;
     }
 
     if (mode === 'live') {
-      popup.location.href = joinUrl;
-      toast.success("Joining meeting...");
+      popup.location.href = targetUrl;
+      toast.success(
+        joinMode === "app" ? "Opening Zoom app..." : "Joining meeting...",
+      );
     } else {
       popup.close();
       setVideoUrl(joinUrl);
@@ -299,6 +308,7 @@ const handleJoin = async () => {
       <ZoomSessionFlow
         isOpen={showZoomFlow}
         isLive={isLive}
+        allowAppJoin={allowAppJoin}
         joinMeeting={handleJoin}
         onClose={() => setShowZoomFlow(false)}
         session={selectedClass}

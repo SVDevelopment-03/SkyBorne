@@ -27,15 +27,14 @@ import {
   XCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useSelector } from "react-redux";
-import { RootState } from "@/store";
 import useGetUser from "@/hooks/useGetUser";
 
 interface ZoomSessionFlowProps {
   isOpen: boolean;
-  joinMeeting: () => void;
+  joinMeeting: (mode?: "browser" | "app") => void;
   isLive: boolean;
   onClose: () => void;
+  allowAppJoin?: boolean;
   session: {
     localTime: string;
     title: string;
@@ -79,6 +78,7 @@ export function ZoomSessionFlow({
   onClose,
   isLive,
   joinMeeting,
+  allowAppJoin = false,
   session,
 }: ZoomSessionFlowProps) {
   const [currentStep, setCurrentStep] = useState<FlowStep>("upcoming");
@@ -117,6 +117,7 @@ export function ZoomSessionFlow({
 
   // allow joining only when remaining time <= 5 minutes
   const isJoinDisabled = diffMinutes > 5;
+  const joinDisabled = isJoinDisabled;
 
   // Join Ready Countdown
   useEffect(() => {
@@ -154,9 +155,9 @@ export function ZoomSessionFlow({
     setCurrentStep("access-check");
   };
 
-  const handleJoinNow = () => {
+  const handleJoinNow = (mode: "browser" | "app" = "browser") => {
     handleClose();
-    joinMeeting();
+    joinMeeting(mode);
   };
 
   const handleEndSession = () => {
@@ -354,27 +355,52 @@ export function ZoomSessionFlow({
             <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
               <p className="text-sm text-blue-900 text-center">
                 <Shield className="w-4 h-4 inline mr-1" />
-                The class will redirect you to zoom on browser.
+                {allowAppJoin
+                  ? "Choose how you want to join. Use the Zoom app for music sharing."
+                  : "The class will redirect you to zoom on browser."}
               </p>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3">
               <Button
                 variant="outline"
                 onClick={handleClose}
-                className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm! font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background! text-foreground hover:bg-accent! hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4! py-2! has-[>svg]:px-3 border-[]"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm! font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive border bg-background! text-foreground hover:bg-accent! hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 h-9 px-4! py-2! has-[>svg]:px-3 border-[]"
               >
                 Cancel
               </Button>
-              <Button
-                onClick={handleJoinNow}
-                disabled={isJoinDisabled}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 rounded-md px-6 has-[>svg]:px-4 flex-1 bg-gradient-to-r from-[#b95e82] to-[#d97ba3] hover:opacity-90 px-4! py-2!"
-                size="lg"
-              >
-                <Video className="w-5 h-5 mr-2" />
-                Join Now
-              </Button>
+              {allowAppJoin ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Button
+                    onClick={() => handleJoinNow("app")}
+                    disabled={joinDisabled}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 rounded-md px-6 has-[>svg]:px-4 flex-1 bg-gradient-to-r from-[#2f7cf4] to-[#4aa3ff] hover:opacity-90 px-4! py-2!"
+                    size="lg"
+                  >
+                    <ExternalLink className="w-5 h-5 mr-2" />
+                    Join In App
+                  </Button>
+                  <Button
+                    onClick={() => handleJoinNow("browser")}
+                    disabled={joinDisabled}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 rounded-md px-6 has-[>svg]:px-4 flex-1 bg-gradient-to-r from-[#b95e82] to-[#d97ba3] hover:opacity-90 px-4! py-2!"
+                    size="lg"
+                  >
+                    <Video className="w-5 h-5 mr-2" />
+                    Join In Browser
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => handleJoinNow("browser")}
+                  disabled={joinDisabled}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 rounded-md px-6 has-[>svg]:px-4 flex-1 bg-gradient-to-r from-[#b95e82] to-[#d97ba3] hover:opacity-90 px-4! py-2!"
+                  size="lg"
+                >
+                  <Video className="w-5 h-5 mr-2" />
+                  Join Now
+                </Button>
+              )}
             </div>
 
             {/* <Button

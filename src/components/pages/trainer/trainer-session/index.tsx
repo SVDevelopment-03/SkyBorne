@@ -34,7 +34,7 @@ import {
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import toast from "react-hot-toast";
-import { ZoomSessionFlow } from "@/components/dashboard/user-dashboard/ZoomSessionFlow"; 
+import { TrainerZoomSessionFlow } from "@/components/dashboard/trainer-dashboard/TrainerZoomSessionFlow"; 
 import CustomPagination from "@/components/ui/CustromPagination";
 import { useUserRegionFromStore } from "@/utils/timezone";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -190,8 +190,8 @@ export default function TrainerSessions() {
     return `${date}, ${time}`;
   };
   // Transform and filter meetings
-  const sessions: Session[] = (meetingsResponse?.data?.meetings || []).map(
-    (meeting: any) => {
+  const sessions: Session[] = (meetingsResponse?.data?.meetings || [])
+    .map((meeting: any) => {
       // ✅ Use the helper function to calculate status
       const calculatedStatus = calculateMeetingStatus(meeting, meeting.status);
       const isManuallyCompleted = manualCompletedIds.has(meeting._id);
@@ -226,8 +226,13 @@ export default function TrainerSessions() {
         _id: meeting._id,
         joined: meeting.joined || false,
       };
-    },
-  );
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.localTime).getTime();
+      const timeB = new Date(b.localTime).getTime();
+      if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
+      return timeA - timeB;
+    });
   const filteredSessions = sessions.filter((session) => {
     const matchesFilter = filter === "all" || session.status === filter;
     const matchesSearch =
@@ -267,7 +272,10 @@ export default function TrainerSessions() {
     setShowClassModal(true);
     toast.success(`You're set for ${session.name}!`);
   };
-  const handleJoinMeeting = async (session: Session) => {
+  const handleJoinMeeting = async (
+    session: Session,
+    joinMode: "browser" | "app" = "browser",
+  ) => {
     if (!session._id || !user?.id || !session.liveRegion) {
       toast.error("Missing meeting or user information");
       return;
@@ -288,15 +296,19 @@ export default function TrainerSessions() {
         userId: user?.id,
         region: userRegion?.region,
       }).unwrap();
-      const { accessUrl: joinUrl, mode } = res?.data;
-      if (!joinUrl) {
+      const { accessUrl: joinUrl, appAccessUrl, mode } = res?.data;
+      const targetUrl =
+        joinMode === "app" ? appAccessUrl || joinUrl : joinUrl;
+      if (!targetUrl) {
         toast.error("Access URL not found");
         popup.close();
         return;
       }
       if (mode === "live") {
-        popup.location.href = joinUrl;
-        toast.success("Joining meeting...");
+        popup.location.href = targetUrl;
+        toast.success(
+          joinMode === "app" ? "Opening Zoom app..." : "Joining meeting...",
+        );
       } else {
         popup.close();
         setVideoUrl(joinUrl);
@@ -790,14 +802,15 @@ export default function TrainerSessions() {
       </Dialog>
       {/* Zoom Session Flow */}
       {selectedClass && (
-        <ZoomSessionFlow
+        <TrainerZoomSessionFlow
           isOpen={showZoomFlow}
           isLive={true}
-          joinMeeting={() =>
+          joinMeeting={(mode) =>
             handleJoinMeeting(
               filteredSessions.find(
                 (s) => s._id === selectedClass.meetingId,
               ) as Session,
+              mode,
             )
           }
           onClose={() => setShowZoomFlow(false)}

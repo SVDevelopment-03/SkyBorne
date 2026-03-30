@@ -58,7 +58,7 @@ const TrainerSessionCard = ({
   const [selectedClass, setSelectedClass] = useState<any>(null);
   const [showClassModal, setShowClassModal] = useState(false);
 
-const handleJoin = async () => {
+const handleJoin = async (joinMode: "browser" | "app" = "browser") => {
   if (!meetingId || !userId || !region) {
     toast.error("Missing meeting or user information");
     return;
@@ -79,10 +79,15 @@ const handleJoin = async () => {
   try {
     const res = await joinMeeting({ meetingId, userId, region }).unwrap();
     const joinUrl = res?.data?.accessUrl;
+    const appJoinUrl = res?.data?.appAccessUrl;
+    const targetUrl =
+      joinMode === "app" ? appJoinUrl || joinUrl : joinUrl;
 
-    if (joinUrl) {
-      popup.location.href = joinUrl;
-      toast.success("Joining meeting...");
+    if (targetUrl) {
+      popup.location.href = targetUrl;
+      toast.success(
+        joinMode === "app" ? "Opening Zoom app..." : "Joining meeting...",
+      );
     } else {
       popup.close();
       toast.error("Join URL not found");

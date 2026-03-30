@@ -14,6 +14,8 @@ interface PaymentData {
   currency?: string;
   status: string;
   success: boolean;
+  message?: string;
+  deferUntil?: string;
   user?: {
     onboardingCompleted: boolean;
   };
@@ -78,8 +80,27 @@ const normalizePaymentResponse = (response: any): PaymentData => {
       nested?.transaction?.currency,
     status,
     success: Boolean(response?.success ?? nested?.success ?? status === "COMPLETED"),
+    message:
+      response?.message ||
+      response?.msg ||
+      response?.error ||
+      nested?.message ||
+      nested?.msg ||
+      nested?.error,
+    deferUntil:
+      response?.deferUntil ||
+      response?.deferredUntil ||
+      nested?.deferUntil ||
+      nested?.deferredUntil,
     user,
   };
+};
+
+const formatDeferredDate = (value?: string): string => {
+  if (!value) return "the end of your current subscription";
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return "the end of your current subscription";
+  return parsed.toLocaleString();
 };
 
 const formatAmount = (amount?: number, currency = "USD"): string => {
@@ -148,6 +169,20 @@ const formatAmount = (amount?: number, currency = "USD"): string => {
           currency: normalized.currency || fallbackCurrency,
         };
 
+        const isDeferredUpgrade =
+          resolvedData.status === "PENDING" &&
+          Boolean(
+            resolvedData.deferUntil ||
+              resolvedData.message?.toLowerCase().includes("upgrade scheduled"),
+          );
+
+        if (isDeferredUpgrade) {
+          setPaymentData(resolvedData);
+          setLoading(false);
+          setAutoRetrying(false);
+          return;
+        }
+
         // ✅ NEW LOGIC: Check user.onboardingCompleted instead of response.success
         if (resolvedData.user?.onboardingCompleted === true) {
           // Payment succeeded and subscription is activated
@@ -158,6 +193,7 @@ const formatAmount = (amount?: number, currency = "USD"): string => {
           // Still processing, retry after 2 seconds
           setAutoRetrying(true);
           setPaymentData(resolvedData);
+          setLoading(false);
           
           retryTimeoutRef.current = setTimeout(() => {
             setRetryCount(prev => prev + 1);
@@ -187,6 +223,16 @@ const formatAmount = (amount?: number, currency = "USD"): string => {
         
         if (retryCount < 5) {
           setAutoRetrying(true);
+          setLoading(false);
+          setPaymentData((current) =>
+            current ?? {
+              orderRef: orderRef || "",
+              amount: fallbackAmount,
+              currency: fallbackCurrency,
+              status: "PENDING",
+              success: false,
+            },
+          );
           
           retryTimeoutRef.current = setTimeout(() => {
             setRetryCount(prev => prev + 1);
@@ -269,6 +315,62 @@ const formatAmount = (amount?: number, currency = "USD"): string => {
               className="flex-1 transition font-semibold"
             >
               Try Again
+            </Button>
+            <Button 
+              variant={"outlineBlackRect"}
+              onClick={() => router.push('/')}
+              className="flex-1 transition font-semibold"
+            >
+              Home
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    paymentData?.status === "PENDING" &&
+    (paymentData?.deferUntil ||
+      paymentData?.message?.toLowerCase().includes("upgrade scheduled"))
+  ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
+        <div className="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full text-center">
+          <div className="text-5xl mb-4">✅</div>
+          <h1 className="text-2xl font-bold text-gray-800 mb-2">
+            Upgrade Scheduled
+          </h1>
+          <p className="text-gray-600 mb-6">
+            Your plan change is confirmed. We’ll charge you on{" "}
+            <span className="font-semibold">
+              {formatDeferredDate(paymentData.deferUntil)}
+            </span>
+            .
+          </p>
+
+          <div className="bg-blue-50 rounded-lg p-4 mb-6 text-left">
+            <p className="text-sm text-gray-600">
+              <span className="font-semibold">Order Ref:</span>{" "}
+              {paymentData.orderRef || "N/A"}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              <span className="font-semibold">Amount:</span>{" "}
+              {formatAmount(paymentData.amount, paymentData.currency || "USD")}
+            </p>
+            <p className="text-sm text-gray-600 mt-1">
+              <span className="font-semibold">Status:</span>{" "}
+              {paymentData.status}
+            </p>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant={"themeRect"}
+              onClick={() => router.push('/dashboard')}
+              className="flex-1 transition font-semibold"
+            >
+              Go to Dashboard
             </Button>
             <Button 
               variant={"outlineBlackRect"}

@@ -44,6 +44,16 @@ const getStatusFromLocalTime = (
   return "Completed";
 };
 
+const getDisplayStatus = (
+  meeting: Pick<IMeeting, "status" | "localTime" | "duration">,
+): Status => {
+  const backendStatus = String(meeting.status || "").toLowerCase();
+  if (backendStatus === "completed") return "Completed";
+  if (backendStatus === "upcoming") return "Upcoming";
+  if (backendStatus === "live") return "Live";
+  return getStatusFromLocalTime(meeting.localTime, meeting.duration);
+};
+
 interface ClassRowData extends IMeeting {
   actions?: React.ReactNode;
 }
@@ -61,6 +71,9 @@ const ClassListManagement = () => {
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [serviceFilter, setServiceFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "upcoming" | "completed"
+  >("all");
   const [serviceOptions, setServiceOptions] = useState<
     Array<{ label: string; value: string }>
   >([]);
@@ -99,6 +112,7 @@ const ClassListManagement = () => {
     limit,
     search,
     filter: serviceFilter,
+    status: statusFilter,
   });
 
   const router = useRouter();
@@ -209,11 +223,19 @@ const ClassListManagement = () => {
     } finally {
       setMarkingMeetingId(null);
     }
+  }
+  
+  const handleStatusFilterChange = (value: string) => {
+    const normalized =
+      value === "upcoming" || value === "completed" ? value : "all";
+    setStatusFilter(normalized);
+    setPage(1);
   };
 
   const handleClearFilters = () => {
     setSearch("");
     setServiceFilter("");
+    setStatusFilter("all");
     setPage(1);
   };
 
@@ -266,38 +288,39 @@ const ClassListManagement = () => {
         <span className="text-[#666666]">{row.original.duration} mins</span>
       ),
     },
-    // {
-    //   accessorKey: "status",
-    //   header: "Status",
-    //   cell: ({ row }) => {
-    //     const status = getStatusFromLocalTime(
-    //       row.original.localTime,
-    //       row.original.duration
-    //     );
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => {
+        const status = getDisplayStatus(row.original);
 
-    //     const statusStyles = {
-    //       Upcoming: "bg-yellow-50 text-yellow-700",
-    //       Live: "bg-green-50 text-green-700",
-    //       Completed: "bg-gray-100 text-gray-700",
-    //     };
+        const statusStyles = {
+          Upcoming: "bg-yellow-50 text-yellow-700",
+          Live: "bg-green-50 text-green-700",
+          Completed: "bg-green-50 text-green-700",
+        } as const;
 
-    //     return (
-    //       <Badge variant="outline" className={`py-1! ${statusStyles[status]}`}>
-    //         {status}
-    //       </Badge>
-    //     );
-    //   },
-    // },
+        return (
+          <Badge
+            variant="outline"
+            className={`py-1! ${statusStyles[status] ?? "bg-gray-50 text-gray-700"}`}
+          >
+            {status}
+          </Badge>
+        );
+      },
+    },
     {
       id: "markCompleted",
       header: "Mark Completed",
       cell: ({ row }) => {
+        const status = getDisplayStatus(row.original);
         const startTime = new Date(row.original.localTime);
         const now = new Date();
         const hasMeetingStarted = !Number.isNaN(startTime.getTime())
           ? startTime.getTime() <= now.getTime()
           : false;
-        const isCompleted = row.original.status === "completed";
+        const isCompleted = status === "Completed";
         const isMarkingThisRow = markingMeetingId === row.original._id;
         const isDisabled = isCompleted || isMarkingThisRow || !hasMeetingStarted;
 
@@ -336,26 +359,31 @@ const ClassListManagement = () => {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => {
+        const status = getDisplayStatus(row.original);
         return (
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => handleCopyLink(row.original._id)}
-              className="rounded-lg"
-              title="Copy link"
-            >
-              <Copy className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="theme"
-              size="sm"
-              onClick={() => handleEdit(row.original._id)}
-              className="rounded-lg"
-              title="Edit"
-            >
-              <Edit className="w-4 h-4" />
-            </Button>
+            {status !== "Completed" && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleCopyLink(row.original._id)}
+                  className="rounded-lg"
+                  title="Copy link"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="theme"
+                  size="sm"
+                  onClick={() => handleEdit(row.original._id)}
+                  className="rounded-lg"
+                  title="Edit"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              </>
+            )}
 
             <Button
               variant="outlineCancel"
@@ -407,6 +435,20 @@ const ClassListManagement = () => {
                 cssProp="min-h-[45px]! w-full"
                 value={serviceFilter}
                 onChange={handleServiceFilterChange}
+              />
+            </div>
+            <div className="w-full sm:max-w-[200px]">
+              <CommonSelect
+                options={[
+                  { label: "All", value: "all" },
+                  { label: "Upcoming", value: "upcoming" },
+                  { label: "Completed", value: "completed" },
+                ]}
+                label="status"
+                showLabel={false}
+                cssProp="min-h-[45px]! w-full"
+                value={statusFilter}
+                onChange={handleStatusFilterChange}
               />
             </div>
           </div>

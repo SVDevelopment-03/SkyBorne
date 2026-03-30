@@ -262,7 +262,12 @@ export default function UserSessions() {
         meeting,
       ]),
     ).values(),
-  );
+  ).sort((a: any, b: any) => {
+    const timeA = new Date(a?.localTime).getTime();
+    const timeB = new Date(b?.localTime).getTime();
+    if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
+    return timeA - timeB;
+  });
 
   // Transform and filter meetings
   const sessions: Session[] = uniqueMeetings.map((meeting: any) => {
@@ -325,8 +330,12 @@ export default function UserSessions() {
     }
 
     focusApplied.current = true;
-    setFilter("all");
-    setSearchQuery(matchedSession.name);
+    
+    setTimeout(() => {
+      setFilter("all");
+      setSearchQuery(matchedSession.name);
+    }, 0);
+    
   }, [meetingIdParam, autoJoin, isLoading, sessions, userRegion?.region]);
 
   const filteredSessions = sessions.filter((session) => {
@@ -370,7 +379,7 @@ export default function UserSessions() {
     toast.success(`You're set for ${session.name}!`);
   };
 
-const handleJoinMeeting = async (session: Session) => {
+const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" = "browser") => {
   if (String(session?.meetingStatus || "").toLowerCase() === "completed") {
     toast.error("meeting is completed by trainer please watch recording");
     return;
@@ -403,17 +412,21 @@ const handleJoinMeeting = async (session: Session) => {
       userId: user?.id,
       region: userRegion?.region,
     }).unwrap();
-    const { accessUrl: joinUrl, mode } = res?.data;
+    const { accessUrl: joinUrl, appAccessUrl, mode } = res?.data;
+    const targetUrl =
+      joinMode === "app" ? appAccessUrl || joinUrl : joinUrl;
 
-    if (!joinUrl) {
+    if (!targetUrl) {
       toast.error("Access URL not found");
       popup.close();
       return;
     }
 
     if (mode === "live") {
-      popup.location.href = joinUrl;
-      toast.success("Joining meeting...");
+      popup.location.href = targetUrl;
+      toast.success(
+        joinMode === "app" ? "Opening Zoom app..." : "Joining meeting...",
+      );
     } else {
       popup.close();
       setVideoUrl(joinUrl);
@@ -838,11 +851,13 @@ const handleJoinMeeting = async (session: Session) => {
           //   filteredSessions.find((s) => s._id === selectedClass.meetingId)
           //     ?.regions?.[0]?.mode === "live"
           // }
-          joinMeeting={() =>
+          allowAppJoin={user?.role === "admin" || user?.role === "trainer"}
+          joinMeeting={(mode) =>
             handleJoinMeeting(
               filteredSessions.find(
                 (s) => s._id === selectedClass.meetingId,
               ) as Session,
+              mode,
             )
           }
           onClose={() => setShowZoomFlow(false)}

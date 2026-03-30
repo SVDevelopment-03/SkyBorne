@@ -215,9 +215,21 @@ export const meetingApi = createApi({
     // Add this to your endpoints builder:
     getMeetings: builder.query<
       GetMeetingsResponse,
-      { page?: number; limit?: number; search?: string; filter?: string }
+      {
+        page?: number;
+        limit?: number;
+        search?: string;
+        filter?: string;
+        status?: "all" | "upcoming" | "completed";
+      }
     >({
-      query: ({ page = 1, limit = 10, search = "", filter = "" }) => ({
+      query: ({
+        page = 1,
+        limit = 10,
+        search = "",
+        filter = "",
+        status = "all",
+      }) => ({
         url: "/meetings/getAll",
         method: "GET",
         params: {
@@ -225,6 +237,7 @@ export const meetingApi = createApi({
           limit,
           search,
           filter,
+          status,
         },
       }),
       providesTags: ["Meetings"],

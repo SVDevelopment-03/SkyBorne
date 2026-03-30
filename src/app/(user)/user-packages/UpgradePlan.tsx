@@ -40,6 +40,9 @@ interface PackageSelectionProps {
   onSelect: (packageType: string) => void;
   onSelectPlanData: (plan: SelectedPlanMeta) => void;
   currentPlan?: string;
+  pendingPlan?: string;
+  pendingBillingType?: "monthly" | "yearly";
+  pendingEffectiveDate?: string | Date | null;
   expiryDate?: Date;
   subscription?: Subscription;
   totalClassCredits?: number;
@@ -304,6 +307,9 @@ export function UpgradePlan({
   onSelect,
   onSelectPlanData,
   currentPlan,
+  pendingPlan,
+  pendingBillingType,
+  pendingEffectiveDate,
   subscription,
   classCredits,
   totalClassCredits,
@@ -336,8 +342,32 @@ export function UpgradePlan({
       .sort((a, b) => (a.order || 0) - (b.order || 0));
   }, [data]);
 
-  const currentPlanDisplayName = useMemo(() => {
-    const raw = String(currentPlan || "").trim();
+  const normalizePlanValue = (value?: string) =>
+    String(value || "").toLowerCase().trim();
+
+  const isPlanMatch = (
+    value: string | undefined,
+    plan: (typeof plansWithMeta)[number] | undefined,
+  ) => {
+    if (!value || !plan) return false;
+    const normalizedValue = normalizePlanValue(value);
+    if (!normalizedValue) return false;
+    const candidates = [
+      plan.paymentPlanRef,
+      plan.planKey,
+      plan.uuid,
+      plan.planId,
+      plan._id,
+      plan.name,
+      slugify(plan.name || ""),
+    ]
+      .filter(Boolean)
+      .map((entry) => normalizePlanValue(String(entry)));
+    return candidates.includes(normalizedValue);
+  };
+
+  const resolvePlanDisplayName = (value?: string) => {
+    const raw = String(value || "").trim();
     if (!raw) return "No plan";
 
     const normalized = raw.toLowerCase();
@@ -345,19 +375,9 @@ export function UpgradePlan({
       return FIXED_PLAN_NAME_MAP[normalized];
     }
 
-    const matchedPlan = plansWithMeta.find((plan) => {
-      const candidates = [
-        String(plan.paymentPlanRef || "").toLowerCase(),
-        String(plan.planKey || "").toLowerCase(),
-        String(plan.uuid || "").toLowerCase(),
-        String(plan.planId || "").toLowerCase(),
-        String(plan._id || "").toLowerCase(),
-        slugify(plan.name || ""),
-        String(plan.name || "").toLowerCase().trim(),
-      ].filter(Boolean);
-
-      return candidates.includes(normalized);
-    });
+    const matchedPlan = plansWithMeta.find((plan) =>
+      isPlanMatch(raw, plan),
+    );
 
     if (matchedPlan?.name) {
       return toTitleCase(matchedPlan.name);
@@ -373,7 +393,16 @@ export function UpgradePlan({
     }
 
     return toTitleCase(raw.replace(/-/g, " "));
-  }, [currentPlan, plansWithMeta]);
+  };
+
+  const currentPlanDisplayName = useMemo(
+    () => resolvePlanDisplayName(currentPlan),
+    [currentPlan, plansWithMeta],
+  );
+  const pendingPlanDisplayName = useMemo(
+    () => resolvePlanDisplayName(pendingPlan),
+    [pendingPlan, plansWithMeta],
+  );
 
   const planMap = useMemo(() => {
     const map = new Map<string, (typeof plansWithMeta)[number]>();
@@ -426,12 +455,32 @@ export function UpgradePlan({
     defaultGoldOption,
   );
 
+  const hasPendingPlan =
+    Boolean(pendingPlan) &&
+    normalizePlanValue(pendingPlan) !== normalizePlanValue(currentPlan);
+  const pendingEffectiveLabel = pendingEffectiveDate
+    ? formatDate(pendingEffectiveDate)
+    : "the end of your current subscription";
+
+  const pendingGoldOption = activeGoldOptions.find((option) => {
+    if (!pendingPlan) return false;
+    if (normalizePlanValue(pendingPlan) === normalizePlanValue(option.id)) {
+      return true;
+    }
+    return isPlanMatch(pendingPlan, planMap.get(option.id));
+  });
+  const isPendingGoldPlan =
+    Boolean(pendingGoldOption) ||
+    normalizePlanValue(pendingPlan || "").startsWith("gold");
+
   const isCurrentGoldPlan =
     currentPlan === "gold-yoga" ||
     currentPlan === "gold-zumba" ||
     currentPlan === "gold-mixed";
   const isDiamondPlan = (currentPlan || "").toLowerCase() === "diamond";
   const isPlatinumPlan = (currentPlan || "").toLowerCase() === "platinum";
+  const isPendingDiamondPlan = isPlanMatch(pendingPlan, diamondPlan);
+  const isPendingPlatinumPlan = isPlanMatch(pendingPlan, platinumPlan);
 
   const sessionsRemaining = calculateTotalRemainingClasses(classCredits);
   const includedSessions = Number(totalClassCredits || 0);
@@ -546,6 +595,15 @@ export function UpgradePlan({
                   <p className="text-white/90 mb-4">
                     {billingType === "monthly" ? "Monthly" : "Yearly"} Subscription
                   </p>
+                  {hasPendingPlan && (
+                    <p className="text-white/90 text-sm">
+                      Scheduled: {pendingPlanDisplayName}
+                      {pendingBillingType
+                        ? ` (${pendingBillingType === "monthly" ? "Monthly" : "Yearly"})`
+                        : ""}{" "}
+                      starting {pendingEffectiveLabel}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2 md:ml-auto w-full md:w-auto">
                   <div className="flex items-center gap-2">
@@ -710,7 +768,11 @@ export function UpgradePlan({
                   disabled={!selectedGoldOption}
                   className="w-full bg-[#B95E82] hover:bg-[#a16685] text-white py-3 px-6 rounded-full transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  {isCurrentGoldPlan ? "Current Plan" : "Select Gold Package"}
+                  {isCurrentGoldPlan
+                    ? "Current Plan"
+                    : isPendingGoldPlan
+                      ? "Scheduled"
+                      : "Select Gold Package"}
                 </button>
               </div>
             </div>
@@ -770,7 +832,11 @@ export function UpgradePlan({
                   onClick={() => selectPlanByKey("diamond")}
                   className="w-full bg-[#B95E82] hover:bg-[#a16685] text-white py-3 px-6 rounded-full transition-all duration-300"
                 >
-                  {isDiamondPlan ? "Current Plan" : "Select Diamond Package"}
+                  {isDiamondPlan
+                    ? "Current Plan"
+                    : isPendingDiamondPlan
+                      ? "Scheduled"
+                      : "Select Diamond Package"}
                 </button>
               </div>
             </div>
@@ -840,7 +906,11 @@ export function UpgradePlan({
                     onClick={() => selectPlanByKey("platinum")}
                     className="w-full  bg-white text-[#b97d9f] hover:bg-white/95 py-3 px-6 rounded-full transition-all duration-300"
                   >
-                    {isPlatinumPlan ? "Current Plan" : "Select Platinum Package"}
+                  {isPlatinumPlan
+                    ? "Current Plan"
+                    : isPendingPlatinumPlan
+                      ? "Scheduled"
+                      : "Select Platinum Package"}
                   </button>
                 </div>
               </div>
@@ -911,6 +981,7 @@ export function UpgradePlan({
                       plan.planKey.toLowerCase() ||
                     (currentPlan || "").toLowerCase() ===
                       String(plan.paymentPlanRef || "").toLowerCase();
+                  const isPendingAdditionalPlan = isPlanMatch(pendingPlan, plan);
                   return (
                 <button
                   onClick={() => selectPlanByKey(plan.planKey)}
@@ -918,7 +989,9 @@ export function UpgradePlan({
                 >
                   {isCurrentAdditionalPlan
                     ? "Current Plan"
-                    : `Select ${toTitleCase(plan.name)}`}
+                    : isPendingAdditionalPlan
+                      ? "Scheduled"
+                      : `Select ${toTitleCase(plan.name)}`}
                 </button>
                   );
                 })()}

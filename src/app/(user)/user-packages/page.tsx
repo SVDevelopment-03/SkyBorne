@@ -1,11 +1,15 @@
 "use client";
 import useGetUser from "@/hooks/useGetUser";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SelectedPlanMeta, UpgradePlan } from "./UpgradePlan";
 import { ReviewConfirm } from "@/components/pages/auth/signup/ReviewConfirm";
 import { Payment } from "@/components/pages/auth/signup/Payment";
 import { Confirmation } from "@/components/pages/auth/signup/Confirmation";
 import { useUpgradePlanOrderMutation } from "@/store/api/paymentApi";
+import { useLazyGetMeQuery } from "@/store/api/authApi";
+import { useDispatch } from "react-redux";
+import { setCredentials } from "@/store/slices/authSlice";
+import { storage } from "@/lib/storage";
 import toast from "react-hot-toast";
 import { PackageType } from "@/components/pages/auth/signup/PackageSelection";
 
@@ -25,7 +29,35 @@ const Page = () => {
     selectedPackage: null as string | null,
     autoRenew: false,
   });
-  const { user } = useGetUser();
+  const { user, accessToken, refreshToken } = useGetUser();
+  const dispatch = useDispatch();
+  const [getMe] = useLazyGetMeQuery();
+  const [hasRefreshedUser, setHasRefreshedUser] = useState(false);
+
+  useEffect(() => {
+    if (!accessToken || hasRefreshedUser) return;
+
+    const refreshUser = async () => {
+      try {
+        const res: any = await getMe(undefined).unwrap();
+        const userData = { ...res?.user, id: res?.user?._id };
+        storage.set(process.env.NEXT_PUBLIC_USER as string, userData);
+        dispatch(
+          setCredentials({
+            user: userData,
+            accessToken,
+            refreshToken: refreshToken as string,
+          }),
+        );
+      } catch (err) {
+        // Ignore refresh errors here to avoid breaking the page
+      } finally {
+        setHasRefreshedUser(true);
+      }
+    };
+
+    refreshUser();
+  }, [accessToken, dispatch, getMe, hasRefreshedUser, refreshToken]);
 
   const [upgradePlanOrder, { isLoading }] = useUpgradePlanOrderMutation();
   const price =
@@ -85,6 +117,9 @@ const Page = () => {
           onSelect={handlePackageSelect}
           onSelectPlanData={setSelectedPlanData}
           currentPlan={user?.plan}
+          pendingPlan={user?.pendingPlan}
+          pendingEffectiveDate={user?.pendingEffectiveDate}
+          pendingBillingType={user?.pendingBillingType}
           expiryDate={user?.subscription?.endDate}
           subscription={user?.subscription}
           classCredits={user?.classCredits}
