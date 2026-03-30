@@ -292,7 +292,7 @@ const ClassListManagement = () => {
       id: "markCompleted",
       header: "Mark Completed",
       cell: ({ row }) => {
-        const startTime = new Date(row.original.localTime as string);
+        const startTime = new Date(row.original.localTime);
         const now = new Date();
         const hasMeetingStarted = !Number.isNaN(startTime.getTime())
           ? startTime.getTime() <= now.getTime()
