@@ -227,7 +227,7 @@ export default function TrainerSessions() {
         joined: meeting.joined || false,
       };
     })
-    .sort((a, b) => {
+    .sort((a: Session, b: Session) => {
       const timeA = new Date(a.localTime).getTime();
       const timeB = new Date(b.localTime).getTime();
       if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
