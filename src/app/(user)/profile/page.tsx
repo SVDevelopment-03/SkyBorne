@@ -14,9 +14,15 @@ import {
   Save,
   AlertCircle,
   Loader2,
+  Eye,
+  EyeOff,
+  LockKeyhole,
 } from "lucide-react";
 import useGetUser from "@/hooks/useGetUser";
-import { useUpdateProfileMutation } from "@/store/api/authApi";
+import {
+  useChangePasswordMutation,
+  useUpdateProfileMutation,
+} from "@/store/api/authApi";
 import { PackageType } from "../user-packages/UpgradePlan";
 import PhoneInput, {
   isValidPhoneNumber,
@@ -26,6 +32,9 @@ import toast from "react-hot-toast";
 import { Country, State } from "country-state-city";
 import { CommonSelect, SelectOptionItem } from "@/components/ui/CountrySelect";
 import { Input2 } from "@/components/ui/input";
+import { Form, Formik } from "formik";
+import { Label } from "@/components/ui/label";
+import * as Yup from "yup";
 
 interface UserProp {
   firstName: string;
@@ -36,6 +45,18 @@ interface UserProp {
   state: string;
   city: string;
 }
+
+interface ChangePasswordFormValues {
+  password: string;
+  confirmPassword: string;
+}
+
+const changePasswordSchema = Yup.object().shape({
+  password: Yup.string().min(8, "Too short").required("Required"),
+  confirmPassword: Yup.string()
+    .oneOf([Yup.ref("password")], "Passwords do not match")
+    .required("Required"),
+});
 
 const isValidEmail = (email: string) => {
   return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i.test(email) 
@@ -75,8 +96,14 @@ const resolveCountryName = (value: string) => {
 export default function UserProfile() {
   const { user } = useGetUser();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
+  const [changePassword, { isLoading: isPasswordChanging }] =
+    useChangePasswordMutation();
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [showChangePasswordForm, setShowChangePasswordForm] =
+    useState<boolean>(false);
+  const [showPass, setShowPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const [formData, setFormData] = useState<UserProp>({
     firstName: "",
@@ -93,9 +120,6 @@ export default function UserProfile() {
     phone?: string;
     city?: string;
   }>({});
-
-  const [updateError, setUpdateError] = useState<string>("");
-  const [updateSuccess, setUpdateSuccess] = useState<string>("");
 
   // Initialize form data when user data loads
   useEffect(() => {
@@ -182,9 +206,6 @@ export default function UserProfile() {
     }
 
     try {
-      setUpdateError("");
-      setUpdateSuccess("");
-
       // Only send changed fields
       const userCountryCode = resolveCountryCode(
         user?.country || "",
@@ -211,17 +232,14 @@ export default function UserProfile() {
       }
 
       if (Object.keys(updatePayload).length === 0) {
-        setUpdateSuccess("No changes to save");
         setIsEditing(false);
         return;
       }
       await updateProfile(updatePayload).unwrap();
       toast.success("Profile updated successfully!")
-      setUpdateSuccess("Profile updated successfully!");
       setIsEditing(false);
     } catch (err: any) {
        toast.error(err?.data?.message || "Failed to update profile")
-      setUpdateError(err?.data?.message || "Failed to update profile");
     }
   };
 
@@ -244,7 +262,6 @@ export default function UserProfile() {
       });
     }
     setIsEditing(false);
-    setUpdateError("");
   };
 
   const stateOptions: SelectOptionItem[] = formData.country
@@ -316,32 +333,173 @@ export default function UserProfile() {
                 )}
               </div>
             </div>
-            <Button
-              onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
-              disabled={isUpdating}
-              className="w-full sm:w-auto bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949] disabled:opacity-50" 
-              style={{ borderRadius: "12px" }}
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Saving...
-                </>
-              ) : isEditing ? (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Save Changes
-                </>
-              ) : (
-                <>
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </>
-              )}
-            </Button>
+            <div className="w-full sm:w-auto flex flex-col lg:flex-row gap-2">
+              <Button
+                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+                disabled={isUpdating}
+                className="w-full sm:w-auto bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949] disabled:opacity-50"
+                style={{ borderRadius: "12px" }}
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : isEditing ? (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Changes
+                  </>
+                ) : (
+                  <>
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit Profile
+                  </>
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                onClick={() => setShowChangePasswordForm((prev) => !prev)}
+                className="w-full sm:w-auto bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949]"
+                style={{ borderRadius: "12px" }}
+              >
+                <LockKeyhole className="w-4 h-4 mr-2" />
+                Change Password
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
+
+      {showChangePasswordForm && (
+        <Card
+          className="border-[#e5e5e5]"
+          style={{ borderRadius: "24px" }}
+        >
+          <CardHeader>
+            <CardTitle className="text-xl text-[#1A1A1A] flex items-center gap-2">
+              <LockKeyhole className="w-5 h-5 text-[#b95e82]" />
+              <span>Change Password</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Formik<ChangePasswordFormValues>
+              initialValues={{
+                password: "",
+                confirmPassword: "",
+              }}
+              validationSchema={changePasswordSchema}
+              onSubmit={async (values, { resetForm }) => {
+                try {
+                  await changePassword({
+                    newPassword: values.password,
+                  }).unwrap();
+                  toast.success("Password changed successfully.");
+                  resetForm();
+                  setShowChangePasswordForm(false);
+                  setShowPass(false);
+                  setShowConfirmPass(false);
+                } catch (err: any) {
+                  toast.error(err?.data?.message || "Failed to change password");
+                }
+              }}
+            >
+              {({ values, errors, touched, handleChange, resetForm }) => (
+                <Form className="space-y-6">
+                  <div className="flex flex-col gap-4.5">
+                    <Label>New Password*</Label>
+                    <div className="relative">
+                      <Input2
+                        type={showPass ? "text" : "password"}
+                        name="password"
+                        value={values.password}
+                        onChange={handleChange}
+                        className="bg-[#F3F3F5] min-h-[55px]"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-4.5"
+                        onClick={() => setShowPass(!showPass)}
+                      >
+                        {showPass ? (
+                          <EyeOff size={22} className="text-[#B1B1B1]" />
+                        ) : (
+                          <Eye size={22} className="text-[#B1B1B1]" />
+                        )}
+                      </button>
+                    </div>
+                    {touched.password && errors.password && (
+                      <p className="text-red-500 text-sm">{errors.password}</p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col gap-4.5">
+                    <Label>Confirm Password*</Label>
+                    <div className="relative">
+                      <Input2
+                        type={showConfirmPass ? "text" : "password"}
+                        name="confirmPassword"
+                        value={values.confirmPassword}
+                        onChange={handleChange}
+                        className="bg-[#F3F3F5] min-h-[55px]"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-4.5"
+                        onClick={() => setShowConfirmPass(!showConfirmPass)}
+                      >
+                        {showConfirmPass ? (
+                          <EyeOff size={22} className="text-[#B1B1B1]" />
+                        ) : (
+                          <Eye size={22} className="text-[#B1B1B1]" />
+                        )}
+                      </button>
+                    </div>
+                    {touched.confirmPassword && errors.confirmPassword && (
+                      <p className="text-red-500 text-sm">
+                        {errors.confirmPassword}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 justify-end pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="border-[#e5e5e5]"
+                      style={{ borderRadius: "12px" }}
+                      onClick={() => {
+                        resetForm();
+                        setShowPass(false);
+                        setShowConfirmPass(false);
+                        setShowChangePasswordForm(false);
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isPasswordChanging}
+                      className="bg-[#b95e82] text-white hover:bg-[#a04d6f] disabled:opacity-50"
+                      style={{ borderRadius: "12px" }}
+                    >
+                      {isPasswordChanging ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Changing...
+                        </>
+                      ) : (
+                        "Change Password"
+                      )}
+                    </Button>
+                  </div>
+                </Form>
+              )}
+            </Formik>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Personal Information */}
       <Card className="border-[#e5e5e5] mb-20 sm:mb-0" style={{ borderRadius: "24px" }}>
