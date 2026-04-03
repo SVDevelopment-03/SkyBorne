@@ -100,9 +100,14 @@ export default function UserProfile() {
   // Initialize form data when user data loads
   useEffect(() => {
     if (user) {
+      const userCountry = typeof user.country === "string" ? user.country : "";
+      const userCountryCode =
+        typeof user.countryCode === "string" ? user.countryCode : "";
+      const userPhone =
+        typeof user.phoneNumber === "string" ? user.phoneNumber : "";
       const resolvedCountryCode = resolveCountryCode(
-        user.country || "",
-        user.countryCode || ""
+        userCountry,
+        userCountryCode
       );
 
       setTimeout(() => {
@@ -110,7 +115,7 @@ export default function UserProfile() {
           firstName: user.firstName || "",
           lastName: user.lastName || "",
           email: user.email || "",
-          phone: user.phoneNumber || "",
+          phone: userPhone,
           country: resolvedCountryCode,
           state: user.state || "",
           city: user.city || "",
@@ -136,14 +141,15 @@ export default function UserProfile() {
   };
 
   // Get plan display name
-  const getPlanDisplayName = (plan: PackageType) => {
-    const planMap = {
+  const getPlanDisplayName = (plan?: string) => {
+    const planMap: Record<string, string> = {
       "gold-yoga": "Gold Yoga",
       "gold-zumba": "Gold Zumba",
       "gold-mixed": "Gold Mixed",
       diamond: "Diamond",
       platinum: "Platinum",
     };
+    if (!plan) return "Premium Member";
     return planMap[plan] || "Premium Member";
   };
 
@@ -186,9 +192,12 @@ export default function UserProfile() {
       setUpdateSuccess("");
 
       // Only send changed fields
-      const userCountryCode = resolveCountryCode(
-        user?.country || "",
-        user?.countryCode || ""
+      const userCountry = typeof user?.country === "string" ? user.country : "";
+      const userCountryCode =
+        typeof user?.countryCode === "string" ? user.countryCode : "";
+      const resolvedCountryCode = resolveCountryCode(
+        userCountry,
+        userCountryCode
       );
 
       const updatePayload: Partial<UserProp> = {};
@@ -197,7 +206,7 @@ export default function UserProfile() {
           key === "phone"
             ? user?.phoneNumber
             : key === "country"
-              ? userCountryCode
+              ? resolvedCountryCode
               : user?.[key];
 
         if (formData[key] !== userValue) {
@@ -228,9 +237,12 @@ export default function UserProfile() {
   const handleCancel = () => {
     // Reset form to original user data
     if (user) {
+      const userCountry = typeof user.country === "string" ? user.country : "";
+      const userCountryCode =
+        typeof user.countryCode === "string" ? user.countryCode : "";
       const resolvedCountryCode = resolveCountryCode(
-        user.country || "",
-        user.countryCode || ""
+        userCountry,
+        userCountryCode
       );
 
       setFormData({

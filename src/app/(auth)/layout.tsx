@@ -4,6 +4,7 @@ import { useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/token";
 import useGetUser from "@/hooks/useGetUser";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -51,7 +52,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     }
   }, [router, user?.onboardingCompleted, user?.role]);
 
-  if (checking) return null; 
+  if (checking) return <FullPageLoader label="Preparing login..." />; 
 
   return <>
   {

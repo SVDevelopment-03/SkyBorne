@@ -10,6 +10,7 @@ import { toTitleCase } from "@/utils/Titlecase";
 import { format } from "date-fns/format";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
 const Adminlayout = ({ children }: { children: React.ReactNode }) => {
   useFetchUser();
@@ -45,7 +46,7 @@ const Adminlayout = ({ children }: { children: React.ReactNode }) => {
     }
   }, [router, user?.role]);
 
-  if (checking) return null;
+  if (checking) return <FullPageLoader label="Loading admin console..." />;
 
   return (
     <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 lg:grid-cols-[300px_1fr] min-h-dvh">

@@ -14,16 +14,16 @@ export type PackageType =
   | "platinum";
 
 interface Subscription {
-  startDate: string | Date;
-  endDate: string | Date;
-  status: "active" | "inactive" | "cancelled";
+  startDate?: string | Date;
+  endDate?: string | Date;
+  status?: "active" | "inactive" | "cancelled" | "suspended" | "expired" | string;
   _id?: string;
 }
 
 interface ClassCredits {
-  yoga: number;
-  zumba: number;
-  specialty: number;
+  yoga?: number;
+  zumba?: number;
+  specialty?: number;
   _id?: string;
 }
 
@@ -43,7 +43,7 @@ interface PackageSelectionProps {
   pendingPlan?: string;
   pendingBillingType?: "monthly" | "yearly";
   pendingEffectiveDate?: string | Date | null;
-  expiryDate?: Date;
+  expiryDate?: string | Date;
   subscription?: Subscription;
   totalClassCredits?: number;
   classCredits?: ClassCredits;
@@ -137,7 +137,9 @@ const normalizePlanKey = (plan: IPlan): string => {
     return "diamond";
   }
   if (
-    count === 5 ||
+    (count === 5 &&
+      services.includes("yoga") &&
+      services.includes("zumba")) ||
     (yogaCount === 2 &&
       zumbaCount === 2 &&
       Number(plan.classCountPerMonth || 0) === 5)
@@ -318,7 +320,10 @@ export function UpgradePlan({
   const [billingType, setBillingType] = useState<"monthly" | "yearly">(
     "monthly",
   );
-  const { data } = useGetPlansQuery(undefined);
+  const { data } = useGetPlansQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+    refetchOnFocus: true,
+  });
   const { user } = useGetUser();
 
   const plansWithMeta = useMemo(() => {

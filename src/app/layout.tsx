@@ -5,6 +5,7 @@ import { ReduxProvider } from "./provider";
 import { Toaster } from "react-hot-toast";
 import TopLoaderClient from "./TopLoader";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import ConsoleSilencer from "@/components/ConsoleSilencer";
 
 export const metadata: Metadata = {
   title: "Skyborne Drop",
@@ -32,6 +33,7 @@ export default function RootLayout({
         <GoogleOAuthProvider
           clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID!}
         >
+          <ConsoleSilencer />
           <TopLoaderClient />
           <ReduxProvider>
             <RouteWrapper>

@@ -55,10 +55,11 @@ export default function UserFeedback() {
   });
 
   // Fetch user feedback
-  const { data: feedbackData, isLoading: feedbackLoading, refetch } = useGetUserFeedbackQuery(
-    user?.id || '',
-    { skip: !user?.id }
-  );
+  const { data: feedbackData, isLoading: feedbackLoading, refetch } =
+    useGetUserFeedbackQuery(
+      { userId: user?.id ?? "" },
+      { skip: !user?.id }
+    );
 
   // Submit feedback mutation
   const [submitFeedback, { isLoading: isSubmitting }] = useSubmitFeedbackMutation();

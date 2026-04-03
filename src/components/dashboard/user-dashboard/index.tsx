@@ -604,7 +604,7 @@ export default function Page() {
                       <SessionCard
                         key={index}
                         meetingId={meeting?._id}
-                        userId={user?.id}
+                        userId={user?.id ?? ""}
                         meetingStatus={meeting?.status}
                         isLive={true}
                         // isLive={regionInfo?.mode === "live"}

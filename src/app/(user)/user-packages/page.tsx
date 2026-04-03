@@ -120,7 +120,11 @@ const Page = () => {
           pendingPlan={user?.pendingPlan}
           pendingEffectiveDate={user?.pendingEffectiveDate}
           pendingBillingType={user?.pendingBillingType}
-          expiryDate={user?.subscription?.endDate}
+          expiryDate={
+            user?.subscription?.endDate
+              ? new Date(user.subscription.endDate)
+              : undefined
+          }
           subscription={user?.subscription}
           classCredits={user?.classCredits}
           totalClassCredits={user?.totalClassCredits}

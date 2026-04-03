@@ -5,6 +5,7 @@ import { useGetPlansQuery } from "@/store/api/publicApi";
 import { IPlan } from "@/types/home.type";
 import { SkeletonSubscription, Subscription } from "../home/Subscription";
 import { useEffect, useState } from "react";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
 const ALLOWED_PACKAGE_PRICES = [100, 200, 300];
 
@@ -34,7 +35,7 @@ const SubscriptionPlans = () => {
     }, 0);
   }, []);
 
-  if (!hydrated) return null;
+  if (!hydrated) return <FullPageLoader label="Loading plans..." />;
 
   return (
     <div className="max-w-[1268px] w-full mx-auto">

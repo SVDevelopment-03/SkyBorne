@@ -1,17 +1,10 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { storage } from "@/lib/storage";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { AuthState, User } from "@/types/auth";
 const isBrowser = typeof window !== "undefined";
 
-interface AuthState {
-  user: any | null;
-  accessToken: string | null;
-  refreshToken: string | null;
-}
-
 const initialState: AuthState = {
-  user: isBrowser ? storage.get(process.env.NEXT_PUBLIC_USER as string) : null,
+  user: isBrowser ? storage.get<User>(process.env.NEXT_PUBLIC_USER as string) : null,
 
   accessToken: isBrowser
     ? localStorage.getItem(process.env.NEXT_PUBLIC_ACCESS_TOKEN as string)
@@ -28,7 +21,7 @@ const authSlice = createSlice({
     setCredentials: (
       state,
       action: PayloadAction<{
-        user: any;
+        user: User;
         accessToken: string;
         refreshToken: string;
       }>

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 // src/store/api/serviceApi.ts
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
@@ -19,13 +17,22 @@ export interface CreateServiceRequest {
   title: string;
 }
 
+type ApiResponse<T> = {
+  success: boolean;
+  message?: string;
+  data?: T;
+};
+
 export const serviceApi = createApi({
   reducerPath: "serviceApi",
   baseQuery: axiosBaseQuery(),
   tagTypes: ["Service"],
   endpoints: (builder) => ({
     // GET SERVICES (Admin)
-    getServices: builder.query<any, { page: number; limit: number; search: string }>({
+    getServices: builder.query<
+      ApiResponse<IService[]>,
+      { page: number; limit: number; search: string }
+    >({
       query: ({ page, limit, search }) => ({
         url: "/services",
         method: "GET",
@@ -35,7 +42,7 @@ export const serviceApi = createApi({
     }),
 
     // CREATE SERVICE
-    createService: builder.mutation<any, CreateServiceRequest>({
+    createService: builder.mutation<ApiResponse<IService>, CreateServiceRequest>({
       query: (body) => ({
         url: "/services",
         method: "POST",
@@ -45,7 +52,7 @@ export const serviceApi = createApi({
     }),
 
     updateService: builder.mutation<
-      any,
+      ApiResponse<IService>,
       { serviceId: string; title: string }
     >({
       query: ({ serviceId, title }) => ({
@@ -59,7 +66,7 @@ export const serviceApi = createApi({
 
     // UPDATE STATUS
     updateServiceStatus: builder.mutation<
-      any,
+      ApiResponse<IService>,
       { serviceId: string; isActive: boolean }
     >({
       query: ({ serviceId, isActive }) => ({
@@ -71,7 +78,7 @@ export const serviceApi = createApi({
     }),
 
     // DELETE SERVICE
-    deleteService: builder.mutation<any, string>({
+    deleteService: builder.mutation<ApiResponse<null>, string>({
       query: (serviceId) => ({
         url: `/services/${serviceId}`,
         method: "DELETE",

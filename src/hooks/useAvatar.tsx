@@ -11,7 +11,15 @@ const UserAvatar = ({ name }: { name: string }) => {
     }, 0);
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <Avatar className="h-11 w-11">
+        <AvatarFallback className="bg-[#b95e82] text-white">
+          {name?.charAt(0)?.toUpperCase() || "U"}
+        </AvatarFallback>
+      </Avatar>
+    );
+  }
 
   return (
     <Avatar className="h-11 w-11">

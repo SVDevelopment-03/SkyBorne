@@ -13,16 +13,16 @@ export type PackageType =
   | "platinum";
 
 interface Subscription {
-  startDate: string | Date;
-  endDate: string | Date;
-  status: "active" | "inactive" | "cancelled";
+  startDate?: string | Date;
+  endDate?: string | Date;
+  status?: "active" | "inactive" | "cancelled" | "suspended" | "expired" | string;
   _id?: string;
 }
 
 interface ClassCredits {
-  yoga: number;
-  zumba: number;
-  specialty: number;
+  yoga?: number;
+  zumba?: number;
+  specialty?: number;
   _id?: string;
 }
 
@@ -39,7 +39,7 @@ interface PackageSelectionProps {
   onSelect: (packageType: string) => void;
   onSelectPlanData: (plan: SelectedPlanMeta) => void;
   currentPlan?: string;
-  expiryDate?: Date;
+  expiryDate?: string | Date;
   subscription?: Subscription;
   totalClassCredits?: number;
   classCredits?: ClassCredits;

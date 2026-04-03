@@ -414,7 +414,7 @@ const attendanceChartData = useMemo(() => {
                       <TrainerSessionCard
                         key={index}
                         meetingId={meeting?._id}
-                        userId={user?.id}
+                        userId={user?.id ?? ""}
                         isLive={regionInfo?.mode === "live"}
                         trainer={trainer}
                         region={region as string}

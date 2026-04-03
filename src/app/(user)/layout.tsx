@@ -10,6 +10,7 @@ import UserAvatar from "@/hooks/useAvatar";
 import { Typography } from "@/components/ui/heading";
 import { toTitleCase } from "@/utils/Titlecase";
 import SidebarDrawer from "@/components/layout/sidebar-drawer";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -49,7 +50,7 @@ export default function UserLayout({ children }: AuthLayoutProps) {
     }
   }, [router, pathname, user?.onboardingCompleted]);
 
-  if (checking) return null;
+  if (checking) return <FullPageLoader label="Loading your account..." />;
 
   return (
     <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 lg:grid-cols-[260px_1fr] h-dvh overflow-hidden">

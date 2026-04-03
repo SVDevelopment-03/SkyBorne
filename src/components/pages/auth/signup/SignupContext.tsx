@@ -58,7 +58,7 @@ export const SignupProvider = ({ children ,initialStep}: { children: ReactNode,i
     const savedForm = localStorage.getItem(STORAGE_KEY);
     if (!savedForm) return defaultData;
 
-    const decrypted = decrypt(savedForm);
+    const decrypted = decrypt<SignupFormData>(savedForm);
     if (!decrypted) return defaultData;
 
     return {

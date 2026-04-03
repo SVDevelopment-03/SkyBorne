@@ -33,6 +33,13 @@ import { useRouter } from 'next/navigation';
 import CancelSubscriptionModal from "@/utils/CancelSubscriptionAlert";
 import { InvoiceViewerModal } from "@/components/pages/admin/payment-management/InvoiceViewerModal";
 
+type Subscription = {
+  status?: string;
+  endDate?: string;
+  startDate?: string;
+  [key: string]: unknown;
+};
+
 export interface Payment {
   _id: string;
   orderRef: string;
@@ -102,8 +109,14 @@ function UserPayments() {
   const plans = useMemo(() => plansData?.data || [], [plansData]);
   
   // Get subscription from user object
-  const subscription = useMemo(() => user?.subscription || {}, [user]);
-  const plan = useMemo(() => user?.plan || '', [user]);
+  const subscription = useMemo<Subscription | null>(
+    () => (user?.subscription as Subscription | undefined) ?? null,
+    [user],
+  );
+  const plan = useMemo<string>(
+    () => (typeof user?.plan === "string" ? user.plan : ""),
+    [user],
+  );
   const canEditCard = subscription?.status === 'active';
   // Calculate days remaining
   const calculateDaysRemaining = () => {

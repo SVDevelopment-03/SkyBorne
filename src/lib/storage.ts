@@ -1,9 +1,8 @@
 "use client";
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { encrypt, decrypt } from "./crypto"; // adjust import path
 
 export const storage = {
-  set(key: string, value: any) {
+  set<T>(key: string, value: T) {
     try {
       const encrypted = encrypt(value);
       if (encrypted) localStorage.setItem(key, encrypted);
@@ -12,13 +11,13 @@ export const storage = {
     }
   },
 
-  get(key: string) {
+  get<T>(key: string): T | null {
     try {
       const encrypted = localStorage.getItem(key);
 
       if (!encrypted) return null;
 
-      return decrypt(encrypted);
+      return decrypt<T>(encrypted);
     } catch (error) {
       console.error("Storage get error:", error);
       return null;

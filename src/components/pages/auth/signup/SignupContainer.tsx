@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import SignupPage from "./SignupPage";
 import Step8 from "./Step8";
 import { useEffect, useState } from "react";
+import FullPageLoader from "@/components/ui/FullPageLoader";
 
 // import Step8 from "./steps/Step8";
 
@@ -20,7 +21,7 @@ export default function SignupContainer() {
     return () => clearTimeout(t);
   }, []);
 
-  if (!ready) return null; // prevent SSR mismatch
+  if (!ready) return <FullPageLoader label="Preparing signup..." />; // prevent SSR mismatch
 
   const renderStep = () => {
     switch (step) {

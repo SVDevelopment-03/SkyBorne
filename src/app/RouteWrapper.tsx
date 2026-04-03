@@ -74,7 +74,7 @@ const isBlocked =
     "/diet-detail/",
     "/fitness-detail/",
   ];
-  console.log("path", pathname);
+  // Avoid noisy logs in production builds.
 
   // Check exact match OR dynamic route match
 
