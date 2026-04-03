@@ -3,9 +3,10 @@
 "use client"
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Filter, Eye, Loader2 } from 'lucide-react';
+import { Search, Eye, Loader2 } from 'lucide-react';
 import { useGetAllOrdersQuery } from '@/store/api/orderApi';
 import type { OrderStatus, PaymentStatus } from '@/store/api/orderApi';
+import { useDebounce } from "@/hooks/useDebounce";
 
 const paymentStatusColors: Record<string, string> = {
   'Paid': 'bg-green-100 text-green-700',
@@ -27,9 +28,10 @@ const fulfillmentStatusColors: Record<string, string> = {
 export function Orders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
-  const [paymentFilter, setPaymentFilter] = useState('all');
-  const [fulfillmentFilter, setFulfillmentFilter] = useState('all');
+  const [limit] = useState(10);
+  const [paymentFilter] = useState('all');
+  const [fulfillmentFilter] = useState('all');
+  const debouncedSearchTerm = useDebounce(searchTerm, 400);
 
   // Fetch orders from backend with search and filters
   const { 
@@ -39,7 +41,7 @@ export function Orders() {
   } = useGetAllOrdersQuery({
     page,
     limit,
-    search: searchTerm,
+    search: debouncedSearchTerm,
     status: fulfillmentFilter !== 'all' ? (fulfillmentFilter as OrderStatus) : undefined,
     paymentStatus: paymentFilter !== 'all' ? (paymentFilter as PaymentStatus) : undefined,
   });
