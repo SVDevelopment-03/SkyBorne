@@ -4,7 +4,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Upload, CheckCircle, ToggleLeft, ToggleRight } from "lucide-react";
+import { ArrowLeft, Upload } from "lucide-react";
 import { useCreateProductMutation } from "@/store/api/productApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import toast from "react-hot-toast";
@@ -81,7 +81,7 @@ export function ProductForm() {
         name: formData.title,
         description: formData.description,
         category: formData.category,
-        status: action === "publish" ? "active" : "inactive",
+        status: formData.status,
         price: formData.price,
         stock: formData.stock,
         imageBase64,
@@ -90,9 +90,9 @@ export function ProductForm() {
       await addProduct(payload as any).unwrap();
 
       toast.success(
-        action === "publish"
+        formData.status === "active"
           ? "Product published successfully"
-          : "Product saved as draft"
+          : "Product created as inactive"
       );
       router.push("/products");
     } catch (error: any) {
@@ -130,15 +130,6 @@ export function ProductForm() {
     };
     reader.readAsDataURL(file);
   };
-
-  const toggleStatus = () => {
-    setFormData((prev) => ({
-      ...prev,
-      status: prev.status === "active" ? "inactive" : "active",
-    }));
-  };
-
-
 
   return (
     <div className="space-y-6">

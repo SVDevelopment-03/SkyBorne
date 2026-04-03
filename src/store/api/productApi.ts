@@ -111,6 +111,7 @@ export const productApi = createApi({
         data: body,
       }),
       invalidatesTags: (_result, _error, { productId }) => [
+        "Product",
         { type: "Product", id: productId },
       ],
     }),
@@ -122,6 +123,7 @@ export const productApi = createApi({
         data: { status },
       }),
       invalidatesTags: (_result, _error, { productId }) => [
+        "Product",
         { type: "Product", id: productId },
       ],
     }),
