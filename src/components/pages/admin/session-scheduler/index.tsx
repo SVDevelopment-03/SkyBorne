@@ -417,7 +417,7 @@ const ClassListManagement = () => {
             {/* Search Input */}
             <div className="relative w-full sm:max-w-[360px]">
               <Input2
-                placeholder="Search by class name or trainer..."
+                placeholder="Search by name"
                 value={search}
                 onChange={(e) => handleSearch(e.target.value)}
                 name="search"

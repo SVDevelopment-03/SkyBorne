@@ -3,27 +3,23 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { Search, Eye, Loader2 } from 'lucide-react';
+import { Search, Loader2 } from 'lucide-react';
 import { useGetAllCustomersQuery } from '@/store/api/customerApi';
+import { useDebounce } from "@/hooks/useDebounce";
 
 export default function CustomersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit] = useState(10);
+  const debouncedSearchTerm = useDebounce(searchTerm, 400);
 
   const { data: customersResponse, isLoading, isError, error } = useGetAllCustomersQuery({
     page,
     limit,
-    search: searchTerm,
+    search: debouncedSearchTerm,
   });
 
   const customers = customersResponse?.data || [];
-
-  console.log('🔵 Customers Response:', customersResponse);
-  console.log('🔵 Customers Data:', customers);
-  console.log('🔵 Is Loading:', isLoading);
-  console.log('🔵 Error:', error);
 
   // Format currency
   const formatCurrency = (amount: number): string => {
@@ -32,20 +28,6 @@ export default function CustomersPage() {
       currency: 'USD',
       minimumFractionDigits: 2,
     }).format(amount);
-  };
-
-  // Format date
-  const formatDate = (dateString: string | undefined): string => {
-    if (!dateString) return '-';
-    try {
-      return new Date(dateString).toLocaleDateString('en-IN', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
-    } catch {
-      return '-';
-    }
   };
 
   // Get error message safely
