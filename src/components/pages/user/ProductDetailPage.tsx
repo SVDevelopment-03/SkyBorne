@@ -324,7 +324,8 @@ export default function ProductDetailPage({
             {activeTab === "specs" && (
               specifications.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  {specifications.map((spec, idx) => (
+                {specifications.map(
+                  (spec: { label?: string; value?: string }, idx: number) => (
                     <div
                       key={`${spec.label}-${idx}`}
                       className="flex items-center justify-between border-b border-border/40 pb-2"
@@ -334,7 +335,8 @@ export default function ProductDetailPage({
                         {spec.value}
                       </span>
                     </div>
-                  ))}
+                  )
+                )}
                 </div>
               ) : (
                 <p>No specifications available.</p>
