@@ -7,10 +7,12 @@ import { ImageWithFallback } from "./ImageWithFallback";
 import { Minus, Plus, ChevronLeft, Loader2, Check, ShoppingCart } from "lucide-react";
 import {
   useGetProductByIdQuery,
+  useGetPublishedProductsQuery,
   useExpressProductInterestMutation,
 } from "@/store/api/productApi";
 import { useAddToCartMutation } from "@/store/api/cartApi";
 import toast from "react-hot-toast";
+import { ProductCard } from "./ProductCard";
 
 export default function ProductDetailPage({
   params,
@@ -27,6 +29,26 @@ export default function ProductDetailPage({
     useExpressProductInterestMutation();
   const [addedToCart, setAddedToCart] = useState(false);
   const [interestSaved, setInterestSaved] = useState(false);
+  const [addingRelatedId, setAddingRelatedId] = useState<string | null>(null);
+  const [savingRelatedId, setSavingRelatedId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<
+    "description" | "specs" | "shipping" | "reviews"
+  >("description");
+
+  const categoryId =
+    typeof product?.category === "object" && product?.category !== null
+      ? (product.category as any)?._id
+      : product?.category;
+
+  const { data: relatedByCategoryResponse, isLoading: relatedByCategoryLoading } =
+    useGetPublishedProductsQuery({
+      categoryId: categoryId || undefined,
+      sortBy: "newest",
+    });
+  const { data: relatedAllResponse, isLoading: relatedAllLoading } =
+    useGetPublishedProductsQuery({
+      sortBy: "newest",
+    });
 
   const handleAddToCart = async () => {
     try {
@@ -47,6 +69,30 @@ export default function ProductDetailPage({
       setTimeout(() => setInterestSaved(false), 2000);
     } catch (err: any) {
       toast.error(err?.data?.message ?? "Failed to save interest");
+    }
+  };
+
+  const handleRelatedAddToCart = async (productId: string) => {
+    try {
+      setAddingRelatedId(productId);
+      await addToCart({ productId, quantity: 1 }).unwrap();
+      toast.success("Product added to cart");
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to add to cart");
+    } finally {
+      setAddingRelatedId(null);
+    }
+  };
+
+  const handleRelatedInterested = async (productId: string) => {
+    try {
+      setSavingRelatedId(productId);
+      const response = await expressInterest({ productId }).unwrap();
+      toast.success(response?.message || "Interest recorded");
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to save interest");
+    } finally {
+      setSavingRelatedId(null);
     }
   };
 
@@ -98,6 +144,29 @@ export default function ProductDetailPage({
     typeof (product as any)?.stock === "number"
       ? (product as any).stock <= 0
       : false;
+
+  const specifications = Array.isArray(product.specifications)
+    ? product.specifications
+    : [];
+  const shippingInfo =
+    typeof product.shippingInfo === "string" ? product.shippingInfo.trim() : "";
+  const reviews = Array.isArray(product.reviews) ? product.reviews : [];
+
+  const categoryCandidates = Array.isArray(relatedByCategoryResponse?.data)
+    ? relatedByCategoryResponse.data
+    : [];
+  const fallbackCandidates = Array.isArray(relatedAllResponse?.data)
+    ? relatedAllResponse.data
+    : [];
+
+  const relatedSource =
+    categoryCandidates.length > 1 ? categoryCandidates : fallbackCandidates;
+
+  const relatedProducts = relatedSource
+    .filter((item: any) => item._id !== product._id)
+    .slice(0, 3);
+
+  const relatedLoading = relatedByCategoryLoading || relatedAllLoading;
 
   return (
     <div className="min-h-screen">
@@ -217,6 +286,140 @@ export default function ProductDetailPage({
             </div>
           </div>
         </div>
+      </section>
+
+      {/* Product Details Tabs */}
+      <section className="max-w-7xl mx-auto px-6 pb-20">
+        <div className="bg-card rounded-3xl shadow-md overflow-hidden">
+          <div className="grid grid-cols-2 md:grid-cols-4 border-b border-border/60">
+            {[
+              { key: "description", label: "Description" },
+              { key: "specs", label: "Specifications" },
+              { key: "shipping", label: "Shipping Info" },
+              { key: "reviews", label: "Reviews" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() =>
+                  setActiveTab(
+                    tab.key as "description" | "specs" | "shipping" | "reviews"
+                  )
+                }
+                className={`px-4 py-4 text-sm md:text-base font-medium transition-colors ${
+                  activeTab === tab.key
+                    ? "text-primary border-b-2 border-primary bg-background"
+                    : "text-foreground/60 hover:text-foreground"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="p-6 md:p-8 text-foreground/70 leading-relaxed">
+            {activeTab === "description" && (
+              <p>{product.description || "No description available for this product."}</p>
+            )}
+
+            {activeTab === "specs" && (
+              specifications.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                  {specifications.map((spec, idx) => (
+                    <div
+                      key={`${spec.label}-${idx}`}
+                      className="flex items-center justify-between border-b border-border/40 pb-2"
+                    >
+                      <span className="text-foreground/60">{spec.label}</span>
+                      <span className="font-medium text-foreground">
+                        {spec.value}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p>No specifications available.</p>
+              )
+            )}
+
+            {activeTab === "shipping" && (
+              <div className="text-sm">
+                {shippingInfo ? (
+                  <p>{shippingInfo}</p>
+                ) : (
+                  <p>No shipping information available.</p>
+                )}
+              </div>
+            )}
+
+            {activeTab === "reviews" && (
+              <div className="space-y-4 text-sm">
+                {reviews.length > 0 ? (
+                  reviews.map((review: any, idx: number) => (
+                    <div key={`${review.name || "review"}-${idx}`} className="border-b border-border/40 pb-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="font-medium text-foreground">
+                          {review.name || "Anonymous"}
+                        </span>
+                        {review.rating !== undefined && (
+                          <span className="text-foreground/60">
+                            {review.rating} / 5
+                          </span>
+                        )}
+                      </div>
+                      {review.comment && (
+                        <p className="text-foreground/70">{review.comment}</p>
+                      )}
+                      {review.createdAt && (
+                        <p className="text-xs text-foreground/50 mt-2">
+                          {new Date(review.createdAt).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <>
+                    <p>No reviews yet.</p>
+                    <p>Be the first to share your experience with this product.</p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Related Products */}
+      <section className="max-w-7xl mx-auto px-6 pb-24">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl md:text-3xl font-serif text-foreground">
+            Pairs Well With
+          </h2>
+        </div>
+
+        {relatedLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, idx) => (
+              <div key={idx} className="bg-card rounded-3xl h-72 animate-pulse" />
+            ))}
+          </div>
+        ) : relatedProducts.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {relatedProducts.map((related: any) => (
+              <ProductCard
+                key={related._id}
+                product={related}
+                onAddToCart={handleRelatedAddToCart}
+                isAddingToCart={addingRelatedId === related._id && addingToCart}
+                onInterested={handleRelatedInterested}
+                isInterested={savingRelatedId === related._id && savingInterest}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="bg-card rounded-2xl p-6 text-sm text-foreground/60">
+            No related products found in this category yet.
+          </div>
+        )}
       </section>
     </div>
   );

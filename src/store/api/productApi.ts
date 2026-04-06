@@ -5,6 +5,18 @@ import { axiosBaseQuery } from "../axiosBaseQuery";
 
 export type ProductStatus = "active" | "inactive";
 
+export interface ProductSpecification {
+  label: string;
+  value: string;
+}
+
+export interface ProductReview {
+  name?: string;
+  rating?: number;
+  comment?: string;
+  createdAt?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -14,6 +26,9 @@ export interface Product {
   status: ProductStatus;
   image: string;
   description?: string;
+  specifications?: ProductSpecification[];
+  shippingInfo?: string;
+  reviews?: ProductReview[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -26,6 +41,9 @@ export interface CreateProductPayload {
   status?: ProductStatus;
   image: string;
   description?: string;
+  specifications?: ProductSpecification[];
+  shippingInfo?: string;
+  reviews?: ProductReview[];
 }
 
 export interface ProductInterest {

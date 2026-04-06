@@ -20,6 +20,9 @@ interface FormErrors {
   const InputError = ({ msg }: { msg?: string }) =>
     msg ? <p className="text-red-500 text-xs mt-1">{msg}</p> : null;
 
+type SpecificationInput = { label: string; value: string };
+type ReviewInput = { name: string; rating: number; comment: string };
+
 export function ProductForm() {
   const router = useRouter();
   const [addProduct, { isLoading }] = useCreateProductMutation();
@@ -40,6 +43,9 @@ export function ProductForm() {
     price: 1,
     stock: 1,
     status: "inactive" as "active" | "inactive",
+    specifications: [] as SpecificationInput[],
+    shippingInfo: "",
+    reviews: [] as ReviewInput[],
   });
 
   // ========================
@@ -76,6 +82,21 @@ export function ProductForm() {
     if (!validate(requireImage)) return;
 
     try {
+      const cleanedSpecifications = formData.specifications
+        .map((spec) => ({
+          label: spec.label.trim(),
+          value: spec.value.trim(),
+        }))
+        .filter((spec) => spec.label || spec.value);
+
+      const cleanedReviews = formData.reviews
+        .map((review) => ({
+          name: review.name.trim(),
+          rating: Number(review.rating) || 0,
+          comment: review.comment.trim(),
+        }))
+        .filter((review) => review.name || review.comment || review.rating);
+
       const payload = {
         name: formData.title,
         description: formData.description,
@@ -84,6 +105,9 @@ export function ProductForm() {
         price: formData.price,
         stock: formData.stock,
         imageBase64,
+        specifications: cleanedSpecifications,
+        shippingInfo: formData.shippingInfo,
+        reviews: cleanedReviews,
       };
 
       await addProduct(payload as any).unwrap();
@@ -128,6 +152,57 @@ export function ProductForm() {
       setErrors((prev) => ({ ...prev, image: undefined }));
     };
     reader.readAsDataURL(file);
+  };
+
+  const addSpecification = () => {
+    setFormData((prev) => ({
+      ...prev,
+      specifications: [...prev.specifications, { label: "", value: "" }],
+    }));
+  };
+
+  const updateSpecification = (index: number, field: "label" | "value", value: string) => {
+    setFormData((prev) => {
+      const next = [...prev.specifications];
+      next[index] = { ...next[index], [field]: value };
+      return { ...prev, specifications: next };
+    });
+  };
+
+  const removeSpecification = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      specifications: prev.specifications.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addReview = () => {
+    setFormData((prev) => ({
+      ...prev,
+      reviews: [...prev.reviews, { name: "", rating: 5, comment: "" }],
+    }));
+  };
+
+  const updateReview = (
+    index: number,
+    field: "name" | "rating" | "comment",
+    value: string
+  ) => {
+    setFormData((prev) => {
+      const next = [...prev.reviews];
+      next[index] = {
+        ...next[index],
+        [field]: field === "rating" ? Number(value) : value,
+      };
+      return { ...prev, reviews: next };
+    });
+  };
+
+  const removeReview = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      reviews: prev.reviews.filter((_, i) => i !== index),
+    }));
   };
 
   return (
@@ -235,6 +310,129 @@ export function ProductForm() {
               </div>
               <InputError msg={errors.price} />
             </div>
+          </div>
+
+          {/* Specifications */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[#333]">Specifications</h2>
+              <button
+                type="button"
+                onClick={addSpecification}
+                className="text-sm font-medium text-[#B95E82] hover:text-[#A04D6F] transition-colors"
+              >
+                Add Spec
+              </button>
+            </div>
+
+            {formData.specifications.length === 0 ? (
+              <p className="text-sm text-[#707070]">No specifications added.</p>
+            ) : (
+              <div className="space-y-3">
+                {formData.specifications.map((spec, idx) => (
+                  <div
+                    key={`spec-${idx}`}
+                    className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center"
+                  >
+                    <input
+                      type="text"
+                      value={spec.label}
+                      onChange={(e) => updateSpecification(idx, "label", e.target.value)}
+                      placeholder="Label"
+                      className="md:col-span-2 w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82]"
+                    />
+                    <input
+                      type="text"
+                      value={spec.value}
+                      onChange={(e) => updateSpecification(idx, "value", e.target.value)}
+                      placeholder="Value"
+                      className="md:col-span-2 w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82]"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeSpecification(idx)}
+                      className="text-sm text-red-600 hover:text-red-700 md:justify-self-end"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Shipping Info */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            <h2 className="text-lg font-bold text-[#333]">Shipping Info</h2>
+            <textarea
+              name="shippingInfo"
+              value={formData.shippingInfo}
+              onChange={handleChange}
+              rows={4}
+              className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] resize-none"
+              placeholder="Enter shipping information"
+            />
+          </div>
+
+          {/* Reviews */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[#333]">Reviews</h2>
+              <button
+                type="button"
+                onClick={addReview}
+                className="text-sm font-medium text-[#B95E82] hover:text-[#A04D6F] transition-colors"
+              >
+                Add Review
+              </button>
+            </div>
+
+            {formData.reviews.length === 0 ? (
+              <p className="text-sm text-[#707070]">No reviews added.</p>
+            ) : (
+              <div className="space-y-4">
+                {formData.reviews.map((review, idx) => (
+                  <div
+                    key={`review-${idx}`}
+                    className="border border-gray-100 rounded-xl p-4 space-y-3"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-center">
+                      <input
+                        type="text"
+                        value={review.name}
+                        onChange={(e) => updateReview(idx, "name", e.target.value)}
+                        placeholder="Name"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82]"
+                      />
+                      <input
+                        type="number"
+                        min={0}
+                        max={5}
+                        step={1}
+                        value={review.rating}
+                        onChange={(e) => updateReview(idx, "rating", e.target.value)}
+                        placeholder="Rating"
+                        className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82]"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeReview(idx)}
+                        className="text-sm text-red-600 hover:text-red-700 md:justify-self-end"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <textarea
+                      rows={3}
+                      value={review.comment}
+                      onChange={(e) => updateReview(idx, "comment", e.target.value)}
+                      placeholder="Comment"
+                      className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] resize-none"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
