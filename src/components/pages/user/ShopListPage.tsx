@@ -5,8 +5,11 @@
 import { useState, useMemo } from "react";
 import { ChevronDown, Search } from "lucide-react";
 import { ProductCard } from "./ProductCard";
-import { useGetPublishedProductsQuery } from "@/store/api/productApi";
-import { useGetServicesQuery } from "@/store/api/publicApi";
+import {
+  useGetPublishedProductsQuery,
+  useExpressProductInterestMutation,
+} from "@/store/api/productApi";
+import { useGetActiveEcomCategoriesQuery } from "@/store/api/categoryApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAddToCartMutation } from "@/store/api/cartApi";
 import toast from "react-hot-toast";
@@ -19,6 +22,7 @@ export default function ShopListingPage() {
 
   // Track per-product loading state
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
+  const [interestProductId, setInterestProductId] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(searchInput, 400);
 
@@ -32,10 +36,11 @@ export default function ShopListingPage() {
     sortBy: sortBy as "newest" | "price-low" | "price-high",
   });
 
-  const { data: servicesData, isLoading: servicesLoading } =
-    useGetServicesQuery(undefined);
+  const { data: categoriesData, isLoading: categoriesLoading } =
+    useGetActiveEcomCategoriesQuery();
 
   const [addToCart] = useAddToCartMutation();
+  const [expressInterest] = useExpressProductInterestMutation();
 
   const products = useMemo(() => {
     const raw = (productsData as any)?.data ?? [];
@@ -43,9 +48,9 @@ export default function ShopListingPage() {
   }, [productsData]);
 
   const categories = useMemo(() => {
-    const raw = (servicesData as any)?.data ?? [];
+    const raw = (categoriesData as any)?.data ?? [];
     return Array.isArray(raw) ? raw : [];
-  }, [servicesData]);
+  }, [categoriesData]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchInput(e.target.value);
@@ -68,6 +73,18 @@ export default function ShopListingPage() {
       toast.error(err?.data?.message ?? "Failed to add to cart");
     } finally {
       setAddingProductId(null);
+    }
+  };
+
+  const handleInterested = async (productId: string) => {
+    setInterestProductId(productId);
+    try {
+      const response = await expressInterest({ productId }).unwrap();
+      toast.success(response?.message || "Interest recorded");
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to save interest");
+    } finally {
+      setInterestProductId(null);
     }
   };
 
@@ -122,12 +139,12 @@ export default function ShopListingPage() {
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     className="w-full appearance-none bg-background border border-border rounded-2xl px-4 py-3 pr-10 text-foreground text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-primary/50"
-                    disabled={servicesLoading}
+                    disabled={categoriesLoading}
                   >
                     <option value="">All Products</option>
                     {categories.map((s: any) => (
                       <option key={s._id} value={s._id}>
-                        {s.title}
+                        {s.name}
                       </option>
                     ))}
                   </select>
@@ -211,6 +228,8 @@ export default function ShopListingPage() {
                   product={product}
                   onAddToCart={handleAddToCart}
                   isAddingToCart={addingProductId === product._id}
+                  onInterested={handleInterested}
+                  isInterested={interestProductId === product._id}
                 />
               ))}
             </div>

@@ -15,6 +15,7 @@ import { userApi } from "./api/userApi";
 import { feedbackApi } from "./api/feedbackApi";
 import { invoiceApi } from "./api/InvoiceApi";
 import { productApi } from "./api/productApi";
+import { categoryApi } from "./api/categoryApi";
 import { customerApi } from "./api/customerApi";
 import { orderApi } from "./api/orderApi";
 import { cartApi } from "./api/cartApi";
@@ -38,6 +39,7 @@ export const store = configureStore({
     [feedbackApi.reducerPath]: feedbackApi.reducer,
     [invoiceApi.reducerPath]: invoiceApi.reducer,
     [productApi.reducerPath]: productApi.reducer,
+    [categoryApi.reducerPath]: categoryApi.reducer,
     [customerApi.reducerPath]: customerApi.reducer,
     [orderApi.reducerPath]: orderApi.reducer,
     [cartApi.reducerPath]: cartApi.reducer, 
@@ -60,6 +62,7 @@ export const store = configureStore({
       .concat(feedbackApi.middleware)
       .concat(invoiceApi.middleware)
       .concat(productApi.middleware)
+      .concat(categoryApi.middleware)
       .concat(customerApi.middleware)
       .concat(orderApi.middleware)
       .concat(cartApi.middleware)

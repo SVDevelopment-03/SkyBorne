@@ -11,6 +11,7 @@ interface BackendProduct {
   price: number;
   image: string;
   category?: { _id: string; title: string } | string;
+  stock?: number;
   status: string;
   createdAt?: string;
 }
@@ -19,11 +20,21 @@ interface ProductCardProps {
   product: BackendProduct;
   onAddToCart?: (productId: string) => void;
   isAddingToCart?: boolean;
+  onInterested?: (productId: string) => void;
+  isInterested?: boolean;
 }
 
-export function ProductCard({ product, onAddToCart, isAddingToCart = false }: ProductCardProps) {
+export function ProductCard({
+  product,
+  onAddToCart,
+  isAddingToCart = false,
+  onInterested,
+  isInterested = false,
+}: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
+  const isOutOfStock =
+    typeof product.stock === "number" ? product.stock <= 0 : false;
 
   return (
     <div
@@ -70,26 +81,49 @@ export function ProductCard({ product, onAddToCart, isAddingToCart = false }: Pr
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <p className="text-2xl font-serif text-primary">${product.price}</p>
           <div data-no-nav="true">
-            <Button
-              type="button"
-              variant="theme"
-              disabled={isAddingToCart}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onAddToCart?.(product._id);
-              }}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
-            >
-              {isAddingToCart ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Adding…
-                </>
-              ) : (
-                'Add to Cart'
-              )}
-            </Button>
+            {isOutOfStock ? (
+              <Button
+                type="button"
+                variant="outlineBlack"
+                disabled={isInterested}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onInterested?.(product._id);
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isInterested ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Saving…
+                  </>
+                ) : (
+                  "Interested"
+                )}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="theme"
+                disabled={isAddingToCart}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onAddToCart?.(product._id);
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {isAddingToCart ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Adding…
+                  </>
+                ) : (
+                  "Add to Cart"
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </div>

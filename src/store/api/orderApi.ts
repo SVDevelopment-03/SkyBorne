@@ -46,6 +46,7 @@ export interface Order {
   orderNumber: string;
   userId: string;
   customerId: string;
+  stripePaymentIntentId?: string;
   items: IOrderItem[];
   subtotal: number;
   tax: number;

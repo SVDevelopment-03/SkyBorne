@@ -124,7 +124,7 @@ export const Subscription = ({
           className={`${
             isSelected ? "text-base py-2 mt-2" : "text-base py-2"
           } lg:w-[257px] mx-auto mt-auto!`}
-          onClick={() => router.push("/signup")}
+          onClick={() => router.push("/user-packages")}
         >
           Unlock This Plan
         </Button>
@@ -135,7 +135,20 @@ export const Subscription = ({
 
 const Subscriptions = () => {
   const { data, isLoading, error } = useGetPlansQuery(undefined);
-  const plans: IPlan[] = data?.data || [];
+  const ALLOWED_PACKAGE_PRICES = [100, 200, 300];
+  const toNumericPrice = (value: unknown): number => {
+    if (typeof value === "number") return value;
+    const parsed = Number(String(value ?? "").replace(/[^0-9.]/g, ""));
+    return Number.isFinite(parsed) ? parsed : NaN;
+  };
+  const plans: IPlan[] = (data?.data || [])
+    .filter((plan: IPlan) =>
+      ALLOWED_PACKAGE_PRICES.includes(toNumericPrice(plan?.price)),
+    )
+    .sort(
+      (a: IPlan, b: IPlan) =>
+        toNumericPrice(a?.price) - toNumericPrice(b?.price),
+    );
 
   const [isSelected, setIsSelected] = useState(1);
   const scrollRef = useRef<HTMLDivElement>(null);

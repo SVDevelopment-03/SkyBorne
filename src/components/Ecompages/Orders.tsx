@@ -3,10 +3,12 @@
 "use client"
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Eye, Loader2 } from 'lucide-react';
-import { useGetAllOrdersQuery } from '@/store/api/orderApi';
+import { Search, Eye, Loader2, RotateCcw } from 'lucide-react';
+import { useGetAllOrdersQuery, useRefundOrderMutation } from '@/store/api/orderApi';
 import type { OrderStatus, PaymentStatus } from '@/store/api/orderApi';
 import { useDebounce } from "@/hooks/useDebounce";
+import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import toast from "react-hot-toast";
 
 const paymentStatusColors: Record<string, string> = {
   'Paid': 'bg-green-100 text-green-700',
@@ -32,6 +34,9 @@ export function Orders() {
   const [paymentFilter] = useState('all');
   const [fulfillmentFilter] = useState('all');
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
+  const [showRefundModal, setShowRefundModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [refundOrder, { isLoading: refunding }] = useRefundOrderMutation();
 
   // Fetch orders from backend with search and filters
   const { 
@@ -70,6 +75,21 @@ export function Orders() {
       return errorData?.message || 'Failed to load orders';
     }
     return 'Failed to load orders';
+  };
+
+  const handleRefundConfirm = async () => {
+    if (!selectedOrder) return;
+    try {
+      await refundOrder({
+        orderId: selectedOrder._id,
+        amount: selectedOrder.totalAmount,
+      }).unwrap();
+      toast.success("Refund processed");
+      setShowRefundModal(false);
+      setSelectedOrder(null);
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Refund failed");
+    }
   };
 
   if (error) {
@@ -182,6 +202,7 @@ export function Orders() {
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Order ID</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Customer</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Payment Intent</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Mobile</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Total</th>
@@ -195,6 +216,11 @@ export function Orders() {
                     <tr key={order._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 text-sm font-medium text-[#333]">{order.orderNumber}</td>
                       <td className="px-6 py-4 text-sm text-[#707070]">{getUserName(order)}</td>
+                      <td className="px-6 py-4">
+                        <span className="text-xs font-mono text-[#8A8A8A] break-all">
+                          {order.stripePaymentIntentId || "-"}
+                        </span>
+                      </td>
                       <td className="px-6 py-4 text-sm text-[#707070]">{order.shippingAddress?.phone || '-'}</td>
                       <td className="px-6 py-4 text-sm text-[#707070]">{formatDate(order.createdAt)}</td>
                       <td className="px-6 py-4 text-sm font-medium text-[#333]">
@@ -211,13 +237,32 @@ export function Orders() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <Link 
-                          href={`/orders/${order._id}`}
-                          className="inline-flex items-center gap-1 text-[#B95E82] hover:text-[#A04D6F] transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span className="text-sm font-medium">View</span>
-                        </Link>
+                        <div className="flex items-center gap-3">
+                          <Link 
+                            href={`/orders/${order._id}`}
+                            className="inline-flex items-center gap-1 text-[#B95E82] hover:text-[#A04D6F] transition-colors"
+                          >
+                            <Eye className="w-4 h-4" />
+                            <span className="text-sm font-medium">View</span>
+                          </Link>
+                          {order.orderStatus === "Cancelled" && order.paymentStatus === "Paid" && (
+                            <button
+                              onClick={() => {
+                                setSelectedOrder(order);
+                                setShowRefundModal(true);
+                              }}
+                              className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border border-red-200 text-red-700 bg-red-50 hover:bg-red-100 transition-colors"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5" />
+                              Refund
+                            </button>
+                          )}
+                          {order.paymentStatus === "Refunded" && (
+                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                              Refunded
+                            </span>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -311,6 +356,20 @@ export function Orders() {
           </>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={showRefundModal}
+        title="Refund this order?"
+        message={`This will refund $${(selectedOrder?.totalAmount || 0).toFixed(2)} to the customer via Stripe.`}
+        confirmText={refunding ? "Refunding..." : "Confirm Refund"}
+        cancelText="Cancel"
+        onConfirm={handleRefundConfirm}
+        onCancel={() => {
+          setShowRefundModal(false);
+          setSelectedOrder(null);
+        }}
+        variant="warning"
+      />
     </div>
   );
 }

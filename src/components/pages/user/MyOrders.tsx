@@ -7,8 +7,9 @@ import {
   CheckCircle, XCircle, Clock, MapPin,
   RefreshCw, Star, AlertCircle, Loader2,
 } from "lucide-react";
-import { useGetMyOrdersQuery } from "@/store/api/orderApi";
+import { useCancelOrderMutation, useGetMyOrdersQuery } from "@/store/api/orderApi";
 import { ImageWithFallback } from "@/components/pages/user/ImageWithFallback";
+import toast from "react-hot-toast";
 
 type ViewMode = "list" | "detail";
 
@@ -19,15 +20,29 @@ export default function MyOrders() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-  const { data, isLoading, isFetching } = useGetMyOrdersQuery({
+  const { data, isLoading, isFetching, refetch } = useGetMyOrdersQuery({
     status: statusFilter !== "all" ? statusFilter as any: undefined,
     search: searchQuery || undefined,
     page: 1,
     limit: 20,
   });
+  const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
 
   const orders = data?.data ?? [];
   const selectedOrder = orders.find((o: any) => o._id === selectedOrderId) ?? null;
+
+  const handleCancelOrder = async () => {
+    if (!selectedOrderId) return;
+    try {
+      await cancelOrder(selectedOrderId).unwrap();
+      toast.success("Order cancelled successfully");
+      setShowCancelModal(false);
+      setSelectedOrderId(null);
+      await refetch();
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to cancel order");
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -49,6 +64,45 @@ export default function MyOrders() {
       case "cancelled":   return <XCircle size={16} />;
       default:            return <Package size={16} />;
     }
+  };
+
+  const renderCancelModal = () => {
+    if (!showCancelModal) return null;
+
+    return (
+      <div
+        className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+        onClick={() => setShowCancelModal(false)}
+      >
+        <div
+          className="bg-card rounded-3xl max-w-md w-full p-8 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="text-red-600" size={32} />
+          </div>
+          <h2 className="text-center mb-3">Cancel this order?</h2>
+          <p className="text-center text-foreground/60 mb-6">
+            This action cannot be undone.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowCancelModal(false)}
+              className="flex-1 py-3 bg-muted rounded-full hover:bg-muted/80 transition-colors"
+            >
+              Keep Order
+            </button>
+            <button
+              onClick={handleCancelOrder}
+              disabled={isCancelling}
+              className="flex-1 py-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors disabled:opacity-70"
+            >
+              {isCancelling ? "Cancelling..." : "Confirm Cancel"}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   // ── Detail View ─────────────────────────────────────────────────────────────
@@ -157,43 +211,56 @@ export default function MyOrders() {
           </div>
 
           {/* Right — Timeline + actions */}
-
-        </div>
-
-        {/* Cancel Modal */}
-        {showCancelModal && (
-          <div
-            className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-            onClick={() => setShowCancelModal(false)}
-          >
-            <div
-              className="bg-card rounded-3xl max-w-md w-full p-8 shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="text-red-600" size={32} />
+          <div className="space-y-6">
+            <div className="bg-card rounded-3xl p-6 shadow-md">
+              <h3 className="mb-4">Order Status</h3>
+              <div className="flex items-center gap-3 mb-4">
+                <span
+                  className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${getStatusColor(order.orderStatus)}`}
+                >
+                  {getStatusIcon(order.orderStatus)}
+                  {order.orderStatus}
+                </span>
               </div>
-              <h2 className="text-center mb-3">Cancel this order?</h2>
-              <p className="text-center text-foreground/60 mb-6">
-                This action cannot be undone.
-              </p>
-              <div className="flex gap-3">
+              {String(order.orderStatus || "").toLowerCase() === "pending" && (
                 <button
-                  onClick={() => setShowCancelModal(false)}
-                  className="flex-1 py-3 bg-muted rounded-full hover:bg-muted/80 transition-colors"
+                  onClick={() => {
+                    setSelectedOrderId(order._id);
+                    setShowCancelModal(true);
+                  }}
+                  className="w-full py-3 rounded-full text-sm border border-red-200 text-red-600 hover:bg-red-50 transition-all"
                 >
-                  Keep Order
+                  Cancel Order
                 </button>
-                <button
-                  onClick={() => setShowCancelModal(false)}
-                  className="flex-1 py-3 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
-                >
-                  Confirm Cancel
-                </button>
+              )}
+            </div>
+
+            <div className="bg-card rounded-3xl p-6 shadow-md">
+              <h3 className="mb-4">Order Timeline</h3>
+              <div className="space-y-4">
+                {timelineSteps.map((step, idx) => (
+                  <div key={`${step.label}-${idx}`} className="flex items-center gap-3">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        step.done ? "bg-primary/10 text-primary" : "bg-muted text-foreground/40"
+                      }`}
+                    >
+                      {step.icon}
+                    </div>
+                    <div>
+                      <p className={`text-sm ${step.done ? "text-foreground" : "text-foreground/50"}`}>
+                        {step.label}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        )}
+
+        </div>
+
+        {renderCancelModal()}
       </div>
     );
   }
@@ -269,7 +336,7 @@ export default function MyOrders() {
                   <Package className="text-primary" size={28} />
                 </div>
 
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
                   <div>
                     <p className="text-sm text-foreground/60 mb-1">Order ID</p>
                     <p className="font-medium text-sm">{order.orderNumber}</p>
@@ -292,13 +359,27 @@ export default function MyOrders() {
                       {order.paymentStatus}
                     </span>
                   </div>
+                  <div>
+                    <p className="text-sm text-foreground/60 mb-1">Order Status</p>
+                    <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm ${getStatusColor(order.orderStatus)}`}>
+                      {getStatusIcon(order.orderStatus)}
+                      {order.orderStatus}
+                    </span>
+                  </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row lg:flex-col gap-3 lg:items-end">
-                  <span className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm ${getStatusColor(order.orderStatus)}`}>
-                    {getStatusIcon(order.orderStatus)}
-                    {order.orderStatus}
-                  </span>
+                  {String(order.orderStatus || "").toLowerCase() === "pending" && (
+                    <button
+                      onClick={() => {
+                        setSelectedOrderId(order._id);
+                        setShowCancelModal(true);
+                      }}
+                      className="px-6 py-2 rounded-full text-sm border border-red-200 text-red-600 hover:bg-red-50 transition-all"
+                    >
+                      Cancel Order
+                    </button>
+                  )}
                   <button
                     onClick={() => {
                       setSelectedOrderId(order._id);
@@ -315,6 +396,7 @@ export default function MyOrders() {
           ))}
         </div>
       )}
+      {renderCancelModal()}
     </div>
   );
 }

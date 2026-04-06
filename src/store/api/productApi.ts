@@ -8,7 +8,7 @@ export type ProductStatus = "active" | "inactive";
 export interface Product {
   _id: string;
   name: string;
-  category: string;
+  category?: { _id: string; name?: string; title?: string } | string;
   price: number;
   stock?: number;
   status: ProductStatus;
@@ -28,6 +28,13 @@ export interface CreateProductPayload {
   description?: string;
 }
 
+export interface ProductInterest {
+  _id: string;
+  product?: { _id: string; name?: string };
+  user?: { _id: string; firstName?: string; lastName?: string; email?: string };
+  createdAt?: string;
+}
+
 export interface GetPublishedProductsParams {
   search?: string;
   categoryId?: string;
@@ -45,6 +52,12 @@ export interface UpdateProductStatusPayload {
 export interface GetProductsParams {
   search?: string;
   status?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface GetProductInterestsParams {
+  search?: string;
   page?: number;
   limit?: number;
 }
@@ -135,15 +148,38 @@ export const productApi = createApi({
       }),
       invalidatesTags: ["Product"],
     }),
+    expressProductInterest: builder.mutation<
+      { success: boolean; message: string },
+      { productId: string }
+    >({
+      query: ({ productId }) => ({
+        url: `/products/${productId}/interested`,
+        method: "POST",
+      }),
+    }),
     // Inside endpoints builder:
-getPublishedProducts: builder.query<{ data: Product[] }, GetPublishedProductsParams>({
-  query: (params = {}) => ({
-    url: "/products/published",
-    method: "GET",
-    params,
-  }),
-  providesTags: ["Product"],
-}),
+    getPublishedProducts: builder.query<{ data: Product[] }, GetPublishedProductsParams>({
+      query: (params = {}) => ({
+        url: "/products/published",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["Product"],
+    }),
+    getProductInterests: builder.query<
+      { data: { interests: ProductInterest[]; pagination: any } },
+      GetProductInterestsParams
+    >({
+      query: (params = {}) => ({
+        url: "/product-interests",
+        method: "GET",
+        params: {
+          page: params.page || 1,
+          limit: params.limit || 10,
+          search: params.search || "",
+        },
+      }),
+    }),
 
 
   }),
@@ -155,8 +191,10 @@ export const {
   useGetPublishedProductsQuery,
   useGetProductsByCategoryQuery,
   useGetProductsByStatusQuery,
+  useGetProductInterestsQuery,
   useCreateProductMutation,
   useUpdateProductMutation,
   useUpdateProductStatusMutation,
   useDeleteProductMutation,
+  useExpressProductInterestMutation,
 } = productApi;

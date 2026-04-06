@@ -27,6 +27,7 @@ import {
   Tag,
   Truck,
   CreditCard,
+  Heart,
   BarChart3,
   ChevronDown,
   Package2Icon,
@@ -74,28 +75,33 @@ export const SidebarNav = {
       items: [],
     },
     {
-      title: "Cart",
-      url: "/cart",
-      icon: ShoppingBag,
-      items: [],
-    },
-    {
       title: "Products",
-      url: "/product",
+      url: "",
       icon: Package2Icon,
-      items: [],
-    },
-    {
-      title: "My Orders",
-      url: "/my-orders",
-      icon: Truck,
-      items: [],
-    },
-    {
-      title: "Checkout",
-      url: "/checkout",
-      icon: ShoppingCart,
-      items: [],
+      items: [
+        {
+          title: "Products",
+          url: "/product",
+          icon: Package2Icon,
+        },
+        {
+          title: "Cart",
+          url: "/cart",
+          icon: ShoppingBag,
+        },
+        {
+          title: "Checkout",
+          url: "/checkout",
+          icon: ShoppingCart,
+        },
+        {
+          title: "My Orders",
+          url: "/my-orders",
+          icon: Truck,
+        },
+      ],
+      isCollapsible: true,
+      collapsibleIcon: ChevronDown,
     },
 
     {
@@ -211,6 +217,21 @@ export const AdminNav = {
           title: "Products",
           url: "/products",
           icon: Package,
+        },
+        {
+          title: "Categories",
+          url: "/categories",
+          icon: Tag,
+        },
+        {
+          title: "Inventory",
+          url: "/inventory",
+          icon: Boxes,
+        },
+        {
+          title: "Interested",
+          url: "/interests",
+          icon: Heart,
         },
         {
           title: "Customers",

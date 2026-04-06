@@ -5,7 +5,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { Minus, Plus, ChevronLeft, Loader2, Check, ShoppingCart } from "lucide-react";
-import { useGetProductByIdQuery } from "@/store/api/productApi";
+import {
+  useGetProductByIdQuery,
+  useExpressProductInterestMutation,
+} from "@/store/api/productApi";
 import { useAddToCartMutation } from "@/store/api/cartApi";
 import toast from "react-hot-toast";
 
@@ -20,7 +23,10 @@ export default function ProductDetailPage({
 
   const [quantity, setQuantity] = useState(1);
   const [addToCart, { isLoading: addingToCart }] = useAddToCartMutation();
+  const [expressInterest, { isLoading: savingInterest }] =
+    useExpressProductInterestMutation();
   const [addedToCart, setAddedToCart] = useState(false);
+  const [interestSaved, setInterestSaved] = useState(false);
 
   const handleAddToCart = async () => {
     try {
@@ -30,6 +36,17 @@ export default function ProductDetailPage({
       setTimeout(() => setAddedToCart(false), 2000);
     } catch (err: any) {
       toast.error(err?.data?.message ?? "Failed to add to cart");
+    }
+  };
+
+  const handleInterested = async () => {
+    try {
+      const response = await expressInterest({ productId: id }).unwrap();
+      setInterestSaved(true);
+      toast.success(response?.message || "Interest recorded");
+      setTimeout(() => setInterestSaved(false), 2000);
+    } catch (err: any) {
+      toast.error(err?.data?.message ?? "Failed to save interest");
     }
   };
 
@@ -76,6 +93,11 @@ export default function ProductDetailPage({
     typeof product.category === "object" && product.category !== null
       ? product.category.title ?? product.category.name ?? ""
       : "";
+
+  const isOutOfStock =
+    typeof (product as any)?.stock === "number"
+      ? (product as any).stock <= 0
+      : false;
 
   return (
     <div className="min-h-screen">
@@ -143,28 +165,55 @@ export default function ProductDetailPage({
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              {/* Add to Cart — local style only for this page */}
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={addingToCart || addedToCart}
-                className="w-full py-4 px-8 rounded-full transition-all shadow-md hover:shadow-lg"
-                style={{
-                  background: "linear-gradient(135deg, #B95E82 0%, #F39F9F 100%)",
-                  color: "#FFFFFF",
-                }}
-              >
-                <span className="inline-flex items-center justify-center gap-2">
-                  {addingToCart ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : addedToCart ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    <ShoppingCart className="w-5 h-5" />
-                  )}
-                  {addingToCart ? "Adding..." : addedToCart ? "Added!" : "Add to Cart"}
-                </span>
-              </button>
+              {isOutOfStock ? (
+                <button
+                  type="button"
+                  onClick={handleInterested}
+                  disabled={savingInterest || interestSaved}
+                  className="w-full py-4 px-8 rounded-full transition-all shadow-md hover:shadow-lg border border-[#B95E82] text-[#B95E82] bg-white"
+                >
+                  <span className="inline-flex items-center justify-center gap-2">
+                    {savingInterest ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : interestSaved ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <ShoppingCart className="w-5 h-5" />
+                    )}
+                    {savingInterest
+                      ? "Saving..."
+                      : interestSaved
+                        ? "Saved!"
+                        : "Interested"}
+                  </span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={addingToCart || addedToCart}
+                  className="w-full py-4 px-8 rounded-full transition-all shadow-md hover:shadow-lg"
+                  style={{
+                    background: "linear-gradient(135deg, #B95E82 0%, #F39F9F 100%)",
+                    color: "#FFFFFF",
+                  }}
+                >
+                  <span className="inline-flex items-center justify-center gap-2">
+                    {addingToCart ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : addedToCart ? (
+                      <Check className="w-5 h-5" />
+                    ) : (
+                      <ShoppingCart className="w-5 h-5" />
+                    )}
+                    {addingToCart
+                      ? "Adding..."
+                      : addedToCart
+                        ? "Added!"
+                        : "Add to Cart"}
+                  </span>
+                </button>
+              )}
             </div>
           </div>
         </div>

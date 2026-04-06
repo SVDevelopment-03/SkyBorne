@@ -74,6 +74,11 @@ export default function OrderDetailPage() {
     }
   };
 
+  const canRefund =
+    order?.orderStatus === "Cancelled" &&
+    order?.paymentStatus === "Paid" &&
+    !refunding;
+
   if (isLoading) {
     return (
       <div className="py-12 text-center">
@@ -124,7 +129,13 @@ export default function OrderDetailPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-[#707070]">Payment Status</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  order.paymentStatus === 'Paid'
+                    ? 'bg-green-100 text-green-700'
+                    : order.paymentStatus === 'Refunded'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                }`}>
                   {order.paymentStatus}
                 </span>
               </div>
@@ -189,6 +200,31 @@ export default function OrderDetailPage() {
             </div>
           </div>
 
+          {/* Refund */}
+          {(order.orderStatus === "Cancelled" || order.paymentStatus === "Refunded") && (
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+              <h2 className="text-lg font-bold text-[#333] mb-4">Refund</h2>
+              {order.paymentStatus === "Refunded" ? (
+                <div className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                  Refunded
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-[#707070] mb-4">
+                    This order was cancelled. You can refund the full amount back to the customer via Stripe.
+                  </p>
+                  <button
+                    onClick={() => setShowRefundModal(true)}
+                    disabled={!canRefund || isSubmitting || refunding}
+                    className="w-full px-6 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {refunding ? "Refunding..." : "Refund Amount"}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+
           {/* Fulfillment Control */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-lg font-bold text-[#333] mb-4 flex items-center gap-2">
@@ -237,6 +273,16 @@ export default function OrderDetailPage() {
         </div>
       </div>
 
+      <ConfirmModal
+        isOpen={showRefundModal}
+        title="Refund this order?"
+        message={`This will refund $${(order.totalAmount || 0).toFixed(2)} to the customer via Stripe.`}
+        confirmText={refunding ? "Refunding..." : "Confirm Refund"}
+        cancelText="Cancel"
+        onConfirm={handleRefund}
+        onCancel={() => setShowRefundModal(false)}
+        variant="warning"
+      />
      
     </div>
   );

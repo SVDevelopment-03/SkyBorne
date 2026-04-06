@@ -9,7 +9,7 @@ import {
   useGetProductByIdQuery,
   useUpdateProductMutation,
 } from "@/store/api/productApi";
-import { useGetServicesQuery } from "@/store/api/publicApi";
+import { useGetActiveEcomCategoriesQuery } from "@/store/api/categoryApi";
 import toast from "react-hot-toast";
 import { Toggle2 } from "@/components/ui/Toggle2";
 
@@ -30,7 +30,8 @@ interface EditProductFormProps {
 export function EditProductForm({ productId }: EditProductFormProps) {
   const router = useRouter();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
-  const { data: serviceData, isLoading: servicesLoading } = useGetServicesQuery(undefined);
+  const { data: categoryData, isLoading: categoriesLoading } =
+    useGetActiveEcomCategoriesQuery();
   const { data: productData, isLoading: productLoading } = useGetProductByIdQuery(productId);
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -191,12 +192,12 @@ export function EditProductForm({ productId }: EditProductFormProps) {
                 }`}
               >
                 <option value="">Select category</option>
-                {servicesLoading ? (
+                {categoriesLoading ? (
                   <option disabled>Loading...</option>
-                ) : Array.isArray(serviceData?.data) ? (
-                  serviceData?.data?.map((service: any) => (
-                    <option key={service._id} value={service._id}>
-                      {service.title}
+                ) : Array.isArray(categoryData?.data) ? (
+                  categoryData?.data?.map((category: any) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
                     </option>
                   ))
                 ) : null}
