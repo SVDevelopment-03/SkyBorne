@@ -169,6 +169,33 @@ export default function ProductDetailPage({
   const specifications = Array.isArray(product.specifications)
     ? product.specifications
     : [];
+  const formatSpecLabel = (label?: string) =>
+    (label || "")
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, (char) => char.toUpperCase());
+
+  const detailSpecs = (() => {
+    const specMap = new Map<string, { label?: string; value?: string }>();
+    const normalize = (label?: string) => (label || "").trim().toLowerCase();
+
+    specifications.forEach((spec: { label?: string; value?: string }) => {
+      if (!spec?.label || !spec?.value) return;
+      const key = normalize(spec.label);
+      if (!key || key === "category") return;
+      specMap.set(key, { label: formatSpecLabel(spec.label), value: spec.value });
+    });
+
+    if (!specMap.has("price") && typeof product.price === "number") {
+      specMap.set("price", {
+        label: "Price",
+        value: `$${product.price.toFixed(2)}`,
+      });
+    }
+
+    return Array.from(specMap.values()).slice(0, 6);
+  })();
   const shippingInfo =
     typeof product.shippingInfo === "string" ? product.shippingInfo.trim() : "";
   const reviews = Array.isArray(product.reviews) ? product.reviews : [];
@@ -232,6 +259,29 @@ export default function ProductDetailPage({
             <p className="text-lg text-foreground/80 leading-relaxed">
               {product.description}
             </p>
+
+            {detailSpecs.length > 0 && (
+              <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/60">
+                <h3 className="text-sm font-semibold text-foreground/70 mb-3">
+                  Product Details
+                </h3>
+                <div className="space-y-3 text-sm">
+                  {detailSpecs.map(
+                    (spec: { label?: string; value?: string }, idx: number) => (
+                      <div
+                        key={`${spec.label}-${idx}`}
+                        className="flex items-center justify-between gap-4 border-b border-border/40 pb-2 last:border-b-0 last:pb-0"
+                      >
+                        <span className="text-foreground/60">{spec.label}</span>
+                        <span className="font-medium text-foreground text-right">
+                          {spec.value}
+                        </span>
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Quantity Selector */}
             <div className="space-y-4">
