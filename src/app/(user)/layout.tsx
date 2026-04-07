@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { getAccessToken } from "@/lib/token";
 import useGetUser from "@/hooks/useGetUser";
 import useFetchUser from "@/hooks/useFetchUser";
+import Header from "@/components/layout/header";
 import Sidebar from "@/components/layout/sidebar";
 import UserAvatar from "@/hooks/useAvatar";
 import { Typography } from "@/components/ui/heading";
@@ -21,6 +22,12 @@ export default function UserLayout({ children }: AuthLayoutProps) {
   const pathname = usePathname();
   const { user } = useGetUser();
   const [checking, setChecking] = useState(true);
+  const token = getAccessToken();
+  const publicShopRoutes = ["/product", "/cart"];
+  const publicShopPrefixes = ["/product/"];
+  const isPublicShopRoute =
+    publicShopRoutes.includes(pathname) ||
+    publicShopPrefixes.some((prefix) => pathname.startsWith(prefix));
   const avatarName = `${user?.firstName?.charAt(0) || "U"}${
     user?.lastName?.charAt(0) || ""
   }`;
@@ -29,12 +36,11 @@ export default function UserLayout({ children }: AuthLayoutProps) {
   );
 
   useEffect(() => {
-    const token = getAccessToken();
     const search = typeof window !== "undefined" ? window.location.search : "";
     const nextPath = `${pathname}${search}`;
 
     // if (!user?.onboardingCompleted) {
-    if (!token) {
+    if (!token && !isPublicShopRoute) {
       setTimeout(() => {
         router.replace(`/login?next=${encodeURIComponent(nextPath)}`);
       }, 0);
@@ -47,9 +53,20 @@ export default function UserLayout({ children }: AuthLayoutProps) {
         setChecking(false);
       }, 0);
     }
-  }, [router, pathname, user?.onboardingCompleted]);
+  }, [router, pathname, user?.onboardingCompleted, isPublicShopRoute, token]);
 
   if (checking) return null;
+
+  if (!token && isPublicShopRoute) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="px-4 sm:px-6 py-6">
+          <Header isHero />
+        </div>
+        <div className="flex-1">{children}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-[30px] bg-[#FBFAF9] grid grid-cols-1 lg:grid-cols-[260px_1fr] h-dvh overflow-hidden">

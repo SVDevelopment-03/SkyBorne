@@ -2,6 +2,7 @@
 
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ImageWithFallback } from "./ImageWithFallback";
 import { Minus, Plus, ChevronLeft, Loader2, Check, ShoppingCart } from "lucide-react";
@@ -13,12 +14,14 @@ import {
 import { useAddToCartMutation } from "@/store/api/cartApi";
 import toast from "react-hot-toast";
 import { ProductCard } from "./ProductCard";
+import { getAccessToken } from "@/lib/token";
 
 export default function ProductDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
+  const router = useRouter();
   const { id } = params;
   const { data, isLoading, isError } = useGetProductByIdQuery(id);
   const product = (data as any)?.data ?? data;
@@ -51,6 +54,15 @@ export default function ProductDetailPage({
     });
 
   const handleAddToCart = async () => {
+    const token = getAccessToken();
+    if (!token) {
+      toast.error("Please login to add items to cart");
+      if (typeof window !== "undefined") {
+        const next = `${window.location.pathname}${window.location.search}`;
+        router.push(`/login?next=${encodeURIComponent(next)}`);
+      }
+      return;
+    }
     try {
       await addToCart({ productId: id, quantity }).unwrap();
       setAddedToCart(true);
@@ -73,6 +85,15 @@ export default function ProductDetailPage({
   };
 
   const handleRelatedAddToCart = async (productId: string) => {
+    const token = getAccessToken();
+    if (!token) {
+      toast.error("Please login to add items to cart");
+      if (typeof window !== "undefined") {
+        const next = `${window.location.pathname}${window.location.search}`;
+        router.push(`/login?next=${encodeURIComponent(next)}`);
+      }
+      return;
+    }
     try {
       setAddingRelatedId(productId);
       await addToCart({ productId, quantity: 1 }).unwrap();

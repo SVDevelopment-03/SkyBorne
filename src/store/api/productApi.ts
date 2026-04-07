@@ -17,6 +17,12 @@ export interface ProductReview {
   createdAt?: string;
 }
 
+export interface AddProductReviewPayload {
+  productId: string;
+  rating: number;
+  comment?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -175,6 +181,20 @@ export const productApi = createApi({
         method: "POST",
       }),
     }),
+    addProductReview: builder.mutation<
+      { success: boolean; message: string; data: Product },
+      AddProductReviewPayload
+    >({
+      query: ({ productId, rating, comment }) => ({
+        url: `/products/${productId}/reviews`,
+        method: "POST",
+        data: { rating, comment },
+      }),
+      invalidatesTags: (_result, _error, { productId }) => [
+        "Product",
+        { type: "Product", id: productId },
+      ],
+    }),
     // Inside endpoints builder:
     getPublishedProducts: builder.query<{ data: Product[] }, GetPublishedProductsParams>({
       query: (params = {}) => ({
@@ -215,4 +235,5 @@ export const {
   useUpdateProductStatusMutation,
   useDeleteProductMutation,
   useExpressProductInterestMutation,
+  useAddProductReviewMutation,
 } = productApi;

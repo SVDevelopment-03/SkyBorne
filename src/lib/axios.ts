@@ -34,6 +34,8 @@ const PUBLIC_ROUTES = [
   "/inner-blog",
   "/packages",
   "/testimonials",
+  "/product",
+  "/cart",
   "/yoga-detail",
   "/zumba-detail",
   "/diet-detail",
@@ -45,6 +47,7 @@ const PUBLIC_ROUTE_PREFIXES = [
   "/zumba-detail/",
   "/diet-detail/",
   "/fitness-detail/",
+  "/product/",
 ];
 
 const buildLoginUrl = () => {

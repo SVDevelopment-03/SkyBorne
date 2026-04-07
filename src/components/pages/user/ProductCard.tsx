@@ -22,6 +22,7 @@ interface ProductCardProps {
   isAddingToCart?: boolean;
   onInterested?: (productId: string) => void;
   isInterested?: boolean;
+  isInterestSaved?: boolean;
 }
 
 export function ProductCard({
@@ -30,11 +31,13 @@ export function ProductCard({
   isAddingToCart = false,
   onInterested,
   isInterested = false,
+  isInterestSaved = false,
 }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
   const isOutOfStock =
     typeof product.stock === "number" ? product.stock <= 0 : false;
+  const isInterestDisabled = isInterested || isInterestSaved;
 
   return (
     <div
@@ -85,10 +88,11 @@ export function ProductCard({
               <Button
                 type="button"
                 variant="outlineBlack"
-                disabled={isInterested}
+                disabled={isInterestDisabled}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  if (isInterestDisabled) return;
                   onInterested?.(product._id);
                 }}
                 className="w-full sm:w-auto px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70"

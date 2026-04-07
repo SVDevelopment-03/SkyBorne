@@ -62,6 +62,8 @@ const isBlocked =
     "/inner-blog",
     "/packages",
     "/testimonials",
+    "/product",
+    "/cart",
     "/yoga-detail",
      "/zumba-detail",
      "/diet-detail",
@@ -73,6 +75,7 @@ const isBlocked =
     "/zumba-detail/",
     "/diet-detail/",
     "/fitness-detail/",
+    "/product/",
   ];
   console.log("path", pathname);
 

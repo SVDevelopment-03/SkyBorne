@@ -99,6 +99,11 @@ export const SidebarNav = {
           url: "/my-orders",
           icon: Truck,
         },
+        {
+          title: "Interested",
+          url: "/product-interests",
+          icon: Heart,
+        },
       ],
       isCollapsible: true,
       collapsibleIcon: ChevronDown,

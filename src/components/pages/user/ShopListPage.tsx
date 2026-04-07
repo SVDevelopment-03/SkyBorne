@@ -3,6 +3,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronDown, Search } from "lucide-react";
 import { ProductCard } from "./ProductCard";
 import {
@@ -13,8 +14,10 @@ import { useGetActiveEcomCategoriesQuery } from "@/store/api/categoryApi";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useAddToCartMutation } from "@/store/api/cartApi";
 import toast from "react-hot-toast";
+import { getAccessToken } from "@/lib/token";
 
 export default function ShopListingPage() {
+  const router = useRouter();
   const [category, setCategory] = useState<string>("");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [search, setSearch] = useState<string>("");
@@ -65,6 +68,15 @@ export default function ShopListingPage() {
   };
 
   const handleAddToCart = async (productId: string) => {
+    const token = getAccessToken();
+    if (!token) {
+      toast.error("Please login to add items to cart");
+      if (typeof window !== "undefined") {
+        const next = `${window.location.pathname}${window.location.search}`;
+        router.push(`/login?next=${encodeURIComponent(next)}`);
+      }
+      return;
+    }
     setAddingProductId(productId);
     try {
       await addToCart({ productId, quantity: 1 }).unwrap();
