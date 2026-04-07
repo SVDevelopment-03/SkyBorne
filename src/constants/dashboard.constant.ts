@@ -75,7 +75,7 @@ export const SidebarNav = {
       items: [],
     },
     {
-      title: "Products",
+      title: "Shop",
       url: "",
       icon: Package2Icon,
       items: [
