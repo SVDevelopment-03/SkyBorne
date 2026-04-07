@@ -442,37 +442,25 @@ const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" =
 };
 
   const handleViewRecording = async (session: Session) => {
-    if (!session._id || !user?.id) {
-      toast.error("Missing meeting or user information");
+    if (!session._id) {
+      toast.error("Missing meeting information");
       return;
     }
-    if (!userRegion?.region) {
-      toast.error("User region not available");
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+    const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+    const fallbackRecordingUrl = baseUrl
+      ? `${normalizedBase}meetings/${session._id}/recording`
+      : `/api/v1/meetings/${session._id}/recording`;
+    const recordingUrl = session.recordingUrl || fallbackRecordingUrl;
+
+    if (!recordingUrl) {
+      toast.error("Recording not yet available");
       return;
     }
-    try {
-      const res = await joinMeeting({
-        meetingId: session._id,
-        userId: user?.id,
-        region: userRegion?.region,
-      }).unwrap();
-      const { recordUrl, mode } = res?.data;
 
-      if (!recordUrl) {
-        toast.error("Access URL not found");
-        return;
-      }
-
-      
-      // 👇 OPEN YOUR VIDEO PLAYER MODAL
-      setVideoUrl(recordUrl);
-      setShowVideoPlayer(true);
-    } catch (err: any) {
-      console.error("Join meeting error:", err);
-      toast.error(
-        err?.data?.message || err?.message || "Failed to join meeting",
-      );
-    }
+    setVideoUrl(recordingUrl);
+    setShowVideoPlayer(true);
   };
 
   if (isLoading) {
