@@ -58,11 +58,14 @@ export default function UserLayout({ children }: AuthLayoutProps) {
   if (checking) return null;
 
   if (!token && isPublicShopRoute) {
+    const shouldShowTopHeader = pathname !== "/product";
     return (
       <div className="min-h-screen flex flex-col">
-        <div className="px-4 sm:px-6 py-6">
-          <Header isHero />
-        </div>
+        {shouldShowTopHeader && (
+          <div className="px-4 sm:px-6 py-6">
+            <Header isHero />
+          </div>
+        )}
         <div className="flex-1">{children}</div>
       </div>
     );

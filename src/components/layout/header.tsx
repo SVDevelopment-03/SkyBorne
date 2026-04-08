@@ -52,16 +52,12 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
       link: "/packages",
     },
     {
-      title: "Product",
+      title: "Shop",
       link: "/product",
     },
     {
       title: "Cart",
       link: "/cart",
-    },
-    {
-      title: "Checkout",
-      link: "/checkout",
     },
     // {
     //   title: "Blogs",
