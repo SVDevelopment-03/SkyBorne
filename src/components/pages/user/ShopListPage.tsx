@@ -144,8 +144,8 @@ export default function ShopListingPage() {
           >
             <div className="max-w-7xl mx-auto text-center">
               <h1
-                className="text-3xl sm:text-4xl lg:text-6xl mb-4 sm:mb-6 text-white"
-                style={{ color: "#FFFFFF" }}
+                className="text-3xl sm:text-4xl lg:text-6xl mb-4 sm:mb-6"
+                style={{ color: "#494949" }}
               >
                 Curated Wellness Essentials
               </h1>
