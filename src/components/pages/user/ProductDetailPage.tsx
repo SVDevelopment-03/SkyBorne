@@ -169,6 +169,19 @@ export default function ProductDetailPage({
   const specifications = Array.isArray(product.specifications)
     ? product.specifications
     : [];
+  const normalizeSpecKey = (label?: string) =>
+    (label || "")
+      .trim()
+      .toLowerCase()
+      .replace(/[_-]+/g, " ")
+      .replace(/\s+/g, " ");
+
+  const processingSpec = specifications.find((spec: { label?: string; value?: string }) =>
+    normalizeSpecKey(spec.label).includes("processing")
+  );
+  const deliverySpec = specifications.find((spec: { label?: string; value?: string }) =>
+    normalizeSpecKey(spec.label).includes("delivery")
+  );
   const formatSpecLabel = (label?: string) =>
     (label || "")
       .replace(/[_-]+/g, " ")
@@ -440,24 +453,30 @@ export default function ProductDetailPage({
                     {shippingInfo || "No shipping information available."}
                   </p>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="rounded-2xl border border-border/50 bg-[#FFF7FA] px-4 py-3">
-                    <div className="text-xs uppercase tracking-wide text-foreground/50">
-                      Processing
-                    </div>
-                    <div className="mt-2 text-sm font-medium text-foreground">
-                      1-2 business days
-                    </div>
+                {(processingSpec?.value || deliverySpec?.value) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {processingSpec?.value && (
+                      <div className="rounded-2xl border border-border/50 bg-[#FFF7FA] px-4 py-3">
+                        <div className="text-xs uppercase tracking-wide text-foreground/50">
+                          {processingSpec.label || "Processing"}
+                        </div>
+                        <div className="mt-2 text-sm font-medium text-foreground">
+                          {processingSpec.value}
+                        </div>
+                      </div>
+                    )}
+                    {deliverySpec?.value && (
+                      <div className="rounded-2xl border border-border/50 bg-[#FFF7FA] px-4 py-3">
+                        <div className="text-xs uppercase tracking-wide text-foreground/50">
+                          {deliverySpec.label || "Delivery"}
+                        </div>
+                        <div className="mt-2 text-sm font-medium text-foreground">
+                          {deliverySpec.value}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="rounded-2xl border border-border/50 bg-[#FFF7FA] px-4 py-3">
-                    <div className="text-xs uppercase tracking-wide text-foreground/50">
-                      Delivery
-                    </div>
-                    <div className="mt-2 text-sm font-medium text-foreground">
-                      3-7 business days
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
