@@ -362,7 +362,8 @@ export default function ProductDetailPage({
       {/* Product Details Tabs */}
       <section className="max-w-7xl mx-auto px-6 pb-20">
         <div className="bg-card rounded-3xl shadow-md overflow-hidden">
-          <div className="grid grid-cols-2 md:grid-cols-4 border-b border-border/60">
+          <div className="px-3 py-3 md:px-5 md:py-4 border-b border-border/40 bg-gradient-to-b from-[#FBF7F9] to-white">
+            <div className="flex flex-wrap gap-2 md:gap-3">
             {[
               { key: "description", label: "Description" },
               { key: "specs", label: "Specifications" },
@@ -376,83 +377,143 @@ export default function ProductDetailPage({
                     tab.key as "description" | "specs" | "shipping" | "reviews"
                   )
                 }
-                className={`px-4 py-4 text-sm md:text-base font-medium transition-colors ${
+                className={`relative px-4 py-2.5 md:px-5 md:py-3 text-sm md:text-base font-medium rounded-full transition-all ${
                   activeTab === tab.key
-                    ? "text-primary border-b-2 border-primary bg-background"
-                    : "text-foreground/60 hover:text-foreground"
+                    ? "bg-white text-[#B95E82] shadow-[0_10px_20px_-12px_rgba(185,94,130,0.6)] border border-[#B95E82]/20"
+                    : "text-foreground/60 hover:text-foreground hover:bg-white/70 border border-transparent"
                 }`}
               >
                 {tab.label}
               </button>
             ))}
+            </div>
           </div>
 
-          <div className="p-6 md:p-8 text-foreground/70 leading-relaxed">
+          <div className="p-6 md:p-8 text-foreground/70 leading-relaxed bg-white/70">
             {activeTab === "description" && (
-              <p>{product.description || "No description available for this product."}</p>
+              <div className="space-y-4">
+                <h3 className="text-lg md:text-xl font-semibold text-foreground">
+                  About this product
+                </h3>
+                <p className="text-base md:text-lg text-foreground/70 leading-relaxed">
+                  {product.description || "No description available for this product."}
+                </p>
+                <div className="rounded-2xl border border-dashed border-[#B95E82]/30 bg-[#FFF7FA] px-4 py-3 text-sm text-foreground/60">
+                  Crafted to pair seamlessly with your wellness routine.
+                </div>
+              </div>
             )}
 
             {activeTab === "specs" && (
               specifications.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                {specifications.map(
-                  (spec: { label?: string; value?: string }, idx: number) => (
-                    <div
-                      key={`${spec.label}-${idx}`}
-                      className="flex items-center justify-between border-b border-border/40 pb-2"
-                    >
-                      <span className="text-foreground/60">{spec.label}</span>
-                      <span className="font-medium text-foreground">
-                        {spec.value}
-                      </span>
-                    </div>
-                  )
-                )}
+                  {specifications.map(
+                    (spec: { label?: string; value?: string }, idx: number) => (
+                      <div
+                        key={`${spec.label}-${idx}`}
+                        className="rounded-2xl border border-border/50 bg-white px-4 py-4 shadow-sm"
+                      >
+                        <div className="text-xs uppercase tracking-wide text-foreground/50">
+                          {spec.label || "Spec"}
+                        </div>
+                        <div className="mt-2 text-base font-semibold text-foreground">
+                          {spec.value || "—"}
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
               ) : (
-                <p>No specifications available.</p>
+                <div className="rounded-2xl border border-dashed border-border/60 bg-white px-4 py-6 text-center text-sm text-foreground/60">
+                  No specifications available.
+                </div>
               )
             )}
 
             {activeTab === "shipping" && (
-              <div className="text-sm">
-                {shippingInfo ? (
-                  <p>{shippingInfo}</p>
-                ) : (
-                  <p>No shipping information available.</p>
-                )}
+              <div className="space-y-4 text-sm">
+                <div className="rounded-2xl border border-border/50 bg-white px-5 py-4 shadow-sm">
+                  <h4 className="text-base font-semibold text-foreground">
+                    Shipping details
+                  </h4>
+                  <p className="mt-2 text-foreground/70 leading-relaxed">
+                    {shippingInfo || "No shipping information available."}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="rounded-2xl border border-border/50 bg-[#FFF7FA] px-4 py-3">
+                    <div className="text-xs uppercase tracking-wide text-foreground/50">
+                      Processing
+                    </div>
+                    <div className="mt-2 text-sm font-medium text-foreground">
+                      1-2 business days
+                    </div>
+                  </div>
+                  <div className="rounded-2xl border border-border/50 bg-[#FFF7FA] px-4 py-3">
+                    <div className="text-xs uppercase tracking-wide text-foreground/50">
+                      Delivery
+                    </div>
+                    <div className="mt-2 text-sm font-medium text-foreground">
+                      3-7 business days
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
             {activeTab === "reviews" && (
               <div className="space-y-4 text-sm">
                 {reviews.length > 0 ? (
-                  reviews.map((review: any, idx: number) => (
-                    <div key={`${review.name || "review"}-${idx}`} className="border-b border-border/40 pb-4">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-foreground">
-                          {review.name || "Anonymous"}
-                        </span>
-                        {review.rating !== undefined && (
-                          <span className="text-foreground/60">
-                            {review.rating} / 5
-                          </span>
+                  reviews.map((review: any, idx: number) => {
+                    const reviewerName = review.name || "Anonymous";
+                    const initials = reviewerName
+                      .split(" ")
+                      .filter(Boolean)
+                      .slice(0, 2)
+                      .map((part: string) => part[0])
+                      .join("")
+                      .toUpperCase();
+                    return (
+                      <div
+                        key={`${review.name || "review"}-${idx}`}
+                        className="rounded-2xl border border-border/50 bg-white px-5 py-4 shadow-sm"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-center gap-3">
+                            <div className="size-10 rounded-full bg-[#F4E7EC] text-[#B95E82] font-semibold flex items-center justify-center">
+                              {initials || "A"}
+                            </div>
+                            <div>
+                              <p className="text-base font-semibold text-foreground">
+                                {reviewerName}
+                              </p>
+                              {review.createdAt && (
+                                <p className="text-xs text-foreground/50">
+                                  {new Date(review.createdAt).toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          {review.rating !== undefined && (
+                            <span className="rounded-full bg-[#FFF7FA] px-3 py-1 text-xs font-semibold text-[#B95E82]">
+                              {review.rating} / 5
+                            </span>
+                          )}
+                        </div>
+                        {review.comment && (
+                          <p className="mt-3 text-foreground/70 leading-relaxed">
+                            {review.comment}
+                          </p>
                         )}
                       </div>
-                      {review.comment && (
-                        <p className="text-foreground/70">{review.comment}</p>
-                      )}
-                      {review.createdAt && (
-                        <p className="text-xs text-foreground/50 mt-2">
-                          {new Date(review.createdAt).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <>
-                    <p>No reviews yet.</p>
-                    <p>Be the first to share your experience with this product.</p>
+                    <div className="rounded-2xl border border-dashed border-border/60 bg-white px-4 py-6 text-center text-foreground/60">
+                      <p>No reviews yet.</p>
+                      <p>Be the first to share your experience with this product.</p>
+                    </div>
                   </>
                 )}
               </div>
