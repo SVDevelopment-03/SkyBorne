@@ -231,11 +231,11 @@ export default function ProductDetailPage({
 
       {/* Product Detail */}
       <section className="max-w-7xl mx-auto px-6 pb-16">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:items-start">
 
           {/* Left: Image */}
-          <div className="bg-card rounded-3xl overflow-hidden shadow-lg">
-            <div className="aspect-square">
+          <div className="bg-card rounded-3xl overflow-hidden shadow-lg self-start">
+            <div className="h-[360px] sm:h-[460px] lg:h-[560px] max-h-[72vh]">
               <ImageWithFallback
                 src={product.image}
                 alt={product.name}
