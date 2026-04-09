@@ -5,7 +5,15 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ImageWithFallback } from "./ImageWithFallback";
-import { Minus, Plus, ChevronLeft, Loader2, Check, ShoppingCart } from "lucide-react";
+import {
+  Minus,
+  Plus,
+  ChevronLeft,
+  Loader2,
+  Check,
+  ShoppingCart,
+  Star,
+} from "lucide-react";
 import {
   useGetProductByIdQuery,
   useGetPublishedProductsQuery,
@@ -200,12 +208,12 @@ export default function ProductDetailPage({
       specMap.set(key, { label: formatSpecLabel(spec.label), value: spec.value });
     });
 
-    if (!specMap.has("price") && typeof product.price === "number") {
-      specMap.set("price", {
-        label: "Price",
-        value: `$${product.price.toFixed(2)}`,
-      });
-    }
+    // if (!specMap.has("price") && typeof product.price === "number") {
+    //   specMap.set("price", {
+    //     label: "Price",
+    //     value: `$${product.price.toFixed(2)}`,
+    //   });
+    // }
 
     return Array.from(specMap.values()).slice(0, 6);
   })();
@@ -492,6 +500,10 @@ export default function ProductDetailPage({
                       .map((part: string) => part[0])
                       .join("")
                       .toUpperCase();
+                    const ratingValue = Number(review.rating);
+                    const clampedRating = Number.isFinite(ratingValue)
+                      ? Math.max(0, Math.min(5, ratingValue))
+                      : null;
                     return (
                       <div
                         key={`${review.name || "review"}-${idx}`}
@@ -513,11 +525,20 @@ export default function ProductDetailPage({
                               )}
                             </div>
                           </div>
-                          {review.rating !== undefined && (
-                            <span className="rounded-full bg-[#FFF7FA] px-3 py-1 text-xs font-semibold text-[#B95E82]">
-                              {review.rating} / 5
-                            </span>
-                          )}
+                          {clampedRating !== null && (
+                              <div className="flex items-center gap-1 rounded-full bg-[#FFF7FA] px-3 py-1">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={`h-4 w-4 ${
+                                      star <= clampedRating
+                                        ? "text-[#f4b942] fill-current"
+                                        : "text-[#e5e5e5]"
+                                    }`}
+                                  />
+                                ))}
+                              </div>
+                            )}
                         </div>
                         {review.comment && (
                           <p className="mt-3 text-foreground/70 leading-relaxed">
