@@ -452,13 +452,13 @@ const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" =
     const fallbackRecordingUrl = baseUrl
       ? `${normalizedBase}meetings/${session._id}/recording`
       : `/api/v1/meetings/${session._id}/recording`;
-    const recordingUrl = session.recordingUrl || fallbackRecordingUrl;
 
-    if (!recordingUrl) {
+    if (!session.recordingUrl) {
       toast.error("Recording not yet available");
       return;
     }
 
+    const recordingUrl = fallbackRecordingUrl;
     setVideoUrl(recordingUrl);
     setShowVideoPlayer(true);
   };
