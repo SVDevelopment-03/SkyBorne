@@ -12,6 +12,11 @@ import {
 import { useGetActiveEcomCategoriesQuery } from "@/store/api/categoryApi";
 import toast from "react-hot-toast";
 import { Toggle2 } from "@/components/ui/Toggle2";
+import {
+  EMPTY_PRODUCT_MASTER_DATA,
+  PRODUCT_MASTER_GROUPS,
+  ProductMasterData,
+} from "./productMasterFields";
 
 interface FormErrors {
   title?: string;
@@ -25,6 +30,7 @@ const InputError = ({ msg }: { msg?: string }) =>
 
 type SpecificationInput = { label: string; value: string };
 type ReviewInput = { name: string; rating: number; comment: string };
+type ImageItem = { id: string; preview: string; base64?: string; url?: string };
 
 interface EditProductFormProps {
   productId: string;
@@ -37,9 +43,11 @@ export function EditProductForm({ productId }: EditProductFormProps) {
     useGetActiveEcomCategoriesQuery();
   const { data: productData, isLoading: productLoading } = useGetProductByIdQuery(productId);
 
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageItems, setImageItems] = useState<ImageItem[]>([]);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [masterData, setMasterData] = useState<ProductMasterData>(
+    EMPTY_PRODUCT_MASTER_DATA
+  );
 
   const [formData, setFormData] = useState({
     title: "",
@@ -66,7 +74,30 @@ export function EditProductForm({ productId }: EditProductFormProps) {
         shippingInfo: p.shippingInfo ?? "",
         reviews: Array.isArray(p.reviews) ? p.reviews : [],
       });
-      if (p.image) setImagePreview(p.image);
+      const imageUrls = Array.isArray(p.images) && p.images.length
+        ? p.images
+        : p.image
+        ? [p.image]
+        : [];
+      const cappedUrls = imageUrls.slice(0, 5);
+      if (imageUrls.length > 5) {
+        toast.error("Only the first 5 images are shown");
+      }
+      setImageItems(
+        cappedUrls.map((url: string, index: number) => ({
+          id: `existing-${index}`,
+          preview: url,
+          url,
+        }))
+      );
+      const nextMasterData: ProductMasterData = { ...EMPTY_PRODUCT_MASTER_DATA };
+      PRODUCT_MASTER_GROUPS.forEach((group) => {
+        group.fields.forEach((field) => {
+          nextMasterData[field.key] =
+            typeof p[field.key] === "string" ? p[field.key] : "";
+        });
+      });
+      setMasterData(nextMasterData);
     }
   }, [productData]);
 
@@ -84,6 +115,9 @@ export function EditProductForm({ productId }: EditProductFormProps) {
     }
     if (!formData.price || formData.price < 1) {
       newErrors.price = "Price must be at least $1";
+    }
+    if (imageItems.length === 0) {
+      newErrors.image = "Please upload at least one product image";
     }
 
     setErrors(newErrors);
@@ -112,6 +146,16 @@ export function EditProductForm({ productId }: EditProductFormProps) {
         }))
         .filter((review) => review.name || review.comment || review.rating);
 
+      const masterPayload = PRODUCT_MASTER_GROUPS.reduce(
+        (acc, group) => {
+          group.fields.forEach((field) => {
+            acc[field.key] = masterData[field.key];
+          });
+          return acc;
+        },
+        {} as Partial<ProductMasterData>
+      );
+
       const payload: any = {
         productId,
         name: formData.title,
@@ -122,12 +166,17 @@ export function EditProductForm({ productId }: EditProductFormProps) {
         specifications: cleanedSpecifications,
         shippingInfo: formData.shippingInfo,
         reviews: cleanedReviews,
+        ...masterPayload,
       };
 
-      // Only include imageBase64 if a new image was selected
-      if (imageBase64) {
-        payload.imageBase64 = imageBase64;
-      }
+      const imageBase64s = imageItems
+        .filter((item) => item.base64)
+        .map((item) => item.base64 as string);
+      const imageUrls = imageItems
+        .filter((item) => item.url)
+        .map((item) => item.url as string);
+      payload.imageBase64s = imageBase64s;
+      payload.imageUrls = imageUrls;
 
       await updateProduct(payload).unwrap();
       toast.success("Product updated successfully");
@@ -149,16 +198,60 @@ export function EditProductForm({ productId }: EditProductFormProps) {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    if (!file) return;
+  const handleMasterChange = (
+    key: keyof ProductMasterData,
+    value: string
+  ) => {
+    setMasterData((prev) => ({ ...prev, [key]: value }));
+  };
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setImagePreview(reader.result as string);
-      setImageBase64(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const remainingSlots = 5 - imageItems.length;
+    if (remainingSlots <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Maximum 5 images allowed",
+      }));
+      return;
+    }
+
+    const filesToRead = files.slice(0, remainingSlots);
+    if (files.length > remainingSlots) {
+      setErrors((prev) => ({
+        ...prev,
+        image: "Only the first 5 images were added",
+      }));
+    }
+    const readAsDataUrl = (file: File) =>
+      new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+
+    try {
+      const dataUrls = await Promise.all(filesToRead.map(readAsDataUrl));
+      const newItems: ImageItem[] = dataUrls.map((dataUrl, index) => ({
+        id: `${Date.now()}-${index}`,
+        preview: dataUrl,
+        base64: dataUrl,
+      }));
+      setImageItems((prev) => [...prev, ...newItems]);
+      setErrors((prev) => ({ ...prev, image: undefined }));
+    } catch (err) {
+      console.error("Failed to read images:", err);
+      toast.error("Failed to read one or more images");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const removeImage = (id: string) => {
+    setImageItems((prev) => prev.filter((item) => item.id !== id));
   };
 
   const addSpecification = () => {
@@ -327,6 +420,60 @@ export function EditProductForm({ productId }: EditProductFormProps) {
             </div>
           </div>
 
+          {/* Product Master Data */}
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-6">
+            <h2 className="text-lg font-bold text-[#333]">Product Master Data</h2>
+            {PRODUCT_MASTER_GROUPS.map((group) => (
+              <div key={group.title} className="space-y-3">
+                <h3 className="text-sm font-semibold text-[#333]">{group.title}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {group.fields.map((field) => (
+                    <div key={field.key}>
+                      <label className="block text-sm font-medium text-[#707070] mb-2">
+                        {field.label}
+                      </label>
+                      {field.type === "textarea" ? (
+                        <textarea
+                          rows={field.rows ?? 3}
+                          value={masterData[field.key]}
+                          onChange={(e) => handleMasterChange(field.key, e.target.value)}
+                          placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] resize-none"
+                        />
+                      ) : field.type === "select" ? (
+                        <select
+                          value={masterData[field.key]}
+                          onChange={(e) => handleMasterChange(field.key, e.target.value)}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82]"
+                        >
+                          <option value="">
+                            {field.placeholder || `Select ${field.label.toLowerCase()}`}
+                          </option>
+                          {(field.options || []).map((option) => (
+                            <option key={option} value={option}>
+                              {option}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type={field.type || "text"}
+                          value={masterData[field.key]}
+                          onChange={(e) => handleMasterChange(field.key, e.target.value)}
+                          placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                          className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82]"
+                        />
+                      )}
+                      {field.helper ? (
+                        <p className="text-xs text-gray-400 mt-1">{field.helper}</p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
           {/* Specifications */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
             <div className="flex items-center justify-between">
@@ -455,13 +602,19 @@ export function EditProductForm({ productId }: EditProductFormProps) {
         <div className="col-span-2 lg:col-span-1 space-y-6">
           {/* Product Image */}
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 space-y-4">
-            <h2 className="text-lg font-bold text-[#333]">Product Image</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-[#333]">Product Images</h2>
+              <span className="text-xs text-[#707070]">
+                {imageItems.length}/5
+              </span>
+            </div>
             <input
               type="file"
               accept="image/*"
               hidden
               id="imageUpload"
               onChange={handleImageChange}
+              multiple
             />
             <label htmlFor="imageUpload">
               <div
@@ -469,20 +622,35 @@ export function EditProductForm({ productId }: EditProductFormProps) {
                   errors.image ? "border-red-400" : "border-gray-300"
                 }`}
               >
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="w-32 h-32 mx-auto object-cover rounded-lg"
-                  />
-                ) : (
-                  <Upload className="w-12 h-12 mx-auto text-gray-400" />
-                )}
+                <Upload className="w-12 h-12 mx-auto text-gray-400" />
                 <p className="mt-2 text-sm text-gray-500">
-                  {imagePreview ? "Click to change image" : "Click to upload image"}
+                  Click to upload images (max 5)
                 </p>
               </div>
             </label>
+            {imageItems.length > 0 ? (
+              <div className="space-y-3">
+                {imageItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="relative border border-gray-200 rounded-xl overflow-hidden"
+                  >
+                    <img
+                      src={item.preview}
+                      alt="Preview"
+                      className="w-full h-28 object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(item.id)}
+                      className="absolute top-2 right-2 bg-white/90 text-xs px-2 py-1 rounded-md shadow"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <InputError msg={errors.image} />
           </div>
 

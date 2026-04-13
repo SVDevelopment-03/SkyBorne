@@ -23,6 +23,10 @@ import { useAddToCartMutation } from "@/store/api/cartApi";
 import toast from "react-hot-toast";
 import { ProductCard } from "./ProductCard";
 import { getAccessToken } from "@/lib/token";
+import {
+  PRODUCT_MASTER_GROUPS,
+  ProductMasterData,
+} from "@/components/Ecompages/productMasterFields";
 
 export default function ProductDetailPage({
   params,
@@ -197,25 +201,130 @@ export default function ProductDetailPage({
       .trim()
       .replace(/\b\w/g, (char) => char.toUpperCase());
 
+  const readStringValue = (value: any) => {
+    if (value === undefined || value === null) return "";
+    return String(value).trim();
+  };
+
+  const FEATURE_KEYS: Array<
+    "featureBullet1" | "featureBullet2" | "featureBullet3" | "featureBullet4" | "featureBullet5"
+  > = [
+    "featureBullet1",
+    "featureBullet2",
+    "featureBullet3",
+    "featureBullet4",
+    "featureBullet5",
+  ];
+
+  const UNIT_PAIRS: Partial<
+    Record<keyof ProductMasterData, keyof ProductMasterData>
+  > = {
+    size: "sizeUnit",
+    productLength: "productLengthUnit",
+    productHeight: "productHeightUnit",
+    productWidthDepth: "productWidthDepthUnit",
+    productWeight: "productWeightUnit",
+    shippingLength: "shippingLengthUnit",
+    shippingHeight: "shippingHeightUnit",
+    shippingWidthDepth: "shippingWidthDepthUnit",
+    shippingWeight: "shippingWeightUnit",
+    recommendedRetailPrice: "recommendedRetailPriceAEUnit",
+  };
+
+  const EXCLUDED_MASTER_KEYS = new Set<keyof ProductMasterData>([
+    "productCategory",
+    "partnerSkuUniqueCode",
+    "gtinUpc",
+    "featureBullet1",
+    "featureBullet2",
+    "featureBullet3",
+    "featureBullet4",
+    "featureBullet5",
+    "whatIsInTheBox",
+    "longDescription",
+    "shippingLength",
+    "sizeUnit",
+    "productLengthUnit",
+    "productHeightUnit",
+    "productWidthDepthUnit",
+    "productWeightUnit",
+    "shippingHeight",
+    "shippingWidthDepth",
+    "shippingWeight",
+    "shippingLengthUnit",
+    "shippingHeightUnit",
+    "shippingWidthDepthUnit",
+    "shippingWeightUnit",
+    "recommendedRetailPrice",
+    "recommendedRetailPriceAEUnit",
+    "hsCode",
+  ]);
+
+  const formatValueWithUnit = (
+    value: string,
+    unit: string,
+    key: keyof ProductMasterData
+  ) => {
+    if (!unit) return value;
+    if (key === "recommendedRetailPrice") {
+      return `${unit} ${value}`;
+    }
+    return `${value} ${unit}`;
+  };
+
+  const masterSpecs = PRODUCT_MASTER_GROUPS.flatMap((group) =>
+    group.fields
+      .filter((field) => !EXCLUDED_MASTER_KEYS.has(field.key))
+      .map((field) => {
+        const rawValue = readStringValue((product as any)?.[field.key]);
+        if (!rawValue) return null;
+        const unitKey = UNIT_PAIRS[field.key];
+        const unitValue = unitKey
+          ? readStringValue((product as any)?.[unitKey])
+          : "";
+        return {
+          label: field.label,
+          value: unitKey
+            ? formatValueWithUnit(rawValue, unitValue, field.key)
+            : rawValue,
+        };
+      })
+      .filter(Boolean)
+  ) as { label: string; value: string }[];
+
+  const customSpecs = specifications
+    .map((spec: { label?: string; value?: string }) => ({
+      label: formatSpecLabel(spec.label),
+      value: readStringValue(spec.value),
+    }))
+    .filter((spec) => spec.label && spec.value);
+
+  const combinedSpecs = (() => {
+    const seen = new Set<string>();
+    const output: { label: string; value: string }[] = [];
+    const addItem = (item: { label: string; value: string }) => {
+      const key = normalizeSpecKey(item.label);
+      if (!key || key === "category" || seen.has(key)) return;
+      seen.add(key);
+      output.push(item);
+    };
+    masterSpecs.forEach(addItem);
+    customSpecs.forEach(addItem);
+    return output;
+  })();
+
+  const descriptionText = readStringValue(product.description);
+  const featureBullets = FEATURE_KEYS.map((key) =>
+    readStringValue((product as any)?.[key])
+  ).filter(Boolean);
+  const whatIsInTheBox = readStringValue(product.whatIsInTheBox);
+  const longDescription = readStringValue(product.longDescription);
+  const showLongDescription =
+    !!longDescription &&
+    longDescription.toLowerCase() !== descriptionText.toLowerCase();
+
   const detailSpecs = (() => {
-    const specMap = new Map<string, { label?: string; value?: string }>();
-    const normalize = (label?: string) => (label || "").trim().toLowerCase();
-
-    specifications.forEach((spec: { label?: string; value?: string }) => {
-      if (!spec?.label || !spec?.value) return;
-      const key = normalize(spec.label);
-      if (!key || key === "category") return;
-      specMap.set(key, { label: formatSpecLabel(spec.label), value: spec.value });
-    });
-
-    // if (!specMap.has("price") && typeof product.price === "number") {
-    //   specMap.set("price", {
-    //     label: "Price",
-    //     value: `$${product.price.toFixed(2)}`,
-    //   });
-    // }
-
-    return Array.from(specMap.values()).slice(0, 6);
+    return combinedSpecs.slice(0, 6);
   })();
   const shippingInfo =
     typeof product.shippingInfo === "string" ? product.shippingInfo.trim() : "";
@@ -278,8 +387,21 @@ export default function ProductDetailPage({
             </div>
 
             <p className="text-lg text-foreground/80 leading-relaxed">
-              {product.description}
+              {descriptionText || "No description available for this product."}
             </p>
+            {featureBullets.length > 0 && (
+              <ul className="space-y-2 text-sm text-foreground/70">
+                {featureBullets.map((feature, idx) => (
+                  <li
+                    key={`${feature.slice(0, 12)}-${idx}`}
+                    className="flex items-start gap-3"
+                  >
+                    <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#B95E82]" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
 
             {detailSpecs.length > 0 && (
               <div className="bg-card rounded-2xl p-5 shadow-sm border border-border/60">
@@ -417,8 +539,46 @@ export default function ProductDetailPage({
                   About this product
                 </h3>
                 <p className="text-base md:text-lg text-foreground/70 leading-relaxed">
-                  {product.description || "No description available for this product."}
+                  {descriptionText || "No description available for this product."}
                 </p>
+                {featureBullets.length > 0 && (
+                  <div className="rounded-2xl border border-border/50 bg-white px-5 py-4 shadow-sm">
+                    <h4 className="text-base font-semibold text-foreground">
+                      Key Features
+                    </h4>
+                    <ul className="mt-3 space-y-2 text-sm text-foreground/70">
+                      {featureBullets.map((feature, idx) => (
+                        <li
+                          key={`${feature.slice(0, 12)}-${idx}`}
+                          className="flex items-start gap-3"
+                        >
+                          <span className="mt-2 h-1.5 w-1.5 rounded-full bg-[#B95E82]" />
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {whatIsInTheBox && (
+                  <div className="rounded-2xl border border-border/50 bg-white px-5 py-4 shadow-sm">
+                    <h4 className="text-base font-semibold text-foreground">
+                      What's in the box
+                    </h4>
+                    <p className="mt-2 text-sm text-foreground/70 leading-relaxed">
+                      {whatIsInTheBox}
+                    </p>
+                  </div>
+                )}
+                {showLongDescription && (
+                  <div className="rounded-2xl border border-border/50 bg-white px-5 py-4 shadow-sm">
+                    <h4 className="text-base font-semibold text-foreground">
+                      More details
+                    </h4>
+                    <p className="mt-2 text-sm text-foreground/70 leading-relaxed">
+                      {longDescription}
+                    </p>
+                  </div>
+                )}
                 <div className="rounded-2xl border border-dashed border-[#B95E82]/30 bg-[#FFF7FA] px-4 py-3 text-sm text-foreground/60">
                   Crafted to pair seamlessly with your wellness routine.
                 </div>
@@ -426,9 +586,9 @@ export default function ProductDetailPage({
             )}
 
             {activeTab === "specs" && (
-              specifications.length > 0 ? (
+              combinedSpecs.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                  {specifications.map(
+                  {combinedSpecs.map(
                     (spec: { label?: string; value?: string }, idx: number) => (
                       <div
                         key={`${spec.label}-${idx}`}
