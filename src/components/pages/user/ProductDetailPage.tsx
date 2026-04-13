@@ -349,11 +349,12 @@ export default function ProductDetailPage({
 
   const relatedLoading = relatedByCategoryLoading || relatedAllLoading;
 
-  const imageUrls = Array.isArray(product?.images) && product.images.length
-    ? product.images
-    : product?.image
-      ? [product.image]
-      : [];
+  const imageUrls: string[] =
+    Array.isArray(product?.images) && product.images.length
+      ? (product.images as string[])
+      : product?.image
+        ? [product.image as string]
+        : [];
 
   useEffect(() => {
     if (!imageUrls.length) return;
