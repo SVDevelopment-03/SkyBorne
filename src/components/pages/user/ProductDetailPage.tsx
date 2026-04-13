@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ImageWithFallback } from "./ImageWithFallback";
@@ -49,6 +49,7 @@ export default function ProductDetailPage({
   const [activeTab, setActiveTab] = useState<
     "description" | "specs" | "shipping" | "reviews"
   >("description");
+  const [activeImage, setActiveImage] = useState<string>("");
 
   const categoryId =
     typeof product?.category === "object" && product?.category !== null
@@ -348,6 +349,19 @@ export default function ProductDetailPage({
 
   const relatedLoading = relatedByCategoryLoading || relatedAllLoading;
 
+  const imageUrls = Array.isArray(product?.images) && product.images.length
+    ? product.images
+    : product?.image
+      ? [product.image]
+      : [];
+
+  useEffect(() => {
+    if (!imageUrls.length) return;
+    if (!activeImage || !imageUrls.includes(activeImage)) {
+      setActiveImage(imageUrls[0]);
+    }
+  }, [imageUrls, activeImage]);
+
   return (
     <div className="min-h-screen">
       {/* Breadcrumb */}
@@ -369,11 +383,35 @@ export default function ProductDetailPage({
           <div className="bg-card rounded-3xl overflow-hidden shadow-lg self-start">
             <div className="h-[360px] sm:h-[460px] lg:h-[560px] max-h-[72vh]">
               <ImageWithFallback
-                src={product.image}
+                src={activeImage || product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
+            {imageUrls.length > 1 && (
+              <div className="border-t border-border/40 bg-white">
+                <div className="flex flex-wrap gap-3 p-4">
+                  {imageUrls.map((url, idx) => (
+                    <button
+                      key={`${url}-${idx}`}
+                      type="button"
+                      onClick={() => setActiveImage(url)}
+                      className={`h-16 w-16 overflow-hidden rounded-xl border transition ${
+                        activeImage === url
+                          ? "border-[#B95E82] ring-2 ring-[#B95E82]/20"
+                          : "border-border/40 hover:border-[#B95E82]/40"
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt={`${product.name} thumbnail ${idx + 1}`}
+                        className="h-full w-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Right: Product Info */}
