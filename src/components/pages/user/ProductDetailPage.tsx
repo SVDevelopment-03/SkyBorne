@@ -292,12 +292,14 @@ export default function ProductDetailPage({
       .filter(Boolean)
   ) as { label: string; value: string }[];
 
-  const customSpecs = specifications
+  const customSpecs: { label: string; value: string }[] = specifications
     .map((spec: { label?: string; value?: string }) => ({
       label: formatSpecLabel(spec.label),
       value: readStringValue(spec.value),
     }))
-    .filter((spec) => spec.label && spec.value);
+    .filter(
+      (spec: { label?: string; value?: string }) => spec.label && spec.value
+    ) as { label: string; value: string }[];
 
   const combinedSpecs = (() => {
     const seen = new Set<string>();
