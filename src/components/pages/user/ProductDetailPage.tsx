@@ -66,6 +66,20 @@ export default function ProductDetailPage({
       sortBy: "newest",
     });
 
+  const imageUrls: string[] =
+    Array.isArray(product?.images) && product.images.length
+      ? (product.images as string[])
+      : product?.image
+        ? [product.image as string]
+        : [];
+
+  useEffect(() => {
+    if (!imageUrls.length) return;
+    if (!activeImage || !imageUrls.includes(activeImage)) {
+      setActiveImage(imageUrls[0]);
+    }
+  }, [imageUrls, activeImage]);
+
   const handleAddToCart = async () => {
     const token = getAccessToken();
     if (!token) {
@@ -348,20 +362,6 @@ export default function ProductDetailPage({
     .slice(0, 3);
 
   const relatedLoading = relatedByCategoryLoading || relatedAllLoading;
-
-  const imageUrls: string[] =
-    Array.isArray(product?.images) && product.images.length
-      ? (product.images as string[])
-      : product?.image
-        ? [product.image as string]
-        : [];
-
-  useEffect(() => {
-    if (!imageUrls.length) return;
-    if (!activeImage || !imageUrls.includes(activeImage)) {
-      setActiveImage(imageUrls[0]);
-    }
-  }, [imageUrls, activeImage]);
 
   return (
     <div className="min-h-screen">

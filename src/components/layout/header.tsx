@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,11 +24,17 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
   const router = useRouter();
   const [showAlert, setShowAlert] = useState(false);
   const { user } = useGetUser();
-  const avatarName = `${user?.firstName?.charAt(0) || "U"}${
-    user?.lastName?.charAt(0) || ""
+  const [isHydrated, setIsHydrated] = useState(false);
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  const safeUser = isHydrated ? user : null;
+  const avatarName = `${safeUser?.firstName?.charAt(0) || "U"}${
+    safeUser?.lastName?.charAt(0) || ""
   }`;
   const fullName = toTitleCase(
-    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
+    `${safeUser?.firstName || ""} ${safeUser?.lastName || ""}`.trim() ||
+      "User",
   );
   const menuDetail = [
     {
@@ -74,10 +80,10 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
   ];
 
   const handleClick = () => {
-    if (user?.role == "admin") {
+    if (safeUser?.role == "admin") {
       router.push("/admin-dashboard");
     }
-    if (user?.role == "trainer") {
+    if (safeUser?.role == "trainer") {
       router.push("/trainer-dashboard");
     } else {
       router.push("/dashboard");
@@ -120,7 +126,7 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
         </Link>
       </div>
       <div className="relative flex items-center gap-3.5">
-        {!user ? (
+        {!safeUser ? (
           <>
             <Button
               className={`${
@@ -181,7 +187,7 @@ const Header = ({ isHero }: { isHero?: boolean }) => {
                 <DropdownMenuSeparator />
               </DropdownMenuItem>
             ))}
-            {user && (
+            {safeUser && (
               <DropdownMenuItem
                 onClick={() => setShowAlert(true)}
                 className="hover:bg-[#FFF7DD]! text-[#494949]! hover:text-[#494949]! p-0 cursor-pointer"
