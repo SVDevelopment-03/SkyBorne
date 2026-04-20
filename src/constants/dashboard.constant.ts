@@ -218,6 +218,11 @@ export const AdminNav = {
       url: "",
       icon: ShoppingCart,
       items: [
+         {
+          title: "Dashboard",
+          url: "/shop-dashboard",
+          icon: BarChart3,
+        },
         {
           title: "Products",
           url: "/products",
