@@ -5,12 +5,13 @@ import React, { useState } from "react";
 import {
   Package, Search, Filter, ArrowLeft, Truck,
   CheckCircle, XCircle, Clock, MapPin,
-  RefreshCw, Star, AlertCircle, Loader2,
+  Star, AlertCircle, Loader2,
 } from "lucide-react";
 import { useCancelOrderMutation, useGetMyOrdersQuery, useGetOrderByIdQuery } from "@/store/api/orderApi";
 import type { IOrderItem } from "@/store/api/orderApi";
 import { useAddProductReviewMutation } from "@/store/api/productApi";
 import { ImageWithFallback } from "@/components/pages/user/ImageWithFallback";
+import { useReorderCheckoutSessionMutation } from "@/store/api/EcompaymentApi";
 import toast from "react-hot-toast";
 
 type ViewMode = "list" | "detail";
@@ -27,6 +28,7 @@ export default function MyOrders() {
   const [reviewComment, setReviewComment] = useState("");
   const [hoveredReviewRating, setHoveredReviewRating] = useState(0);
   const [reviewAttempted, setReviewAttempted] = useState(false);
+  const [reorderLoadingId, setReorderLoadingId] = useState<string | null>(null);
 
   const { data, isLoading, isFetching, refetch } = useGetMyOrdersQuery({
     status: statusFilter !== "all" ? statusFilter as any: undefined,
@@ -39,6 +41,7 @@ export default function MyOrders() {
       skip: !selectedOrderId || viewMode !== "detail",
     });
   const [cancelOrder, { isLoading: isCancelling }] = useCancelOrderMutation();
+  const [reorderCheckoutSession] = useReorderCheckoutSessionMutation();
   const [addProductReview, { isLoading: isSubmittingReview }] =
     useAddProductReviewMutation();
 
@@ -145,6 +148,30 @@ export default function MyOrders() {
     if (item.product?.id) return String(item.product.id);
     if (item.productId) return String(item.productId);
     return null;
+  };
+
+  const canReorder = (status: string): boolean => {
+    const safe = String(status || "").toLowerCase();
+    return ["delivered", "cancelled", "refunded"].includes(safe);
+  };
+
+  const handleReorder = async (orderId: string) => {
+    try {
+      setReorderLoadingId(orderId);
+      const response = await reorderCheckoutSession({ orderId }).unwrap();
+      const checkoutUrl = response?.data?.checkoutUrl;
+
+      if (!checkoutUrl) {
+        toast.error("Unable to start reorder checkout");
+        return;
+      }
+
+      window.location.href = checkoutUrl;
+    } catch (err: any) {
+      toast.error(err?.data?.message || "Failed to start reorder");
+    } finally {
+      setReorderLoadingId(null);
+    }
   };
 
   const renderCancelModal = () => {
@@ -484,6 +511,15 @@ export default function MyOrders() {
                   Cancel Order
                 </button>
               )}
+              {canReorder(String(order.orderStatus || "")) && (
+                <button
+                  onClick={() => handleReorder(String(order._id))}
+                  disabled={reorderLoadingId === String(order._id)}
+                  className="w-full py-3 rounded-full text-sm border border-[#B95E82]/40 text-[#B95E82] hover:bg-[#B95E82]/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                  {reorderLoadingId === String(order._id) ? "Redirecting..." : "Reorder"}
+                </button>
+              )}
             </div>
 
             <div className="bg-card rounded-3xl p-6 shadow-md">
@@ -630,6 +666,15 @@ export default function MyOrders() {
                       className="px-6 py-2 rounded-full text-sm border border-red-200 text-red-600 hover:bg-red-50 transition-all"
                     >
                       Cancel Order
+                    </button>
+                  )}
+                  {canReorder(String(order.orderStatus || "")) && (
+                    <button
+                      onClick={() => handleReorder(String(order._id))}
+                      disabled={reorderLoadingId === String(order._id)}
+                      className="px-6 py-2 rounded-full text-sm border border-[#B95E82]/40 text-[#B95E82] hover:bg-[#B95E82]/10 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                    >
+                      {reorderLoadingId === String(order._id) ? "Redirecting..." : "Reorder"}
                     </button>
                   )}
                   <button

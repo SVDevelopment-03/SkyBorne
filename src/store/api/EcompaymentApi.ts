@@ -85,6 +85,10 @@ export interface DownloadReceiptParams {
   paymentId: string;
 }
 
+export interface ReorderCheckoutParams {
+  orderId: string;
+}
+
 export interface EcomPaymentStatsResponse {
   success: boolean;
   stats: {
@@ -111,6 +115,18 @@ export const ecomPaymentApi = createApi({
         url: "/ecom-payments/create-checkout-session",
         method: "POST",
         data: payload,
+      }),
+      invalidatesTags: ["EcomPayment"],
+    }),
+
+    /** POST /ecom-payments/reorder/:orderId */
+    reorderCheckoutSession: builder.mutation<
+      { data: CheckoutSessionResponse },
+      ReorderCheckoutParams
+    >({
+      query: ({ orderId }) => ({
+        url: `/ecom-payments/reorder/${orderId}`,
+        method: "POST",
       }),
       invalidatesTags: ["EcomPayment"],
     }),
@@ -167,6 +183,7 @@ export const ecomPaymentApi = createApi({
 
 export const {
   useCreateCheckoutSessionMutation,
+  useReorderCheckoutSessionMutation,
   useGetSessionDetailsQuery,
   useGetMyPaymentsQuery,
   useGetAllPaymentsQuery,
