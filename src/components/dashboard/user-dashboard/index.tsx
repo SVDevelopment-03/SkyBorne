@@ -2,7 +2,10 @@
 
 "use client";
 import { useEffect, useMemo, useState } from "react";
+import { ShoppingCart, CreditCard } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
 import DashboardBanner from "./DashboardBanner";
+import { useGetMyCartQuery } from "@/store/api/cartApi";
 import { Typography } from "@/components/ui/heading";
 import {
   CalenderIcon,
@@ -125,6 +128,7 @@ const getCreditsChartOptions = (
 };
 
 export default function Page() {
+  const router = useRouter();
   const [userRegion, setUserRegion] = useState<{
     region: string | null;
     timezone: string | null;
@@ -173,6 +177,9 @@ export default function Page() {
     isLoading: tileLoading,
   } = useGetDashboardStatsQuery({ region: userRegion?.region });
   const { data: plansData } = useGetPlansQuery(undefined);
+  const { data: cartData } = useGetMyCartQuery();
+
+  const cartCount = cartData?.data?.items?.length || 0;
 
   const plans = useMemo(() => plansData?.data || [], [plansData]);
 
@@ -474,6 +481,17 @@ export default function Page() {
               </div> */}
           </div>
           <div className="flex items-center gap-2">
+            <div className="relative">
+            <ShoppingCart
+              className="w-7 h-7 mr-6 cursor-pointer text-[#212C26] hover:text-[#B95E82] transition"
+              onClick={() => {
+                router.push("/cart")
+              }}
+            />
+            <span className="absolute -top-2 -right-0 mr-3 bg-red-500 text-white text-xs px-1.5 rounded-full">
+              {cartCount}
+            </span>
+            </div>
             <UserAvatar name={avatarName} />
             <div className="max-md:hidden">
               <Typography title={fullName} cssClass="text-[#212C26]!" />

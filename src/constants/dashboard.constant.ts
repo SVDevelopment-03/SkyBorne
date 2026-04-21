@@ -87,12 +87,12 @@ export const SidebarNav = {
         {
           title: "Cart",
           url: "/cart",
-          icon: ShoppingBag,
+          icon: ShoppingCart,
         },
         {
           title: "Checkout",
           url: "/checkout",
-          icon: ShoppingCart,
+          icon: ShoppingBag,
         },
         {
           title: "My Orders",
