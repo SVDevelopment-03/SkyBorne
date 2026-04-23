@@ -1,7 +1,5 @@
-import Packages from "@/components/pages/public/packages";
+import Home from "@/components/pages/public/home";
 
-export default function page() {
-  return (
-      <Packages />
-  );
+export default function Page() {
+  return <Home />;
 }
