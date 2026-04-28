@@ -88,6 +88,7 @@ API.interceptors.response.use(
       requestUrl.includes("/send-otp") ||
       requestUrl.includes("/verify-otp") ||
       requestUrl.includes("/request-password-reset") ||
+      requestUrl.includes("/forgot-password") ||
       requestUrl.includes("/reset-password");
 
     if (error.response?.status === 401 && !originalRequest._retry && !isAuthRequest) {

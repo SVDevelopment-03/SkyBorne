@@ -59,6 +59,14 @@ export const authApi = createApi({
       }),
     }),
 
+    forgotPassword: builder.mutation({
+      query: (body) => ({
+        url: "/forgot-password",
+        method: "POST",
+        data: body,
+      }),
+    }),
+
     resetPassword: builder.mutation({
       query: (body) => ({
         url: "/reset-password",
@@ -137,6 +145,7 @@ export const {
   useUpdateProfileMutation,
   useGetDashboardStatsQuery,
   usePasswordResetRequestMutation,
+  useForgotPasswordMutation,
   useResetPasswordMutation,
   useChangePasswordMutation,
   useSocialLoginMutation,

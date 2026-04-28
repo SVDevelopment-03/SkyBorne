@@ -8,7 +8,7 @@ import * as Yup from "yup";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { handleApiError } from "@/utils/handleApiError";
-import { usePasswordResetRequestMutation } from "@/store/api/authApi";
+import { useForgotPasswordMutation } from "@/store/api/authApi";
 import { Loader2 } from "lucide-react";
 import { EmailVerifyProps } from ".";
 import HomeIcon from "@/utils/homeIcon";
@@ -30,8 +30,7 @@ const EmailVerify = ({
   userEmail,
 }: EmailVerifyProps) => {
   const router = useRouter();
-  const [passwordResetRequest, { isLoading }] =
-    usePasswordResetRequestMutation();
+  const [forgotPassword, { isLoading }] = useForgotPasswordMutation();
   const requestLockRef = useRef(false);
   const lastRequestRef = useRef<{ email: string; at: number } | null>(null);
 
@@ -69,7 +68,7 @@ const EmailVerify = ({
 
             requestLockRef.current = true;
             try {
-              await passwordResetRequest({ email: normalizedEmail }).unwrap();
+              await forgotPassword({ email: normalizedEmail }).unwrap();
               lastRequestRef.current = { email: normalizedEmail, at: now };
               toast.success("Otp sent to your email.");
               if (updateEmail) updateEmail(normalizedEmail);
