@@ -11,6 +11,8 @@ import UserAvatar from "@/hooks/useAvatar";
 import { Typography } from "@/components/ui/heading";
 import { toTitleCase } from "@/utils/Titlecase";
 import SidebarDrawer from "@/components/layout/sidebar-drawer";
+import { ShoppingCart } from "lucide-react";
+import { useGetMyCartQuery } from "@/store/api/cartApi";
 
 interface AuthLayoutProps {
   children: ReactNode;
@@ -23,6 +25,10 @@ export default function UserLayout({ children }: AuthLayoutProps) {
   const { user } = useGetUser();
   const [checking, setChecking] = useState(true);
   const token = getAccessToken();
+  const { data: cartData } = useGetMyCartQuery(undefined, {
+    skip: !token,
+  });
+  const cartCount = cartData?.data?.items?.length || 0;
   const publicShopRoutes = ["/product", "/cart"];
   const publicShopPrefixes = ["/product/"];
   const isPublicShopRoute =
@@ -81,22 +87,29 @@ export default function UserLayout({ children }: AuthLayoutProps) {
         <SidebarDrawer /> 
       </div>
       <div className="flex flex-col h-dvh min-h-0">
-        {pathname !== "/dashboard" && (
-          <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-end">
-            <div className="flex items-center gap-10 text-[#212C26]">
-              <div className="flex items-center gap-2">
-                <UserAvatar name={avatarName} />
-                <div>
-                  <Typography title={fullName} cssClass="text-[#212C26]!" />
-                  <Typography
-                    title="Premium Member"
-                    cssClass="text-[#878787]! text-[16px]!"
-                  />
-                </div>
+        <div className="px-7.5 py-6 bg-white sticky top-0 z-10 flex items-center justify-end border-b border-[#E6E6E6]">
+          <div className="flex items-center gap-10 text-[#212C26]">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <ShoppingCart
+                  className="w-7 h-7 mr-6 cursor-pointer text-[#212C26] hover:text-[#B95E82] transition"
+                  onClick={() => router.push("/cart")}
+                />
+                <span className="absolute -top-2 -right-0 mr-3 bg-red-500 text-white text-xs px-1.5 rounded-full">
+                  {cartCount}
+                </span>
+              </div>
+              <UserAvatar name={avatarName} />
+              <div>
+                <Typography title={fullName} cssClass="text-[#212C26]!" />
+                <Typography
+                  title="Premium Member"
+                  cssClass="text-[#878787]! text-[16px]!"
+                />
               </div>
             </div>
           </div>
-        )}
+        </div>
         <div className="flex flex-col gap-7.5 flex-1 min-h-0 overflow-y-auto">
           {children}
         </div>

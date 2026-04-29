@@ -2,10 +2,7 @@
 
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { ShoppingCart, CreditCard } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
 import DashboardBanner from "./DashboardBanner";
-import { useGetMyCartQuery } from "@/store/api/cartApi";
 import { Typography } from "@/components/ui/heading";
 import {
   CalenderIcon,
@@ -30,7 +27,6 @@ import { format } from "date-fns";
 import { useSelector } from "react-redux";
 import { RootState } from "@/store";
 import { toTitleCase } from "@/utils/Titlecase";
-import UserAvatar from "@/hooks/useAvatar";
 import { useGetDashboardStatsQuery } from "@/store/api/authApi";
 import { useGetPlansQuery } from "@/store/api/publicApi";
 import { SearchIcon } from "@/icons/helpIcon";
@@ -128,7 +124,6 @@ const getCreditsChartOptions = (
 };
 
 export default function Page() {
-  const router = useRouter();
   const [userRegion, setUserRegion] = useState<{
     region: string | null;
     timezone: string | null;
@@ -177,9 +172,6 @@ export default function Page() {
     isLoading: tileLoading,
   } = useGetDashboardStatsQuery({ region: userRegion?.region });
   const { data: plansData } = useGetPlansQuery(undefined);
-  const { data: cartData } = useGetMyCartQuery();
-
-  const cartCount = cartData?.data?.items?.length || 0;
 
   const plans = useMemo(() => plansData?.data || [], [plansData]);
 
@@ -282,12 +274,6 @@ export default function Page() {
   const paginationTotalPages = completedSessionsPagination?.totalPages ?? 1;
   const paginationCurrentPage = completedSessionsPagination?.currentPage ?? 1;
 
-  const avatarName = `${user?.firstName?.charAt(0) || "U"}${
-    user?.lastName?.charAt(0) || ""
-  }`;
-  const fullName = toTitleCase(
-    `${user?.firstName || ""} ${user?.lastName || ""}`.trim() || "User",
-  );
   type TimeFilter = "3months" | "6months" | "1year";
 
   // ✅ Helper function to format date with timezone awareness
@@ -472,35 +458,6 @@ export default function Page() {
             className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full xl:w-[610px] h-11 top-[25px] left-[30px] rounded-[10px] pl-[41px] pt-1.5 md:text-base! placeholder:text-[#929292]!"
           />
           <SearchIcon />
-        </div>
-        <div className="flex items-center md:gap-10 text-[#212C26]">
-          <div className="relative">
-            {/* <Bell className="h-8 w-8" /> */}
-            {/* <div className="bg-[#E05252] absolute -top-1.5 -right-1 shadow-[0px_1px_2px_-1px_#0000001A,0px_1px_3px_0px_#0000001A] rounded-full h-5 w-5 px-1.5 py-0.5">
-                <h2 className="text-white  text-[12px] font-semibold font-inter!"  style={{ fontFamily: "Inter, sans-serif" }}>3</h2>
-              </div> */}
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="relative">
-            <ShoppingCart
-              className="w-7 h-7 mr-6 cursor-pointer text-[#212C26] hover:text-[#B95E82] transition"
-              onClick={() => {
-                router.push("/cart")
-              }}
-            />
-            <span className="absolute -top-2 -right-0 mr-3 bg-red-500 text-white text-xs px-1.5 rounded-full">
-              {cartCount}
-            </span>
-            </div>
-            <UserAvatar name={avatarName} />
-            <div className="max-md:hidden">
-              <Typography title={fullName} cssClass="text-[#212C26]!" />
-              <Typography
-                title="Premium Member"
-                cssClass="text-[#878787]! text-[16px]!"
-              />
-            </div>
-          </div>
         </div>
       </div>
       <div className="flex flex-col gap-7.5 p-7.5 pt-0">
