@@ -8,7 +8,7 @@ import {
   useRemoveFromCartMutation,
   useClearCartMutation,
 } from "@/store/api/cartApi";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 export default function CartPage() {
   const { data, isLoading, isFetching } = useGetMyCartQuery();

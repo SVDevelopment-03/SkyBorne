@@ -8,7 +8,7 @@ import { ImageWithFallback } from "@/components/pages/user/ImageWithFallback";
 import { useGetMyCartQuery } from "@/store/api/cartApi";
 import { useCreateCheckoutSessionMutation } from "@/store/api/EcompaymentApi";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "react-hot-toast";
 
 export default function CheckoutPage() {
   const { data, isLoading } = useGetMyCartQuery();
@@ -96,7 +96,11 @@ export default function CheckoutPage() {
       // ── Redirect to Stripe Checkout ───────────────────────────────
       window.location.href = result.data.checkoutUrl;
     } catch (err: any) {
-      toast.error(err?.data?.message ?? "Failed to create checkout session");
+      const message =
+        err?.data?.message ??
+        (typeof err?.data === "string" ? err.data : null) ??
+        "Failed to create checkout session";
+      toast.error(message);
     }
   };
 
