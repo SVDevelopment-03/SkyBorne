@@ -13,6 +13,8 @@ import {
   type OrderStatus,
 } from '@/store/api/orderApi';
 import { skipToken } from '@reduxjs/toolkit/query/react';
+import toast from 'react-hot-toast';
+import { handleApiError } from '@/utils/handleApiError';
 
 export default function OrderDetailPage() {
   const router = useRouter();
@@ -51,10 +53,10 @@ export default function OrderDetailPage() {
     setIsSubmitting(true);
     try {
       await updateOrderStatus({ orderId: order._id, orderStatus: fulfillmentStatus as OrderStatus }).unwrap();
-      // Optionally refetch is automatic via invalidation if configured; otherwise you can rely on RTK Query cache
-      console.log('Status updated');
+      toast.success('Order status updated');
     } catch (err) {
       console.error('Update status error', err);
+      handleApiError(err);
     } finally {
       setIsSubmitting(false);
     }
