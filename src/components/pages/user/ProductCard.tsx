@@ -20,6 +20,8 @@ interface ProductCardProps {
   product: BackendProduct;
   onAddToCart?: (productId: string) => void;
   isAddingToCart?: boolean;
+  isAddToCartDisabled?: boolean;
+  addToCartDisabledLabel?: string;
   onInterested?: (productId: string) => void;
   isInterested?: boolean;
   isInterestSaved?: boolean;
@@ -29,6 +31,8 @@ export function ProductCard({
   product,
   onAddToCart,
   isAddingToCart = false,
+  isAddToCartDisabled = false,
+  addToCartDisabledLabel = "Unavailable",
   onInterested,
   isInterested = false,
   isInterestSaved = false,
@@ -110,10 +114,11 @@ export function ProductCard({
               <Button
                 type="button"
                 variant="theme"
-                disabled={isAddingToCart}
+                disabled={isAddingToCart || isAddToCartDisabled}
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
+                  if (isAddToCartDisabled) return;
                   onAddToCart?.(product._id);
                 }}
                 className="w-full sm:w-auto px-5 py-2.5 rounded-full transition-all duration-300 shadow-sm hover:shadow-md flex items-center justify-center gap-2 disabled:opacity-70"
@@ -123,6 +128,8 @@ export function ProductCard({
                     <Loader2 className="w-4 h-4 animate-spin" />
                     Adding…
                   </>
+                ) : isAddToCartDisabled ? (
+                  addToCartDisabledLabel
                 ) : (
                   "Add to Cart"
                 )}

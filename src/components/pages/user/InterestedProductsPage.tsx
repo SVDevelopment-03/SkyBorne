@@ -13,6 +13,7 @@ import {
   type ProductInterest,
 } from "@/store/api/productApi";
 import { useAddToCartMutation } from "@/store/api/cartApi";
+import { useGetMyOrdersQuery } from "@/store/api/orderApi";
 import useGetUser from "@/hooks/useGetUser";
 import toast from "react-hot-toast";
 
@@ -21,6 +22,13 @@ export default function InterestedProductsPage() {
   const userId = user?.id || user?._id;
 
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
+  const { data: myOrdersData } = useGetMyOrdersQuery(
+    {
+      page: 1,
+      limit: 50,
+    },
+    { skip: !userId },
+  );
 
   const { data: interestsData, isLoading: interestsLoading, isFetching: interestsFetching } =
     useGetProductInterestsQuery(
@@ -80,7 +88,60 @@ export default function InterestedProductsPage() {
 
   const [addToCart] = useAddToCartMutation();
 
+  const productCooldownUntilMap = useMemo(() => {
+    const map = new Map<string, number>();
+    const orders = Array.isArray((myOrdersData as any)?.data)
+      ? (myOrdersData as any).data
+      : [];
+    const now = Date.now();
+    const blockedStatuses = new Set(["cancelled", "refunded", "failed"]);
+
+    for (const order of orders) {
+      const orderStatus = String(order?.orderStatus || "").toLowerCase();
+      const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
+      if (blockedStatuses.has(orderStatus) || blockedStatuses.has(paymentStatus)) {
+        continue;
+      }
+      const createdAtMs = new Date(order?.createdAt || order?.paidAt || "").getTime();
+      if (!Number.isFinite(createdAtMs)) continue;
+      const cooldownUntil = createdAtMs + 24 * 60 * 60 * 1000;
+      if (cooldownUntil <= now) continue;
+
+      const items = Array.isArray(order?.items) ? order.items : [];
+      for (const item of items) {
+        const productId =
+          typeof item?.product === "string"
+            ? item.product
+            : String(item?.product?._id || item?.product?.id || "");
+        if (!productId) continue;
+        const current = map.get(productId) || 0;
+        if (cooldownUntil > current) {
+          map.set(productId, cooldownUntil);
+        }
+      }
+    }
+    return map;
+  }, [myOrdersData]);
+
+  const getCooldownMessage = (productId: string): string | null => {
+    const cooldownUntil = productCooldownUntilMap.get(productId);
+    if (!cooldownUntil) return null;
+    const remainingMs = cooldownUntil - Date.now();
+    if (remainingMs <= 0) return null;
+    const totalMinutes = Math.ceil(remainingMs / (60 * 1000));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `Re-order in ${hours}h ${minutes}m`;
+  };
+
   const handleAddToCart = async (productId: string) => {
+    const cooldownMessage = getCooldownMessage(productId);
+    if (cooldownMessage) {
+      toast.error(
+        "You already purchased this product in the last 24 hours. Please try later.",
+      );
+      return;
+    }
     setAddingProductId(productId);
     try {
       await addToCart({ productId, quantity: 1 }).unwrap();
@@ -155,15 +216,20 @@ export default function InterestedProductsPage() {
             isFetching ? "opacity-60 pointer-events-none" : "opacity-100"
           }`}
         >
-          {interestedProducts.map((product) => (
+          {interestedProducts.map((product) => {
+            const cooldownMessage = getCooldownMessage(product._id);
+            return (
             <ProductCard
               key={product._id}
               product={product as any}
               onAddToCart={handleAddToCart}
               isAddingToCart={addingProductId === product._id}
+              isAddToCartDisabled={!!cooldownMessage}
+              addToCartDisabledLabel={cooldownMessage || undefined}
               isInterestSaved
             />
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

@@ -20,6 +20,7 @@ import {
   useExpressProductInterestMutation,
 } from "@/store/api/productApi";
 import { useAddToCartMutation } from "@/store/api/cartApi";
+import { useGetMyOrdersQuery } from "@/store/api/orderApi";
 import toast from "react-hot-toast";
 import { ProductCard } from "./ProductCard";
 import { getAccessToken } from "@/lib/token";
@@ -50,6 +51,14 @@ export default function ProductDetailPage({
     "description" | "specs" | "shipping" | "reviews"
   >("description");
   const [activeImage, setActiveImage] = useState<string>("");
+  const token = getAccessToken();
+  const { data: myOrdersData } = useGetMyOrdersQuery(
+    {
+      page: 1,
+      limit: 50,
+    },
+    { skip: !token },
+  );
 
   const categoryId =
     typeof product?.category === "object" && product?.category !== null
@@ -80,14 +89,63 @@ export default function ProductDetailPage({
     }
   }, [imageUrls, activeImage]);
 
+  const productCooldownUntilMap = new Map<string, number>();
+  const orders = Array.isArray((myOrdersData as any)?.data)
+    ? (myOrdersData as any).data
+    : [];
+  const now = Date.now();
+  const blockedStatuses = new Set(["cancelled", "refunded", "failed"]);
+
+  for (const order of orders) {
+    const orderStatus = String(order?.orderStatus || "").toLowerCase();
+    const paymentStatus = String(order?.paymentStatus || "").toLowerCase();
+    if (blockedStatuses.has(orderStatus) || blockedStatuses.has(paymentStatus)) {
+      continue;
+    }
+    const createdAtMs = new Date(order?.createdAt || order?.paidAt || "").getTime();
+    if (!Number.isFinite(createdAtMs)) continue;
+    const cooldownUntil = createdAtMs + 24 * 60 * 60 * 1000;
+    if (cooldownUntil <= now) continue;
+
+    const items = Array.isArray(order?.items) ? order.items : [];
+    for (const item of items) {
+      const productId =
+        typeof item?.product === "string"
+          ? item.product
+          : String(item?.product?._id || item?.product?.id || "");
+      if (!productId) continue;
+      const current = productCooldownUntilMap.get(productId) || 0;
+      if (cooldownUntil > current) {
+        productCooldownUntilMap.set(productId, cooldownUntil);
+      }
+    }
+  }
+
+  const getCooldownMessage = (productId: string): string | null => {
+    const cooldownUntil = productCooldownUntilMap.get(productId);
+    if (!cooldownUntil) return null;
+    const remainingMs = cooldownUntil - Date.now();
+    if (remainingMs <= 0) return null;
+    const totalMinutes = Math.ceil(remainingMs / (60 * 1000));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `Re-order in ${hours}h ${minutes}m`;
+  };
+
   const handleAddToCart = async () => {
-    const token = getAccessToken();
     if (!token) {
       toast.error("Please login to add items to cart");
       if (typeof window !== "undefined") {
         const next = `${window.location.pathname}${window.location.search}`;
         router.push(`/login?next=${encodeURIComponent(next)}`);
       }
+      return;
+    }
+    const cooldownMessage = getCooldownMessage(id);
+    if (cooldownMessage) {
+      toast.error(
+        "You already purchased this product in the last 24 hours. Please try later.",
+      );
       return;
     }
     try {
@@ -112,13 +170,19 @@ export default function ProductDetailPage({
   };
 
   const handleRelatedAddToCart = async (productId: string) => {
-    const token = getAccessToken();
     if (!token) {
       toast.error("Please login to add items to cart");
       if (typeof window !== "undefined") {
         const next = `${window.location.pathname}${window.location.search}`;
         router.push(`/login?next=${encodeURIComponent(next)}`);
       }
+      return;
+    }
+    const cooldownMessage = getCooldownMessage(productId);
+    if (cooldownMessage) {
+      toast.error(
+        "You already purchased this product in the last 24 hours. Please try later.",
+      );
       return;
     }
     try {
@@ -192,6 +256,7 @@ export default function ProductDetailPage({
     typeof (product as any)?.stock === "number"
       ? (product as any).stock <= 0
       : false;
+  const mainCooldownMessage = getCooldownMessage(id);
 
   const specifications = Array.isArray(product.specifications)
     ? product.specifications
@@ -515,7 +580,7 @@ export default function ProductDetailPage({
                 <button
                   type="button"
                   onClick={handleAddToCart}
-                  disabled={addingToCart || addedToCart}
+                  disabled={addingToCart || addedToCart || !!mainCooldownMessage}
                   className="w-full py-4 px-8 rounded-full transition-all shadow-md hover:shadow-lg"
                   style={{
                     background: "linear-gradient(135deg, #B95E82 0%, #F39F9F 100%)",
@@ -534,7 +599,7 @@ export default function ProductDetailPage({
                       ? "Adding..."
                       : addedToCart
                         ? "Added!"
-                        : "Add to Cart"}
+                        : mainCooldownMessage || "Add to Cart"}
                   </span>
                 </button>
               )}
@@ -779,16 +844,21 @@ export default function ProductDetailPage({
           </div>
         ) : relatedProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {relatedProducts.map((related: any) => (
+            {relatedProducts.map((related: any) => {
+              const cooldownMessage = getCooldownMessage(String(related._id));
+              return (
               <ProductCard
                 key={related._id}
                 product={related}
                 onAddToCart={handleRelatedAddToCart}
                 isAddingToCart={addingRelatedId === related._id && addingToCart}
+                isAddToCartDisabled={!!cooldownMessage}
+                addToCartDisabledLabel={cooldownMessage || undefined}
                 onInterested={handleRelatedInterested}
                 isInterested={savingRelatedId === related._id && savingInterest}
               />
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="bg-card rounded-2xl p-6 text-sm text-foreground/60">

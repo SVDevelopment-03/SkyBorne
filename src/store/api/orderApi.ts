@@ -162,13 +162,25 @@ export const orderApi = createApi({
         search?: string;
         status?: OrderStatus | "all";
         paymentStatus?: PaymentStatus | "all";
+        fromDate?: string;
+        toDate?: string;
       }
     >({
-      query: ({ page = 1, limit = 10, search = "", status, paymentStatus }) => {
+      query: ({
+        page = 1,
+        limit = 10,
+        search = "",
+        status,
+        paymentStatus,
+        fromDate,
+        toDate,
+      }) => {
         let url = `/orders?page=${page}&limit=${limit}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
         if (status && status !== "all") url += `&status=${status}`;
         if (paymentStatus && paymentStatus !== "all") url += `&paymentStatus=${paymentStatus}`;
+        if (fromDate) url += `&fromDate=${encodeURIComponent(fromDate)}`;
+        if (toDate) url += `&toDate=${encodeURIComponent(toDate)}`;
         return {
           url,
           method: "GET",

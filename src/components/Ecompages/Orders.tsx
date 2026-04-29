@@ -3,11 +3,22 @@
 "use client"
 import { useState } from 'react';
 import Link from 'next/link';
-import { Search, Eye, Loader2, RotateCcw } from 'lucide-react';
+import { Search, Eye, Loader2, RotateCcw, CalendarIcon, ChevronDown } from 'lucide-react';
+import { addDays, format } from "date-fns";
 import { useGetAllOrdersQuery, useRefundOrderMutation } from '@/store/api/orderApi';
-import type { OrderStatus, PaymentStatus } from '@/store/api/orderApi';
+import type { OrderStatus } from '@/store/api/orderApi';
 import { useDebounce } from "@/hooks/useDebounce";
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { DateRange } from "react-day-picker";
 import toast from "react-hot-toast";
 
 const paymentStatusColors: Record<string, string> = {
@@ -30,9 +41,13 @@ const fulfillmentStatusColors: Record<string, string> = {
 export function Orders() {
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
-  const [paymentFilter] = useState('all');
-  const [fulfillmentFilter] = useState('all');
+  const limit = 10;
+  const [fulfillmentFilter, setFulfillmentFilter] = useState('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [isSelectingRangeEnd, setIsSelectingRangeEnd] = useState(false);
   const debouncedSearchTerm = useDebounce(searchTerm, 400);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
@@ -48,10 +63,16 @@ export function Orders() {
     limit,
     search: debouncedSearchTerm,
     status: fulfillmentFilter !== 'all' ? (fulfillmentFilter as OrderStatus) : undefined,
-    paymentStatus: paymentFilter !== 'all' ? (paymentFilter as PaymentStatus) : undefined,
+    fromDate: fromDate || undefined,
+    toDate: toDate || undefined,
   });
 
   const orders = ordersResponse?.data || [];
+  const dateRangeLabel = dateRange?.from
+    ? dateRange.to
+      ? `From: ${format(dateRange.from, "dd/MM/yyyy")} - To: ${format(dateRange.to, "dd/MM/yyyy")}`
+      : `From: ${format(dateRange.from, "dd/MM/yyyy")} - To: Select`
+    : "Select date range";
 
   // Format date
   const formatDate = (dateString: string): string => {
@@ -125,56 +146,90 @@ export function Orders() {
             />
           </div>
           
-          {/* <div className="flex items-center gap-2 w-full lg:w-auto flex-wrap lg:flex-nowrap">
-            <Filter className="w-5 h-5 text-[#707070]" />
-            
-            <select
-              value={paymentFilter}
-              onChange={(e) => {
-                setPaymentFilter(e.target.value);
-                setPage(1);
-              }}
-              className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] focus:border-transparent text-[#707070]"
-            >
-              <option value="all">All Payments</option>
-              <option value="Paid">Paid</option>
-              <option value="Pending">Pending</option>
-              <option value="Failed">Failed</option>
-              <option value="Refunded">Refunded</option>
-            </select>
-            
-            <select
+          <div className="flex items-center gap-2 w-full lg:w-auto flex-wrap lg:flex-nowrap">
+            <Select
               value={fulfillmentFilter}
-              onChange={(e) => {
-                setFulfillmentFilter(e.target.value);
+              onValueChange={(value) => {
+                setFulfillmentFilter(value);
                 setPage(1);
               }}
-              className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] focus:border-transparent text-[#707070]"
             >
-              <option value="all">All Fulfillment</option>
-              <option value="Pending">Pending</option>
-              <option value="Confirmed">Confirmed</option>
-              <option value="Processing">Processing</option>
-              <option value="Shipped">Shipped</option>
-              <option value="Delivered">Delivered</option>
-              <option value="Cancelled">Cancelled</option>
-              <option value="Refunded">Refunded</option>
-            </select>
+              <SelectTrigger className="w-full min-[380px]:w-[180px] h-10 rounded-xl border border-gray-200 text-[#707070] focus:ring-0 focus:border-gray-200">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent className="z-[80]">
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="Pending">Pending</SelectItem>
+                <SelectItem value="Processing">Processing</SelectItem>
+                <SelectItem value="Shipped">Shipped</SelectItem>
+                <SelectItem value="Delivered">Delivered</SelectItem>
+                <SelectItem value="Cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+            <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex items-center w-full min-[380px]:w-auto px-4 py-2 border border-gray-200 rounded-xl text-[#707070] bg-transparent hover:bg-transparent active:bg-transparent focus:bg-transparent hover:text-[#707070] active:text-[#707070] focus:text-[#707070] hover:border-gray-200 active:border-gray-200 focus:border-gray-200 shadow-none transition-none"
+                >
+                  <CalendarIcon className="h-4 w-4 mr-2" />
+                  <span className="text-sm">{dateRangeLabel}</span>
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="end">
+                <Calendar
+                  mode="range"
+                  selected={dateRange}
+                  classNames={{
+                    range_start: "bg-[#B95E82]/20 rounded-l-md",
+                    range_middle: "bg-[#F3DCE6] text-[#6B2E47] rounded-none",
+                    range_end: "bg-[#B95E82]/20 rounded-r-md",
+                    day_button:
+                      "hover:bg-transparent! hover:text-inherit! hover:opacity-100! data-[range-start=true]:bg-[#B95E82]! data-[range-start=true]:text-white! data-[range-end=true]:bg-[#B95E82]! data-[range-end=true]:text-white! data-[range-middle=true]:bg-[#F3DCE6]! data-[range-middle=true]:text-[#6B2E47]!",
+                  }}
+                  onSelect={(range) => {
+                    if (!range?.from) {
+                      setDateRange(undefined);
+                      setFromDate("");
+                      setToDate("");
+                      setIsSelectingRangeEnd(false);
+                      setPage(1);
+                      return;
+                    }
 
-            <select
-              value={limit}
-              onChange={(e) => {
-                setLimit(Number(e.target.value));
-                setPage(1);
-              }}
-              className="px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] focus:border-transparent text-[#707070]"
-            >
-              <option value="5">5 per page</option>
-              <option value="10">10 per page</option>
-              <option value="20">20 per page</option>
-              <option value="50">50 per page</option>
-            </select>
-          </div> */}
+                    // First click: keep calendar open and show an initial 2-day range hint.
+                    if (!isSelectingRangeEnd) {
+                      const hintedEnd = addDays(range.from, 1);
+                      setDateRange({ from: range.from, to: hintedEnd });
+                      setFromDate(format(range.from, "yyyy-MM-dd"));
+                      setToDate(format(hintedEnd, "yyyy-MM-dd"));
+                      setIsSelectingRangeEnd(true);
+                      setPage(1);
+                      return;
+                    }
+
+                    // Second click: finalize user's selected range and close.
+                    const finalTo = range.to ?? range.from;
+                    const normalizedTo =
+                      finalTo && range.from && finalTo < range.from
+                        ? range.from
+                        : finalTo;
+
+                    setDateRange({ from: range.from, to: normalizedTo });
+                    setFromDate(format(range.from, "yyyy-MM-dd"));
+                    setToDate(normalizedTo ? format(normalizedTo, "yyyy-MM-dd") : "");
+                    setIsSelectingRangeEnd(false);
+                    setPage(1);
+
+                    if (range.from && normalizedTo) {
+                      setTimeout(() => setDatePickerOpen(false), 100);
+                    }
+                  }}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
 
         {/* Loading State */}
