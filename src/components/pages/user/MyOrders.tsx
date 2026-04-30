@@ -391,6 +391,10 @@ export default function MyOrders() {
                   <p className="text-sm text-foreground/60 mb-1">Tracking Number</p>
                   <p>{order.trackingNumber?.trim() || "N/A"}</p>
                 </div>
+                <div>
+                  <p className="text-sm text-foreground/60 mb-1">Provider</p>
+                  <p>{order.shippingProvider?.trim() || "N/A"}</p>
+                </div>
               </div>
             </div>
 
@@ -628,7 +632,7 @@ export default function MyOrders() {
                   <Package className="text-primary" size={28} />
                 </div>
 
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-7 gap-4">
                   <div>
                     <p className="text-sm text-foreground/60 mb-1">Order ID</p>
                     <p className="font-medium text-sm">{order.orderNumber}</p>
@@ -654,6 +658,10 @@ export default function MyOrders() {
                   <div>
                     <p className="text-sm text-foreground/60 mb-1">Tracking Number</p>
                     <p className="text-sm">{order.trackingNumber?.trim() || "N/A"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-foreground/60 mb-1">Provider</p>
+                    <p className="text-sm">{order.shippingProvider?.trim() || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-foreground/60 mb-1">Order Status</p>

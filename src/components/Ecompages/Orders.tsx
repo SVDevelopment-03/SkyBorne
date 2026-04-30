@@ -262,6 +262,7 @@ export function Orders() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Total</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Tracking Number</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Provider</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Payment</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Fulfillment</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Actions</th>
@@ -284,6 +285,9 @@ export function Orders() {
                       </td>
                       <td className="px-6 py-4 text-sm text-[#707070]">
                         {order.trackingNumber?.trim() || 'N/A'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-[#707070]">
+                        {order.shippingProvider?.trim() || 'N/A'}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${paymentStatusColors[order.paymentStatus] || 'bg-gray-100 text-gray-700'}`}>

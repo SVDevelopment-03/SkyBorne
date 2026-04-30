@@ -32,13 +32,15 @@ export default function OrderDetailPage() {
 
   const [fulfillmentStatus, setFulfillmentStatus] = useState<OrderStatus>((order?.orderStatus as OrderStatus) || ('Processing' as OrderStatus));
   const [trackingNumber, setTrackingNumber] = useState('');
+  const [shippingProvider, setShippingProvider] = useState('');
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (order?.orderStatus) setFulfillmentStatus(order.orderStatus);
     setTrackingNumber(order?.trackingNumber || '');
-  }, [order?.orderStatus, order?.trackingNumber]);
+    setShippingProvider(order?.shippingProvider || '');
+  }, [order?.orderStatus, order?.trackingNumber, order?.shippingProvider]);
 
   const formatDate = (d?: string) => {
     if (!d) return '-';
@@ -57,6 +59,7 @@ export default function OrderDetailPage() {
         orderId: order._id,
         orderStatus: fulfillmentStatus as OrderStatus,
         trackingNumber,
+        shippingProvider,
       }).unwrap();
       toast.success('Order status updated');
     } catch (err) {
@@ -150,6 +153,12 @@ export default function OrderDetailPage() {
                 <span className="text-[#707070]">Tracking Number</span>
                 <span className="font-medium text-[#333]">
                   {order.trackingNumber?.trim() ? order.trackingNumber : 'N/A'}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#707070]">Provider</span>
+                <span className="font-medium text-[#333]">
+                  {order.shippingProvider?.trim() ? order.shippingProvider : 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between pt-3 border-t border-gray-100">
@@ -269,6 +278,17 @@ export default function OrderDetailPage() {
                   onChange={(e) => setTrackingNumber(e.target.value)}
                   disabled={isSubmitting || updating}
                   placeholder="Enter tracking number"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-[#707070] mb-2">Provider</label>
+                <input
+                  type="text"
+                  value={shippingProvider}
+                  onChange={(e) => setShippingProvider(e.target.value)}
+                  disabled={isSubmitting || updating}
+                  placeholder="Enter provider name"
                   className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#B95E82] focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
