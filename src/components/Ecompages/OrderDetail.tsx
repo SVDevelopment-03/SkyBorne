@@ -298,7 +298,7 @@ export default function OrderDetailPage() {
                 disabled={isSubmitting || updating}
                 className="w-full px-6 py-3 bg-[#B95E82] text-white rounded-xl hover:bg-[#A04D6F] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {(isSubmitting || updating) ? 'Updating...' : 'Update Status'}
+                {(isSubmitting || updating) ? 'Updating...' : 'Update'}
               </button>
             </div>
           </div>
