@@ -56,6 +56,7 @@ export interface Order {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   orderStatus: OrderStatus;
+  trackingNumber?: string;
   shippingAddress: ShippingAddress;
   isPaid: boolean;
   paidAt?: string;
@@ -79,6 +80,7 @@ export interface PlaceOrderPayload {
 export interface UpdateOrderStatusPayload {
   orderId: string;
   orderStatus: OrderStatus;
+  trackingNumber?: string;
 }
 
 export interface OrdersResponse {
@@ -211,10 +213,10 @@ export const orderApi = createApi({
       OrderResponse,
       UpdateOrderStatusPayload
     >({
-      query: ({ orderId, orderStatus }) => ({
+      query: ({ orderId, orderStatus, trackingNumber }) => ({
         url: `/orders/${orderId}/status`,
         method: "PATCH",
-        data: { orderStatus },
+        data: { orderStatus, trackingNumber },
       }),
       invalidatesTags: ["Order"],
     }),

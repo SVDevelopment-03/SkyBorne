@@ -261,6 +261,7 @@ export function Orders() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Mobile</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Date</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Total</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Tracking Number</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Payment</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Fulfillment</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-[#707070] uppercase tracking-wider">Actions</th>
@@ -280,6 +281,9 @@ export function Orders() {
                       <td className="px-6 py-4 text-sm text-[#707070]">{formatDate(order.createdAt)}</td>
                       <td className="px-6 py-4 text-sm font-medium text-[#333]">
                         ${order.totalAmount.toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-[#707070]">
+                        {order.trackingNumber?.trim() || 'N/A'}
                       </td>
                       <td className="px-6 py-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${paymentStatusColors[order.paymentStatus] || 'bg-gray-100 text-gray-700'}`}>

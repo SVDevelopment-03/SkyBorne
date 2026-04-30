@@ -364,7 +364,7 @@ export default function MyOrders() {
             {/* Summary */}
             <div className="bg-card rounded-3xl p-6 shadow-md">
               <h3 className="mb-4">Order Summary</h3>
-              <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-foreground/60 mb-1">Order Date</p>
                   <p>{new Date(order.createdAt).toLocaleDateString()}</p>
@@ -386,6 +386,10 @@ export default function MyOrders() {
                 <div>
                   <p className="text-sm text-foreground/60 mb-1">Total Amount</p>
                   <p className="text-2xl text-primary">${order.totalAmount?.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-foreground/60 mb-1">Tracking Number</p>
+                  <p>{order.trackingNumber?.trim() || "N/A"}</p>
                 </div>
               </div>
             </div>
@@ -624,7 +628,7 @@ export default function MyOrders() {
                   <Package className="text-primary" size={28} />
                 </div>
 
-                <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
                   <div>
                     <p className="text-sm text-foreground/60 mb-1">Order ID</p>
                     <p className="font-medium text-sm">{order.orderNumber}</p>
@@ -646,6 +650,10 @@ export default function MyOrders() {
                     }`}>
                       {order.paymentStatus}
                     </span>
+                  </div>
+                  <div>
+                    <p className="text-sm text-foreground/60 mb-1">Tracking Number</p>
+                    <p className="text-sm">{order.trackingNumber?.trim() || "N/A"}</p>
                   </div>
                   <div>
                     <p className="text-sm text-foreground/60 mb-1">Order Status</p>

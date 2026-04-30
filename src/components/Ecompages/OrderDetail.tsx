@@ -37,7 +37,8 @@ export default function OrderDetailPage() {
 
   useEffect(() => {
     if (order?.orderStatus) setFulfillmentStatus(order.orderStatus);
-  }, [order?.orderStatus]);
+    setTrackingNumber(order?.trackingNumber || '');
+  }, [order?.orderStatus, order?.trackingNumber]);
 
   const formatDate = (d?: string) => {
     if (!d) return '-';
@@ -52,7 +53,11 @@ export default function OrderDetailPage() {
     if (!order) return;
     setIsSubmitting(true);
     try {
-      await updateOrderStatus({ orderId: order._id, orderStatus: fulfillmentStatus as OrderStatus }).unwrap();
+      await updateOrderStatus({
+        orderId: order._id,
+        orderStatus: fulfillmentStatus as OrderStatus,
+        trackingNumber,
+      }).unwrap();
       toast.success('Order status updated');
     } catch (err) {
       console.error('Update status error', err);
@@ -139,6 +144,12 @@ export default function OrderDetailPage() {
                       : 'bg-yellow-100 text-yellow-700'
                 }`}>
                   {order.paymentStatus}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#707070]">Tracking Number</span>
+                <span className="font-medium text-[#333]">
+                  {order.trackingNumber?.trim() ? order.trackingNumber : 'N/A'}
                 </span>
               </div>
               <div className="flex justify-between pt-3 border-t border-gray-100">
