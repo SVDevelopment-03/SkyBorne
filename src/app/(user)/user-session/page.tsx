@@ -148,6 +148,8 @@ export default function UserSessions() {
   const [hasMore, setHasMore] = useState(true);
   const [isPageLoading, setIsPageLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const bottomReachLockRef = useRef(false);
+  const isPageLoadingRef = useRef(false);
 
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
@@ -172,11 +174,12 @@ export default function UserSessions() {
   }, [region, timezone]);
 
   const loadMeetingsPage = async (nextSkip: number, replace = false) => {
-    if (isPageLoading) return;
+    if (isPageLoadingRef.current) return;
 
     const needsRegion = filter === "all" || filter === "upcoming";
     if (needsRegion && !userRegion?.region) return;
 
+    isPageLoadingRef.current = true;
     setIsPageLoading(true);
     try {
       const res =
@@ -214,6 +217,7 @@ export default function UserSessions() {
     } catch (err) {
       console.error("Error loading meetings page:", err);
     } finally {
+      isPageLoadingRef.current = false;
       setIsPageLoading(false);
     }
   };
@@ -224,12 +228,14 @@ export default function UserSessions() {
       setMeetings([]);
       setHasMore(false);
       setPageSkip(0);
+      bottomReachLockRef.current = false;
       return;
     }
 
     setMeetings([]);
     setHasMore(true);
     setPageSkip(0);
+    bottomReachLockRef.current = false;
     loadMeetingsPage(0, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filter, searchQuery, userRegion?.region]);
@@ -241,11 +247,17 @@ export default function UserSessions() {
     const observer = new IntersectionObserver(
       (entries) => {
         const first = entries[0];
-        if (!first?.isIntersecting) return;
+        if (!first?.isIntersecting) {
+          // Unlock only after user scrolls away from bottom sentinel.
+          bottomReachLockRef.current = false;
+          return;
+        }
+        if (bottomReachLockRef.current) return;
         if (!hasMore || isPageLoading) return;
+        bottomReachLockRef.current = true;
         loadMeetingsPage(pageSkip + PAGE_SIZE, false);
       },
-      { root: null, rootMargin: "600px 0px", threshold: 0 },
+      { root: null, rootMargin: "0px 0px 120px 0px", threshold: 0 },
     );
 
     observer.observe(el);
@@ -368,17 +380,8 @@ export default function UserSessions() {
     }
   };
 
-  const sortedMeetings = useMemo(() => {
-    return [...meetings].sort((a: any, b: any) => {
-      const timeA = new Date(a?.localTime).getTime();
-      const timeB = new Date(b?.localTime).getTime();
-      if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
-      return timeA - timeB;
-    });
-  }, [meetings]);
-
   const sessions: Session[] = useMemo(() => {
-    return sortedMeetings.map((meeting: any) => {
+    return meetings.map((meeting: any) => {
       const meetingTime = new Date(meeting.localTime);
       const oneHourAfterMeeting = new Date(
         meetingTime.getTime() + 60 * 60 * 1000,
@@ -418,7 +421,7 @@ export default function UserSessions() {
         meetingStatus,
       };
     });
-  }, [sortedMeetings]);
+  }, [meetings]);
 
   useEffect(() => {
     if (!meetingIdParam) return;
