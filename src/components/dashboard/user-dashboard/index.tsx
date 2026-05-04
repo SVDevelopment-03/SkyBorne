@@ -318,7 +318,7 @@ export default function Page() {
         day: "numeric" as const,
         month: "short" as const,
         year: "numeric" as const,
-        timeZone: timezone || undefined,
+        // timeZone: timezone || undefined,
       };
 
       const formattedDate = date
@@ -347,7 +347,7 @@ export default function Page() {
         hour: "numeric" as const,
         minute: "2-digit" as const,
         hour12: true,
-        timeZone: timezone || undefined,
+        // timeZone: timezone || undefined,
       };
 
       return date.toLocaleTimeString("en-US", options);
@@ -557,13 +557,16 @@ export default function Page() {
                     //   userRegion?.timezone
                     // );
 
+                    // const formattedTime =
+                    //   formatTimeWithTimezone(
+                    //     meeting?.localTime,
+                    //     userCountryTimezone ||
+                    //       userRegion?.timezone ||
+                    //       regionInfo?.timezone,
+                    //   );
+
                     const formattedTime =
-                      formatTimeWithTimezone(
-                        meeting?.localTime,
-                        userCountryTimezone ||
-                          userRegion?.timezone ||
-                          regionInfo?.timezone,
-                      );
+                    formatTimeWithTimezone(meeting?.localTime);
 
                     // ✅ Use the enhanced formatDateWithTimezone with recording mode support
                     const formattedDate = formatDateWithTimezone(
