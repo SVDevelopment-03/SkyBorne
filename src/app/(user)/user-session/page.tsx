@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 "use client";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +16,12 @@ import {
   PlayCircle,
 } from "lucide-react";
 import {
+  useGetAllUserMeetingsQuery,
   useGetUpcomingMeetingsQuery,
   useGetPastUserMeetingsQuery,
+  useLazyGetAllUserMeetingsQuery,
+  useLazyGetUpcomingMeetingsQuery,
+  useLazyGetPastUserMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
 } from "@/store/api/meetingApi";
@@ -86,10 +90,28 @@ export default function UserSessions() {
 
   const { region, timezone } = useUserRegionFromStore();
 
-  // RTK Query hooks
+  const PAGE_SIZE = 40;
+
+  // Count-only queries (used for cards and tab counts)
   const {
-    data: upcomingMeetingsData,
-    isLoading: isLoadingUpcoming,
+    data: allCountData,
+    isLoading: isLoadingAllCount,
+    error: allCountError,
+    refetch: refetchAllCount,
+  } = useGetAllUserMeetingsQuery(
+    {
+      region: userRegion?.region,
+      search: searchQuery,
+      skip: 0,
+      limit: 1,
+      countOnly: 1,
+    },
+    { skip: !userRegion?.region },
+  );
+
+  const {
+    data: upcomingCountData,
+    isLoading: isLoadingUpcomingCount,
     error: upcomingError,
     refetch: refetchUpcoming,
   } = useGetUpcomingMeetingsQuery(
@@ -97,7 +119,8 @@ export default function UserSessions() {
       region: userRegion?.region,
       search: searchQuery,
       skip: 0,
-      limit: 500,
+      limit: 1,
+      countOnly: 1,
     },
     {
       skip: !userRegion?.region,
@@ -105,21 +128,33 @@ export default function UserSessions() {
   );
 
   const {
-    data: pastMeetingsData,
-    isLoading: isLoadingPast,
+    data: pastCountData,
+    isLoading: isLoadingPastCount,
     error: pastError,
     refetch: refetchPast,
   } = useGetPastUserMeetingsQuery({
     search: searchQuery,
     skip: 0,
-    limit: 500,
+    limit: 1,
+    countOnly: 1,
   });
+
+  const [fetchAllMeetings] = useLazyGetAllUserMeetingsQuery();
+  const [fetchUpcomingMeetings] = useLazyGetUpcomingMeetingsQuery();
+  const [fetchPastMeetings] = useLazyGetPastUserMeetingsQuery();
+
+  const [meetings, setMeetings] = useState<any[]>([]);
+  const [pageSkip, setPageSkip] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
-  const isLoading = isLoadingUpcoming || isLoadingPast;
-  const fetchError = upcomingError || pastError;
+  const isLoading = isLoadingAllCount || isLoadingUpcomingCount || isLoadingPastCount;
+  const fetchError = allCountError || upcomingError || pastError;
   const refetchAll = () => {
+    refetchAllCount();
     refetchUpcoming();
     refetchPast();
   };
@@ -135,6 +170,87 @@ export default function UserSessions() {
       });
     }, 0);
   }, [region, timezone]);
+
+  const loadMeetingsPage = async (nextSkip: number, replace = false) => {
+    if (isPageLoading) return;
+
+    const needsRegion = filter === "all" || filter === "upcoming";
+    if (needsRegion && !userRegion?.region) return;
+
+    setIsPageLoading(true);
+    try {
+      const res =
+        filter === "all"
+          ? await fetchAllMeetings({
+              region: userRegion?.region,
+              search: searchQuery,
+              skip: nextSkip,
+              limit: PAGE_SIZE,
+            }).unwrap()
+          : filter === "upcoming"
+            ? await fetchUpcomingMeetings({
+                region: userRegion?.region,
+                search: searchQuery,
+                skip: nextSkip,
+                limit: PAGE_SIZE,
+              }).unwrap()
+            : await fetchPastMeetings({
+                search: searchQuery,
+                skip: nextSkip,
+                limit: PAGE_SIZE,
+              }).unwrap();
+
+      const nextMeetings = Array.isArray(res?.meetings) ? res.meetings : [];
+      const nextHasMore = Boolean(res?.hasMore);
+
+      setHasMore(nextHasMore);
+      setPageSkip(nextSkip);
+      setMeetings((prev) => {
+        if (replace) return nextMeetings;
+        const seen = new Set(prev.map((m: any) => String(m?._id)));
+        const deduped = nextMeetings.filter((m: any) => !seen.has(String(m?._id)));
+        return [...prev, ...deduped];
+      });
+    } catch (err) {
+      console.error("Error loading meetings page:", err);
+    } finally {
+      setIsPageLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const needsRegion = filter === "all" || filter === "upcoming";
+    if (needsRegion && !userRegion?.region) {
+      setMeetings([]);
+      setHasMore(false);
+      setPageSkip(0);
+      return;
+    }
+
+    setMeetings([]);
+    setHasMore(true);
+    setPageSkip(0);
+    loadMeetingsPage(0, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filter, searchQuery, userRegion?.region]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (!first?.isIntersecting) return;
+        if (!hasMore || isPageLoading) return;
+        loadMeetingsPage(pageSkip + PAGE_SIZE, false);
+      },
+      { root: null, rootMargin: "600px 0px", threshold: 0 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isPageLoading, pageSkip, filter, searchQuery, userRegion?.region]);
 
 
   useEffect(() => {
@@ -252,65 +368,57 @@ export default function UserSessions() {
     }
   };
 
-  const upcomingMeetings = upcomingMeetingsData?.meetings || [];
-  const pastMeetings = pastMeetingsData?.meetings || [];
+  const sortedMeetings = useMemo(() => {
+    return [...meetings].sort((a: any, b: any) => {
+      const timeA = new Date(a?.localTime).getTime();
+      const timeB = new Date(b?.localTime).getTime();
+      if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
+      return timeA - timeB;
+    });
+  }, [meetings]);
 
-  const uniqueMeetings = Array.from(
-    new Map(
-      [...pastMeetings, ...upcomingMeetings].map((meeting: any) => [
-        String(meeting?._id),
-        meeting,
-      ]),
-    ).values(),
-  ).sort((a: any, b: any) => {
-    const timeA = new Date(a?.localTime).getTime();
-    const timeB = new Date(b?.localTime).getTime();
-    if (Number.isNaN(timeA) || Number.isNaN(timeB)) return 0;
-    return timeA - timeB;
-  });
+  const sessions: Session[] = useMemo(() => {
+    return sortedMeetings.map((meeting: any) => {
+      const meetingTime = new Date(meeting.localTime);
+      const oneHourAfterMeeting = new Date(
+        meetingTime.getTime() + 60 * 60 * 1000,
+      );
+      const meetingStatus = String(meeting?.status || "").toLowerCase();
 
-  // Transform and filter meetings
-  const sessions: Session[] = uniqueMeetings.map((meeting: any) => {
-    const meetingTime = new Date(meeting.localTime);
-    const oneHourAfterMeeting = new Date(
-      meetingTime.getTime() + 60 * 60 * 1000
-    );
-    const meetingStatus = String(meeting?.status || "").toLowerCase();
-
-    return {
-      id: meeting._id,
-      name: meeting.title,
-      trainer: meeting.trainer?.name || "Unknown Trainer",
-      date: meetingTime.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      }),
-      time:
-        formatTimeWithTimezone(meeting?.localTime),
-      liveTime: meeting?.liveTime,
-      duration: meeting.duration,
-      localTime: meeting?.localTime,
-      type: "Online",
-      status:
-        meetingStatus === "completed"
-          ? "completed"
-          : new Date() < oneHourAfterMeeting
-            ? "upcoming"
-            : "completed",
-      participants: 0,
-      maxParticipants: 20,
-      level: "Intermediate",
-      service: meeting.service?.title || "Wellness",
-      joinUrl: meeting.joinUrl,
-      recordingUrl: meeting.recordingUrl,
-      regions: meeting.regions,
-      liveRegion: meeting.liveRegion,
-      _id: meeting._id,
-      joined: meeting.joined || false,
-      meetingStatus,
-    };
-  });
+      return {
+        id: meeting._id,
+        name: meeting.title,
+        trainer: meeting.trainer?.name || "Unknown Trainer",
+        date: meetingTime.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        }),
+        time: formatTimeWithTimezone(meeting?.localTime),
+        liveTime: meeting?.liveTime,
+        duration: meeting.duration,
+        localTime: meeting?.localTime,
+        type: "Online",
+        status:
+          meetingStatus === "completed"
+            ? "completed"
+            : new Date() < oneHourAfterMeeting
+              ? "upcoming"
+              : "completed",
+        participants: 0,
+        maxParticipants: 20,
+        level: "Intermediate",
+        service: meeting.service?.title || "Wellness",
+        joinUrl: meeting.joinUrl,
+        recordingUrl: meeting.recordingUrl,
+        regions: meeting.regions,
+        liveRegion: meeting.liveRegion,
+        _id: meeting._id,
+        joined: meeting.joined || false,
+        meetingStatus,
+      };
+    });
+  }, [sortedMeetings]);
 
   useEffect(() => {
     if (!meetingIdParam) return;
@@ -325,7 +433,7 @@ export default function UserSessions() {
 
     if (!matchedSession) {
       focusApplied.current = true;
-      toast.error("Session not found");
+      setFilter("all");
       return;
     }
 
@@ -347,8 +455,9 @@ export default function UserSessions() {
     return matchesFilter && matchesSearch;
   });
 
-  const upcomingCount = upcomingMeetings.length;
-  const completedCount = pastMeetings.length;
+  const totalSessionsCount = Number(allCountData?.totalCount || 0);
+  const upcomingCount = Number(upcomingCountData?.totalCount || 0);
+  const completedCount = Number(pastCountData?.totalCount || 0);
 
   const handleJoinClass = (session: Session) => {
     if (String(session?.meetingStatus || "").toLowerCase() === "completed") {
@@ -532,7 +641,7 @@ const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" =
                   Total Sessions
                 </p>
                 <p className="text-3xl text-[#494949] font-satoshi-500">
-                  {sessions.length}
+                  {totalSessionsCount}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#b95e82]/20 to-[#d4a5b9]/20 flex items-center justify-center">
@@ -643,118 +752,133 @@ const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" =
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {filteredSessions.map((session) => {
-            const formattedDate = formatDateWithTimezone(session?.localTime);
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {filteredSessions.map((session) => {
+              const formattedDate = formatDateWithTimezone(session?.localTime);
 
-            // const trainer = session?.trainer?.name ?? "";
+              // const trainer = session?.trainer?.name ?? "";
 
-            const startTime = new Date(session?.localTime as string);
-            const now = new Date();
+              const startTime = new Date(session?.localTime as string);
+              const now = new Date();
 
-            const diffMs = startTime.getTime() - now.getTime();
-            const diffMinutes = diffMs / 1000 / 60;
+              const diffMs = startTime.getTime() - now.getTime();
+              const diffMinutes = diffMs / 1000 / 60;
 
-            const isJoinDisabled = diffMinutes > 5;
+              const isJoinDisabled = diffMinutes > 5;
 
-            const formattedTime = formatTimeWithTimezone(session?.localTime);
+              const formattedTime = formatTimeWithTimezone(session?.localTime);
 
-            return (
-              <Card
-                key={session.id}
-                className="border-[#e5e5e5] hover:shadow-lg transition-shadow"
-                style={{ borderRadius: "24px" }}
-              >
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h3 className="text-xl text-[#1A1A1A]">
-                          {session.name}
-                        </h3>
-                        <Badge
-                          className={`py-1! ${
-                            session.status === "upcoming"
-                              ? "bg-[#27AE60]/10 text-[#27AE60]"
-                              : "bg-[#5eb9b4]/10 text-[#5eb9b4]"
-                          }`}
-                          style={{ borderRadius: "8px" }}
-                        >
-                          {session.status === "upcoming"
-                            ? "Upcoming"
-                            : "Completed"}
-                        </Badge>
+              return (
+                <Card
+                  key={session.id}
+                  className="border-[#e5e5e5] hover:shadow-lg transition-shadow"
+                  style={{ borderRadius: "24px" }}
+                >
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-xl text-[#1A1A1A]">
+                            {session.name}
+                          </h3>
+                          <Badge
+                            className={`py-1! ${
+                              session.status === "upcoming"
+                                ? "bg-[#27AE60]/10 text-[#27AE60]"
+                                : "bg-[#5eb9b4]/10 text-[#5eb9b4]"
+                            }`}
+                            style={{ borderRadius: "8px" }}
+                          >
+                            {session.status === "upcoming"
+                              ? "Upcoming"
+                              : "Completed"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-[#6B6B6B]">
+                          with {session?.trainer}
+                        </p>
                       </div>
-                      <p className="text-sm text-[#6B6B6B]">
-                        with {session?.trainer}
-                      </p>
                     </div>
-                  </div>
 
-                  <div className="space-y-3 mb-4">
-                    <div className="flex items-center gap-2 text-[#6B6B6B]">
-                      <Calendar className="w-4 h-4" />
-                      <span className="text-sm">{formattedDate}</span>
+                    <div className="space-y-3 mb-4">
+                      <div className="flex items-center gap-2 text-[#6B6B6B]">
+                        <Calendar className="w-4 h-4" />
+                        <span className="text-sm">{formattedDate}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#6B6B6B]">
+                        <Clock className="w-4 h-4" />
+                        <span className="text-sm">
+                          {/* {regionInfo?.localTime} • {session.duration} min */}
+                          {formattedTime} • {session.duration} min
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[#6B6B6B]">
+                        <MapPin className="w-4 h-4" />
+                        <span className="text-sm">{session.type}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[#6B6B6B]">
-                      <Clock className="w-4 h-4" />
-                      <span className="text-sm">
-                        {/* {regionInfo?.localTime} • {session.duration} min */}
-                        {formattedTime} • {session.duration} min
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[#6B6B6B]">
-                      <MapPin className="w-4 h-4" />
-                      <span className="text-sm">{session.type}</span>
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-2 mb-4">
-                    <Badge
-                      className="bg-[#b95e82]/10 text-[#b95e82] py-1!"
-                      style={{ borderRadius: "8px" }}
-                    >
-                      {session.service}
-                    </Badge>
-                  </div>
-
-                  <div className="flex gap-2">
-                    {session.status === "upcoming" ? (
-                      <Button
-                        className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
-                        style={{ borderRadius: "12px" }}
-                        // disabled={isJoinDisabled || isJoining || session.joined}
-                        onClick={() => handleJoinClass(session)}
+                    <div className="flex items-center gap-2 mb-4">
+                      <Badge
+                        className="bg-[#b95e82]/10 text-[#b95e82] py-1!"
+                        style={{ borderRadius: "8px" }}
                       >
-                        {isJoining
-                          ? "Loading..."
-                          : session.joined
-                            ? "Joined"
-                            : "Join Session"}
-                      </Button>
-                    ) : (
-                      <>
+                        {session.service}
+                      </Badge>
+                    </div>
+
+                    <div className="flex gap-2">
+                      {session.status === "upcoming" ? (
                         <Button
                           className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
                           style={{ borderRadius: "12px" }}
-                          onClick={() => handleViewRecording(session)}
+                          // disabled={isJoinDisabled || isJoining || session.joined}
+                          onClick={() => handleJoinClass(session)}
                         >
-                          Watch Recording
+                          {isJoining
+                            ? "Loading..."
+                            : session.joined
+                              ? "Joined"
+                              : "Join Session"}
                         </Button>
-                        {/* <Button
-                          variant="outline"
-                          className="flex-1 border-[#5eb9b4] text-[#5eb9b4] hover:bg-[#5eb9b4]/10"
-                          style={{ borderRadius: "12px" }}
-                        >
-                          View Summary
-                        </Button> */}
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+                      ) : (
+                        <>
+                          <Button
+                            className="flex-1 bg-[#b95e82] hover:bg-[#a04d6f] text-white"
+                            style={{ borderRadius: "12px" }}
+                            onClick={() => handleViewRecording(session)}
+                          >
+                            Watch Recording
+                          </Button>
+                          {/* <Button
+                            variant="outline"
+                            className="flex-1 border-[#5eb9b4] text-[#5eb9b4] hover:bg-[#5eb9b4]/10"
+                            style={{ borderRadius: "12px" }}
+                          >
+                            View Summary
+                          </Button> */}
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+
+        <div className="flex items-center justify-center py-6">
+          {isPageLoading ? (
+            <div className="flex items-center gap-2 text-[#6B6B6B]">
+              <Loader className="w-5 h-5 text-[#b95e82] animate-spin" />
+              <span>Loading more sessions...</span>
+            </div>
+          ) : hasMore ? null : (
+            <p className="text-[#b4b4b4] text-sm">No more sessions</p>
+          )}
+        </div>
+
+          <div ref={sentinelRef} className="h-px w-full" />
         </div>
       )}
 

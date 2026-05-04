@@ -139,7 +139,7 @@ export const meetingApi = createApi({
     // UPCOMING MEETINGS
     // ---------------------------------------
     getUpcomingMeetings: builder.query({
-      query: ({ region, search, skip, limit }) => ({
+      query: ({ region, search, skip, limit, countOnly }) => ({
         url: "/meetings/upcoming",
         method: "GET",
         params: {
@@ -147,30 +147,34 @@ export const meetingApi = createApi({
           search,
           skip,
           limit,
+          countOnly,
         },
       }),
       providesTags: ["Meetings"],
     }),
     getAllUserMeetings: builder.query({
-      query: ({ region, search,limit=10 }) => ({
+      query: ({ region, search, skip = 0, limit = 10, countOnly }) => ({
         url: "/meetings/all",
         method: "GET",
         params: {
           region,
           search,
-          limit:limit ?? 10
+          skip,
+          limit,
+          countOnly,
         },
       }),
       providesTags: ["Meetings"],
     }),
     getPastUserMeetings: builder.query({
-      query: ({ search = "", skip = 0, limit = 10 }) => ({
+      query: ({ search = "", skip = 0, limit = 10, countOnly }) => ({
         url: "/meetings/past",
         method: "GET",
         params: {
           search,
           skip,
           limit,
+          countOnly,
         },
       }),
       providesTags: ["Meetings"],
@@ -360,7 +364,9 @@ export const {
   useGetCompletedSessionsQuery,
   useGetMeetingByIdQuery,
   useGetAllUserMeetingsQuery,
+  useLazyGetAllUserMeetingsQuery,
   useGetPastUserMeetingsQuery,
+  useLazyGetPastUserMeetingsQuery,
   useUpdateMeetingMutation,
   useGetAllTrainerMeetingsQuery,
   useGetTrainerUpcomingMeetingsQuery,
@@ -368,6 +374,7 @@ export const {
   useGetMeetingsQuery,
   useGetMonthlyAttendanceQuery,
   useGetUpcomingMeetingsQuery,
+  useLazyGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
   useLeaveMeetingMutation,
   useCreateMeetingShareLinkMutation,
