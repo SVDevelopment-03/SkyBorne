@@ -4,8 +4,8 @@ import { axiosBaseQuery } from "../axiosBaseQuery";
 
 export interface OverviewStats {
   activeUsers: { value: number; change: number };
-  monthlyRevenue: { value: number; change: number };
   totalRevenue: { value: number; change: number };
+  monthlyRevenue: { value: number; change: number };
   activeTrainers: { value: number; change: number };
   growthRate: { value: number | string; change: number };
   pendingApprovals: { value: number; change: number };
@@ -40,19 +40,50 @@ export interface Payment {
 export interface CountryRevenueRow {
   country: string;
   count: number;
-  activeUsers?: number;
   amount: number;
+  activeUsers: number;
 }
 
-export interface CountryRevenueData {
-  rows: CountryRevenueRow[];
-  grandTotal: CountryRevenueRow;
+export interface RevenueByCountryResponse {
+  success: boolean;
+  data: {
+    rows: CountryRevenueRow[];
+    grandTotal: CountryRevenueRow;
+  };
+}
+
+export interface AccountDeletionRequest {
+  _id: string;
+  userId: string;
+  email: string;
+  fullName: string;
+  reason?: string;
+  status: "requested" | "processed";
+  requestedAt: string;
+  processedAt?: string | null;
+  metadata?: {
+    gateway?: string;
+    plan?: string | null;
+  };
+}
+
+export interface DeletionRequestsResponse {
+  success: boolean;
+  data: {
+    items: AccountDeletionRequest[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      total: number;
+      limit: number;
+    };
+  };
 }
 
 export const adminApi = createApi({
   reducerPath: "adminApi",
   baseQuery: axiosBaseQuery(),
-  tagTypes: ["AdminStats"],
+  tagTypes: ["AdminStats", "DeletionRequests"],
 
   endpoints: (builder) => ({
     // Get overview stats
@@ -129,16 +160,31 @@ export const adminApi = createApi({
       }),
       providesTags: ["AdminStats"],
     }),
-        // ✅ NEW: Get revenue by country
-    getRevenueByCountry: builder.query<
-      { success: boolean; data: CountryRevenueData },
-      void
-    >({
+
+    // Get revenue by country
+    getRevenueByCountry: builder.query<RevenueByCountryResponse, void>({
       query: () => ({
         url: "/stats/revenue-by-country",
         method: "GET",
       }),
       providesTags: ["AdminStats"],
+    }),
+
+    // Get account deletion requests
+    getAccountDeletionRequests: builder.query<
+      DeletionRequestsResponse,
+      { page?: number; limit?: number; status?: "all" | "requested" | "processed" }
+    >({
+      query: (params) => ({
+        url: "/account-deletion-requests",
+        method: "GET",
+        params: {
+          page: params.page || 1,
+          limit: params.limit || 10,
+          status: params.status || "all",
+        },
+      }),
+      providesTags: ["DeletionRequests"],
     }),
   }),
 });
@@ -147,8 +193,9 @@ export const {
   useGetOverviewStatsQuery,
   useGetUserGrowthQuery,
   useGetMonthlyRevenueQuery,
-  useGetRevenueByCountryQuery,
   useGetRecentActivitiesQuery,
   useGetTopServicesQuery,
   useGetPendingApprovalsQuery,
+  useGetRevenueByCountryQuery,
+  useGetAccountDeletionRequestsQuery,
 } = adminApi;

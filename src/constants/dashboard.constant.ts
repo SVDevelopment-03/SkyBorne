@@ -1,3 +1,5 @@
+
+
 import {
   DashboardIcon,
   PlanIcon,
@@ -34,6 +36,7 @@ import {
   Boxes,
   Mail,
   AlertTriangle,
+  Trash2,
 } from "lucide-react";
 
 export const SidebarNav = {
@@ -210,6 +213,12 @@ export const AdminNav = {
       title: "Feedback Management",
       url: "/feedback-management",
       icon: MessageSquare,
+      items: [],
+    },
+{
+      title: "Deletion Requests",
+      url: "/account-deletion-requests",
+      icon: Trash2,
       items: [],
     },
     // Ecom Module with collapsible sub-items
