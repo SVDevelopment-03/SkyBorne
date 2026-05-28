@@ -4,7 +4,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import "react-phone-number-input/style.css";
+  import "react-phone-number-input/style.css";
+
 import {
   Mail,
   Phone,
@@ -14,27 +15,82 @@ import {
   Save,
   AlertCircle,
   Loader2,
-  Eye,
-  EyeOff,
-  LockKeyhole,
 } from "lucide-react";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+import { useDispatch } from "react-redux";
+import { logout } from "@/store/slices/authSlice";
 import useGetUser from "@/hooks/useGetUser";
-import {
-  useChangePasswordMutation,
-  useUpdateProfileMutation,
-} from "@/store/api/authApi";
+import { useUpdateProfileMutation, useDeleteAccountMutation } from "@/store/api/authApi";
 import { PackageType } from "../user-packages/UpgradePlan";
 import PhoneInput, {
   isValidPhoneNumber,
   parsePhoneNumber,
 } from "react-phone-number-input";
 import toast from "react-hot-toast";
-import { Country, State } from "country-state-city";
-import { CommonSelect, SelectOptionItem } from "@/components/ui/CountrySelect";
-import { Input2 } from "@/components/ui/input";
-import { Form, Formik } from "formik";
-import { Label } from "@/components/ui/label";
-import * as Yup from "yup";
+
+function DeleteAccountButton() {
+  const [deleteAccount, { isLoading }] = useDeleteAccountMutation();
+  const router = useRouter();
+  const dispatch = useDispatch();
+
+  const handleDelete = async () => {
+    const html = `
+      <p>Deleting your account will send a deletion request to the admin for review and approval. Once approved, your profile and all associated data will be permanently removed from our services. This action cannot be undone.</p>
+      <p style="margin-top:12px">If you would like to proceed, click <strong>Delete</strong> below. You may also use the <a href=\"https://skybornedrop.com/account/delete\" target=\"_blank\">website link</a> to complete the deletion process if preferred.</p>
+    `;
+
+    const result = await Swal.fire({
+      title: "Delete Account",
+      html,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Delete",
+      cancelButtonText: "Cancel",
+      buttonsStyling: false,
+      customClass: {
+        confirmButton:
+          "swal-confirm-btn px-6 py-2 rounded-md font-semibold text-white bg-red-600 hover:bg-red-700",
+        cancelButton:
+          "swal-cancel-btn px-6 py-2 rounded-md font-semibold border border-black text-black bg-transparent ml-3",
+      },
+      allowOutsideClick: true,
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const response = await deleteAccount(undefined).unwrap();
+
+      const status = response?.data?.status || response?.status || response?.data?.result?.status;
+
+      if (status === "requested") {
+        toast.success("Deletion requested — pending admin review");
+      } else {
+        toast.success(response?.message || "Account deletion completed");
+      }
+
+      // Clear local auth and redirect to login
+      dispatch(logout());
+      router.push("/login");
+    } catch (err: any) {
+      console.error("Delete account failed", err);
+      toast.error(err?.data?.message || err?.message || "Unable to delete account");
+    }
+  };
+
+  return (
+    <Button
+      variant="outline"
+      className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
+      style={{ borderRadius: "12px" }}
+      onClick={handleDelete}
+      disabled={isLoading}
+    >
+      Delete Account
+    </Button>
+  );
+}
 
 interface UserProp {
   firstName: string;
@@ -42,68 +98,13 @@ interface UserProp {
   email: string;
   phone: string;
   country: string;
-  state: string;
-  city: string;
 }
-
-interface ChangePasswordFormValues {
-  password: string;
-  confirmPassword: string;
-}
-
-const changePasswordSchema = Yup.object().shape({
-  password: Yup.string().min(8, "Too short").required("Required"),
-  confirmPassword: Yup.string()
-    .oneOf([Yup.ref("password")], "Passwords do not match")
-    .required("Required"),
-});
-
-const isValidEmail = (email: string) => {
-  return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i.test(email) 
-         && !/\.\./.test(email)  
-         && !/^\./.test(email)    
-         && !/\.$/.test(email);   
-};
-
-const ALL_COUNTRIES = Country.getAllCountries();
-const COUNTRY_OPTIONS: SelectOptionItem[] = ALL_COUNTRIES.map((country) => ({
-  label: country.name,
-  value: country.isoCode,
-}));
-const COUNTRY_NAME_BY_CODE = new Map(
-  ALL_COUNTRIES.map((country) => [country.isoCode, country.name])
-);
-const COUNTRY_CODE_BY_NAME = new Map(
-  ALL_COUNTRIES.map((country) => [country.name.toLowerCase(), country.isoCode])
-);
-
-const resolveCountryCode = (value: string, fallback = "") => {
-  if (!value) return fallback;
-  const trimmed = value.trim();
-  if (/^[a-z]{2}$/i.test(trimmed)) return trimmed.toUpperCase();
-  return COUNTRY_CODE_BY_NAME.get(trimmed.toLowerCase()) || fallback || "";
-};
-
-const resolveCountryName = (value: string) => {
-  if (!value) return "";
-  const trimmed = value.trim();
-  if (/^[a-z]{2}$/i.test(trimmed)) {
-    return COUNTRY_NAME_BY_CODE.get(trimmed.toUpperCase()) || trimmed;
-  }
-  return trimmed;
-};
 
 export default function UserProfile() {
   const { user } = useGetUser();
   const [updateProfile, { isLoading: isUpdating }] = useUpdateProfileMutation();
-  const [changePassword, { isLoading: isPasswordChanging }] =
-    useChangePasswordMutation();
 
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const [showChangePasswordForm, setShowChangePasswordForm] =
-    useState<boolean>(false);
-  const [showPass, setShowPass] = useState(false);
-  const [showConfirmPass, setShowConfirmPass] = useState(false);
 
   const [formData, setFormData] = useState<UserProp>({
     firstName: "",
@@ -111,33 +112,23 @@ export default function UserProfile() {
     email: "",
     phone: "",
     country: "",
-    state: "",
-    city: "",
   });
 
-  const [errors, setErrors] = useState<{
-    email?: string;
-    phone?: string;
-    city?: string;
-  }>({});
+  console.log("user data", user);
+
+  const [updateError, setUpdateError] = useState<string>("");
+  const [updateSuccess, setUpdateSuccess] = useState<string>("");
 
   // Initialize form data when user data loads
   useEffect(() => {
     if (user) {
-      const resolvedCountryCode = resolveCountryCode(
-        user.country || "",
-        user.countryCode || ""
-      );
-
       setTimeout(() => {
         setFormData({
           firstName: user.firstName || "",
           lastName: user.lastName || "",
           email: user.email || "",
           phone: user.phoneNumber || "",
-          country: resolvedCountryCode,
-          state: user.state || "",
-          city: user.city || "",
+          country: user.country || "",
         });
       }, 0);
     }
@@ -182,94 +173,50 @@ export default function UserProfile() {
   };
 
   const handleSave = async () => {
-    setErrors({});
-
-    // EMAIL VALIDATION
-    if (!formData.email || !isValidEmail(formData.email)) {
-      setErrors({ email: "Please enter a valid email address" });
-      toast.error("Invalid email address");
-      return;
-    }
-
-    // PHONE VALIDATION
-    if (!formData.phone || !isValidPhoneNumber(formData.phone)) {
-      setErrors({ phone: "Please enter a valid phone number" });
-      toast.error("Invalid phone number");
-      return;
-    }
-
-    // CITY VALIDATION
-    if (!formData.city || !formData.city.trim()) {
-      setErrors({ city: "City is required" });
-      toast.error("City is required");
-      return;
-    }
-
     try {
-      // Only send changed fields
-      const userCountryCode = resolveCountryCode(
-        user?.country || "",
-        user?.countryCode || ""
-      );
+      setUpdateError("");
+      setUpdateSuccess("");
 
+      // Only send changed fields
       const updatePayload: Partial<UserProp> = {};
       (Object.keys(formData) as (keyof UserProp)[]).forEach((key) => {
-        const userValue =
-          key === "phone"
-            ? user?.phoneNumber
-            : key === "country"
-              ? userCountryCode
-              : user?.[key];
+        const userValue = key === "phone" ? user?.phoneNumber : user?.[key];
 
         if (formData[key] !== userValue) {
           updatePayload[key] = formData[key];
         }
       });
 
-      if (updatePayload.phone) {
-        const phoneNumber = parsePhoneNumber(updatePayload.phone);
-        updatePayload.phone = phoneNumber?.number;
-      }
-
       if (Object.keys(updatePayload).length === 0) {
+        setUpdateSuccess("No changes to save");
         setIsEditing(false);
         return;
       }
+
       await updateProfile(updatePayload).unwrap();
       toast.success("Profile updated successfully!")
+      setUpdateSuccess("Profile updated successfully!");
       setIsEditing(false);
     } catch (err: any) {
        toast.error(err?.data?.message || "Failed to update profile")
+      setUpdateError(err?.data?.message || "Failed to update profile");
     }
   };
 
   const handleCancel = () => {
     // Reset form to original user data
     if (user) {
-      const resolvedCountryCode = resolveCountryCode(
-        user.country || "",
-        user.countryCode || ""
-      );
-
       setFormData({
         firstName: user.firstName || "",
         lastName: user.lastName || "",
         email: user.email || "",
         phone: user.phoneNumber || "",
-        country: resolvedCountryCode,
-        state: user.state || "",
-        city: user.city || "",
+        country: user.location || "",
       });
     }
     setIsEditing(false);
+    setUpdateError("");
   };
-
-  const stateOptions: SelectOptionItem[] = formData.country
-    ? State.getStatesOfCountry(formData.country).map((region) => ({
-        label: region.name,
-        value: region.name,
-      }))
-    : [];
 
   if (!user) {
     return (
@@ -288,7 +235,7 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="p-3 sm:p-4 lg:p-8 space-y-5 sm:space-y-6">
+    <div className="p-4 lg:p-8 space-y-6">
       <div>
         <h1 className="text-3xl text-[#1A1A1A] mb-2">My Profile</h1>
         <p className="text-[#6B6B6B]">
@@ -305,14 +252,14 @@ export default function UserProfile() {
         }}
       >
         <CardContent className="p-8">
-          <div className="flex flex-col sm:flex-col md:flex-row items-center gap-4 sm:gap-6 text-white">
+          <div className="flex flex-col md:flex-row items-center gap-6 text-white">
             <div className="relative">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-3xl sm:text-4xl md:text-5xl font-bold">
+              <div className="w-32 h-32 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center text-5xl font-bold">
                 {getInitials()}
               </div>
             </div>
             <div className="flex-1 text-center md:text-left">
-              <h2 className="text-xl sm:text-2xl md:text-3xl mb-1 sm:mb-2">
+              <h2 className="text-3xl mb-2">
                 {user?.firstName} {user?.lastName}
               </h2>
               <p className="text-white/90 mb-4">
@@ -333,183 +280,42 @@ export default function UserProfile() {
                 )}
               </div>
             </div>
-            <div className="w-full sm:w-auto flex flex-col lg:flex-row gap-2">
-              <Button
-                onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
-                disabled={isUpdating}
-                className="w-full sm:w-auto bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949] disabled:opacity-50"
-                style={{ borderRadius: "12px" }}
-              >
-                {isUpdating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : isEditing ? (
-                  <>
-                    <Save className="w-4 h-4 mr-2" />
-                    Save Changes
-                  </>
-                ) : (
-                  <>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit Profile
-                  </>
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                onClick={() => setShowChangePasswordForm((prev) => !prev)}
-                className="w-full sm:w-auto bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949]"
-                style={{ borderRadius: "12px" }}
-              >
-                <LockKeyhole className="w-4 h-4 mr-2" />
-                Change Password
-              </Button>
-            </div>
+            <Button
+              onClick={() => (isEditing ? handleSave() : setIsEditing(true))}
+              disabled={isUpdating}
+              className="bg-white text-[#b95e82] hover:bg-gray-50 hover:text-[#494949] disabled:opacity-50"
+              style={{ borderRadius: "12px" }}
+            >
+              {isUpdating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : isEditing ? (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              ) : (
+                <>
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Profile
+                </>
+              )}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {showChangePasswordForm && (
-        <Card
-          className="border-[#e5e5e5]"
-          style={{ borderRadius: "24px" }}
-        >
-          <CardHeader>
-            <CardTitle className="text-xl text-[#1A1A1A] flex items-center gap-2">
-              <LockKeyhole className="w-5 h-5 text-[#b95e82]" />
-              <span>Change Password</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Formik<ChangePasswordFormValues>
-              initialValues={{
-                password: "",
-                confirmPassword: "",
-              }}
-              validationSchema={changePasswordSchema}
-              onSubmit={async (values, { resetForm }) => {
-                try {
-                  await changePassword({
-                    newPassword: values.password,
-                  }).unwrap();
-                  toast.success("Password changed successfully.");
-                  resetForm();
-                  setShowChangePasswordForm(false);
-                  setShowPass(false);
-                  setShowConfirmPass(false);
-                } catch (err: any) {
-                  toast.error(err?.data?.message || "Failed to change password");
-                }
-              }}
-            >
-              {({ values, errors, touched, handleChange, resetForm }) => (
-                <Form className="space-y-6">
-                  <div className="flex flex-col gap-4.5">
-                    <Label>New Password*</Label>
-                    <div className="relative">
-                      <Input2
-                        type={showPass ? "text" : "password"}
-                        name="password"
-                        value={values.password}
-                        onChange={handleChange}
-                        className="bg-[#F3F3F5] min-h-[55px]"
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-4.5"
-                        onClick={() => setShowPass(!showPass)}
-                      >
-                        {showPass ? (
-                          <EyeOff size={22} className="text-[#B1B1B1]" />
-                        ) : (
-                          <Eye size={22} className="text-[#B1B1B1]" />
-                        )}
-                      </button>
-                    </div>
-                    {touched.password && errors.password && (
-                      <p className="text-red-500 text-sm">{errors.password}</p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-4.5">
-                    <Label>Confirm Password*</Label>
-                    <div className="relative">
-                      <Input2
-                        type={showConfirmPass ? "text" : "password"}
-                        name="confirmPassword"
-                        value={values.confirmPassword}
-                        onChange={handleChange}
-                        className="bg-[#F3F3F5] min-h-[55px]"
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-3 top-4.5"
-                        onClick={() => setShowConfirmPass(!showConfirmPass)}
-                      >
-                        {showConfirmPass ? (
-                          <EyeOff size={22} className="text-[#B1B1B1]" />
-                        ) : (
-                          <Eye size={22} className="text-[#B1B1B1]" />
-                        )}
-                      </button>
-                    </div>
-                    {touched.confirmPassword && errors.confirmPassword && (
-                      <p className="text-red-500 text-sm">
-                        {errors.confirmPassword}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row gap-3 justify-end pt-1">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="border-[#e5e5e5]"
-                      style={{ borderRadius: "12px" }}
-                      onClick={() => {
-                        resetForm();
-                        setShowPass(false);
-                        setShowConfirmPass(false);
-                        setShowChangePasswordForm(false);
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isPasswordChanging}
-                      className="bg-[#b95e82] text-white hover:bg-[#a04d6f] disabled:opacity-50"
-                      style={{ borderRadius: "12px" }}
-                    >
-                      {isPasswordChanging ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Changing...
-                        </>
-                      ) : (
-                        "Change Password"
-                      )}
-                    </Button>
-                  </div>
-                </Form>
-              )}
-            </Formik>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Personal Information */}
-      <Card className="border-[#e5e5e5] mb-20 sm:mb-0" style={{ borderRadius: "24px" }}>
+      <Card className="border-[#e5e5e5]" style={{ borderRadius: "24px" }}>
         <CardHeader>
           <CardTitle className="text-xl text-[#1A1A1A]">
             Personal Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm text-[#6B6B6B] mb-2 block">
                 First Name
@@ -541,22 +347,17 @@ export default function UserProfile() {
               Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6B6B6B] pointer-events-none" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#6B6B6B]" />
               <input
                 type="email"
                 value={formData.email || ""}
-                disabled={!isEditing}
-                onChange={(e) => handleInputChange("email", e.target.value)}
-                className={`w-full pl-10 pr-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none 
-                ${errors.email ? "border-red-500" : "border-[#e5e5e5]"} disabled:bg-gray-50 disabled:opacity-50`}
+                disabled={true}
+                className="w-full pl-10 pr-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed disabled:opacity-50"
               />
-              {errors.email && (
-                <p className="text-xs text-red-500 mt-1">{errors.email}</p>
-              )}
             </div>
-            {/* <p className="text-xs text-[#6B6B6B] mt-1">
-              You can update your email address
-            </p> */}
+            <p className="text-xs text-[#6B6B6B] mt-1">
+              Email cannot be changed
+            </p>
           </div>
 
           {/* <div>
@@ -586,8 +387,7 @@ export default function UserProfile() {
                   defaultCountry="AE"
                   value={formData.phone}
                   onChange={(value) => handleInputChange("phone", value || "")}
-                  className={`w-full px-4 py-2 border rounded-xl focus:outline-none ${errors.phone ? "border-red-500" : "border-[#e5e5e5]"}`}
-                  // className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20"
+                  className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none focus:border-[#b95e82] focus:ring-2 focus:ring-[#b95e82]/20"
                 />
               ) : (
                 <>
@@ -603,91 +403,8 @@ export default function UserProfile() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              {isEditing ? (
-                <CommonSelect
-                  options={COUNTRY_OPTIONS}
-                  label="Country"
-                  value={formData.country}
-                  onChange={(value) => {
-                    handleInputChange("country", value);
-                    if (value !== formData.country) {
-                      handleInputChange("state", "");
-                    }
-                  }}
-                />
-              ) : (
-                <>
-                  <label className="text-sm text-[#6B6B6B] mb-2 block">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={resolveCountryName(formData.country) || ""}
-                    disabled
-                    className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed"
-                  />
-                </>
-              )}
-            </div>
-            <div>
-              {isEditing ? (
-                <CommonSelect
-                  options={stateOptions}
-                  label="State"
-                  value={formData.state}
-                  onChange={(value) => handleInputChange("state", value)}
-                />
-              ) : (
-                <>
-                  <label className="text-sm text-[#6B6B6B] mb-2 block">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.state || ""}
-                    disabled
-                    className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed"
-                  />
-                </>
-              )}
-            </div>
-          </div>
-
-          <div>
-            {isEditing ? (
-              <div className="flex flex-col gap-3">
-                <label className="text-sm text-[#6B6B6B] mb-1">
-                  City *
-                </label>
-                <Input2
-                  name="city"
-                  value={formData.city}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
-                  className="bg-[#F3F3F5] min-h-[55px]"
-                />
-                {errors.city && (
-                  <p className="text-xs text-red-500">{errors.city}</p>
-                )}
-              </div>
-            ) : (
-              <>
-                <label className="text-sm text-[#6B6B6B] mb-2 block">
-                  City
-                </label>
-                <input
-                  type="text"
-                  value={formData.city || ""}
-                  disabled
-                  className="w-full px-4 py-2 border border-[#e5e5e5] rounded-xl focus:outline-none disabled:bg-gray-50 cursor-not-allowed"
-                />
-              </>
-            )}
-          </div>
-
           {isEditing && (
-            <div className="flex flex-col sm:flex-row gap-3 justify-end pt-4">
+            <div className="flex gap-3 justify-end pt-4">
               <Button
                 onClick={handleCancel}
                 variant="outline"
@@ -717,10 +434,7 @@ export default function UserProfile() {
         </CardContent>
       </Card>
 
-      {/* <Card
-        className="border-2 border-red-200 bg-red-50/50"
-        style={{ borderRadius: "24px" }}
-      >
+      <Card className="border-2 border-red-200 bg-red-50/50" style={{ borderRadius: "24px" }}>
         <CardHeader>
           <CardTitle className="text-xl text-red-600">Danger Zone</CardTitle>
         </CardHeader>
@@ -729,20 +443,16 @@ export default function UserProfile() {
             <div>
               <h4 className="text-[#1A1A1A] mb-1">Delete Account</h4>
               <p className="text-sm text-[#6B6B6B]">
-                Once you delete your account, there is no going back. Please be
-                certain.
+                Deleting your account will send a deletion request to the admin for review and approval. Once approved, your profile and all associated data will be permanently removed from our services. This action cannot be undone.
+              </p>
+              <p className="text-sm text-[#6B6B6B] mt-2">
+                If you would like to proceed, click "Delete" below. You may also use the <a className="text-[#b95e82] underline" href="https://skybornedrop.com/account/delete" target="_blank" rel="noreferrer">website link</a> to complete the deletion process if preferred.
               </p>
             </div>
-            <Button
-              variant="outline"
-              className="border-red-600 text-red-600 hover:bg-red-600 hover:text-white"
-              style={{ borderRadius: "12px" }}
-            >
-              Delete Account
-            </Button>
+            <DeleteAccountButton />
           </div>
         </CardContent>
-      </Card> */}
+      </Card>
     </div>
   );
 }
