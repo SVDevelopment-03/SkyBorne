@@ -145,3 +145,5 @@ export const {
   useVerifyOtpMutation,
   useDeleteAccountMutation,
 } = authApi;
+
+export const useForgotPasswordMutation = usePasswordResetRequestMutation;
