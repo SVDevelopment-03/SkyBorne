@@ -4,17 +4,23 @@ import React, { useMemo, useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Loader, RefreshCcw } from "lucide-react";
 import toast from "react-hot-toast";
+import Swal from "sweetalert2";
 
 import { DataTable } from "@/components/ui/CommonTable";
 import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
 import MainListHeading from "@/components/ui/MainListHeading";
 import CustomPagination from "@/components/ui/CustromPagination";
 import { Button } from "@/components/ui/button";
-import { useGetAccountDeletionRequestsQuery } from "@/store/api/adminApi";
+import {
+  useApproveAccountDeletionRequestMutation,
+  useDeleteAccountDeletionRequestMutation,
+  useGetAccountDeletionRequestsQuery,
+  useRejectAccountDeletionRequestMutation,
+} from "@/store/api/adminApi";
 
 import { AccountDeletionRequestRow, columns } from "./Column";
 
-const statusFilters = ["all", "requested", "processed"] as const;
+const statusFilters = ["all", "requested", "approved", "rejected"] as const;
 
 const AccountDeletionRequests = () => {
   const [page, setPage] = useState(1);
@@ -26,6 +32,12 @@ const AccountDeletionRequests = () => {
     limit,
     status,
   });
+  const [approveRequest, { isLoading: isApproving }] =
+    useApproveAccountDeletionRequestMutation();
+  const [rejectRequest, { isLoading: isRejecting }] =
+    useRejectAccountDeletionRequestMutation();
+  const [deleteRequest, { isLoading: isDeleting }] =
+    useDeleteAccountDeletionRequestMutation();
 
   const rows = data?.data?.items || [];
   const totalPages = data?.data?.pagination?.totalPages || 0;
@@ -60,6 +72,81 @@ const AccountDeletionRequests = () => {
       console.error(error);
     }
   };
+
+  const handleApprove = async (requestId: string) => {
+    try {
+      await approveRequest(requestId).unwrap();
+      toast.success("Deletion request approved");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to approve request");
+    }
+  };
+
+  const handleReject = async (requestId: string) => {
+    try {
+      const result = await Swal.fire({
+        title: "Reject deletion request?",
+        input: "textarea",
+        inputLabel: "Reason for rejection (optional)",
+        inputPlaceholder: "Enter a note to send to the user, or leave blank...",
+        inputAttributes: {
+          "aria-label": "Reason for rejection",
+        },
+        showCancelButton: true,
+        confirmButtonText: "Reject",
+        cancelButtonText: "Cancel",
+        buttonsStyling: false,
+        customClass: {
+          confirmButton:
+            "swal-confirm-btn px-6 py-2 rounded-md font-semibold text-white bg-red-600 hover:bg-red-700",
+          cancelButton:
+            "swal-cancel-btn px-6 py-2 rounded-md font-semibold border border-black text-black bg-transparent ml-3",
+        },
+        preConfirm: (value) => String(value || "").trim(),
+      });
+
+      if (!result.isConfirmed) {
+        return;
+      }
+
+      const reason = String(result.value || "").trim();
+      const response: any = await rejectRequest({ requestId, reason }).unwrap();
+      const notifications = response?.notifications || {};
+
+      if (notifications.emailSent || notifications.pushSent) {
+        toast.success("Deletion request rejected. User notified.");
+      } else {
+        toast.success("Deletion request rejected.");
+      }
+
+      if (notifications.emailError || notifications.pushError) {
+        toast.error(
+          `Notification warning${notifications.emailError ? ` - email: ${notifications.emailError}` : ""}${notifications.pushError ? ` | push: ${notifications.pushError}` : ""}`,
+        );
+      }
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to reject request");
+    }
+  };
+
+  const handleDelete = async (requestId: string) => {
+    const shouldDelete = window.confirm(
+      "Delete this pending request? This action cannot be undone."
+    );
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    try {
+      await deleteRequest(requestId).unwrap();
+      toast.success("Deletion request deleted");
+    } catch (error: any) {
+      toast.error(error?.data?.message || "Failed to delete request");
+    }
+  };
+
+  const isMutating = isApproving || isRejecting || isDeleting;
 
   return (
     <div className="flex flex-col gap-6">
@@ -109,7 +196,12 @@ const AccountDeletionRequests = () => {
           )}
 
           <DataTable
-            columns={columns as ColumnDef<AccountDeletionRequestRow, unknown>[]}
+            columns={columns({
+              onApprove: handleApprove,
+              onReject: handleReject,
+              onDelete: handleDelete,
+              isMutating,
+            }) as ColumnDef<AccountDeletionRequestRow, unknown>[]}
             data={mappedRows}
             isLoadingData={isLoading}
           />
