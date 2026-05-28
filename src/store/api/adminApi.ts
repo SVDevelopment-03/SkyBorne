@@ -4,7 +4,6 @@ import { axiosBaseQuery } from "../axiosBaseQuery";
 
 export interface OverviewStats {
   activeUsers: { value: number; change: number };
-  totalRevenue: { value: number; change: number };
   monthlyRevenue: { value: number; change: number };
   activeTrainers: { value: number; change: number };
   growthRate: { value: number | string; change: number };
@@ -37,28 +36,13 @@ export interface Payment {
   createdAt: string;
 }
 
-export interface CountryRevenueRow {
-  country: string;
-  count: number;
-  amount: number;
-  activeUsers: number;
-}
-
-export interface RevenueByCountryResponse {
-  success: boolean;
-  data: {
-    rows: CountryRevenueRow[];
-    grandTotal: CountryRevenueRow;
-  };
-}
-
 export interface AccountDeletionRequest {
   _id: string;
   userId: string;
   email: string;
   fullName: string;
   reason?: string;
-  status: "requested" | "processed";
+  status: "requested" | "approved" | "rejected";
   requestedAt: string;
   processedAt?: string | null;
   metadata?: {
@@ -161,19 +145,14 @@ export const adminApi = createApi({
       providesTags: ["AdminStats"],
     }),
 
-    // Get revenue by country
-    getRevenueByCountry: builder.query<RevenueByCountryResponse, void>({
-      query: () => ({
-        url: "/stats/revenue-by-country",
-        method: "GET",
-      }),
-      providesTags: ["AdminStats"],
-    }),
-
     // Get account deletion requests
     getAccountDeletionRequests: builder.query<
       DeletionRequestsResponse,
-      { page?: number; limit?: number; status?: "all" | "requested" | "processed" }
+      {
+        page?: number;
+        limit?: number;
+        status?: "all" | "requested" | "approved" | "rejected";
+      }
     >({
       query: (params) => ({
         url: "/account-deletion-requests",
@@ -186,6 +165,40 @@ export const adminApi = createApi({
       }),
       providesTags: ["DeletionRequests"],
     }),
+
+    approveAccountDeletionRequest: builder.mutation<
+      { success: boolean; message: string; data: AccountDeletionRequest },
+      string
+    >({
+      query: (requestId) => ({
+        url: `/account-deletion-requests/${requestId}/approve`,
+        method: "POST",
+      }),
+      invalidatesTags: ["DeletionRequests", "AdminStats"],
+    }),
+
+    rejectAccountDeletionRequest: builder.mutation<
+      { success: boolean; message: string; data: AccountDeletionRequest },
+      { requestId: string; reason?: string }
+    >({
+      query: ({ requestId, reason }) => ({
+        url: `/account-deletion-requests/${requestId}/reject`,
+        method: "POST",
+        data: reason ? { reason } : undefined,
+      }),
+      invalidatesTags: ["DeletionRequests", "AdminStats"],
+    }),
+
+    deleteAccountDeletionRequest: builder.mutation<
+      { success: boolean; message: string; data: AccountDeletionRequest },
+      string
+    >({
+      query: (requestId) => ({
+        url: `/account-deletion-requests/${requestId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["DeletionRequests", "AdminStats"],
+    }),
   }),
 });
 
@@ -196,6 +209,8 @@ export const {
   useGetRecentActivitiesQuery,
   useGetTopServicesQuery,
   useGetPendingApprovalsQuery,
-  useGetRevenueByCountryQuery,
   useGetAccountDeletionRequestsQuery,
+  useApproveAccountDeletionRequestMutation,
+  useRejectAccountDeletionRequestMutation,
+  useDeleteAccountDeletionRequestMutation,
 } = adminApi;
