@@ -66,6 +66,7 @@ function DeleteAccountButton() {
 
       if (status === "requested") {
         toast.success("Deletion requested — pending admin review");
+        return;
       } else {
         toast.success(response?.message || "Account deletion completed");
       }
