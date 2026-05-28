@@ -1,15 +1,23 @@
 import { ColumnDef } from "@tanstack/react-table";
+import { Button } from "@/components/ui/button";
 
 export interface AccountDeletionRequestRow {
   _id: string;
   fullName: string;
   email: string;
   reason?: string;
-  status: "requested" | "processed";
+  status: "requested" | "approved" | "rejected";
   requestedAt: string;
   processedAt?: string | null;
   gateway?: string;
   plan?: string | null;
+}
+
+export interface AccountDeletionColumnActions {
+  onApprove: (requestId: string) => void;
+  onReject: (requestId: string) => void;
+  onDelete: (requestId: string) => void;
+  isMutating?: boolean;
 }
 
 const formatDate = (value?: string | null) => {
@@ -25,7 +33,12 @@ const formatDate = (value?: string | null) => {
   });
 };
 
-export const columns: ColumnDef<AccountDeletionRequestRow>[] = [
+export const columns = ({
+  onApprove,
+  onReject,
+  onDelete,
+  isMutating = false,
+}: AccountDeletionColumnActions): ColumnDef<AccountDeletionRequestRow>[] => [
   {
     id: "serial",
     header: "S.No.",
@@ -54,16 +67,18 @@ export const columns: ColumnDef<AccountDeletionRequestRow>[] = [
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const isProcessed = row.original.status === "processed";
+      const { status } = row.original;
+      const statusClass =
+        status === "approved"
+          ? "bg-green-100 text-green-700"
+          : status === "rejected"
+            ? "bg-red-100 text-red-700"
+            : "bg-amber-100 text-amber-700";
       return (
         <span
-          className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${
-            isProcessed
-              ? "bg-green-100 text-green-700"
-              : "bg-amber-100 text-amber-700"
-          }`}
+          className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium ${statusClass}`}
         >
-          {row.original.status}
+          {status}
         </span>
       );
     },
@@ -90,5 +105,48 @@ export const columns: ColumnDef<AccountDeletionRequestRow>[] = [
         {row.original.gateway || "—"}
       </span>
     ),
+  },
+  {
+    id: "actions",
+    header: "Actions",
+    cell: ({ row }) => {
+      const isRequested = row.original.status === "requested";
+
+      if (!isRequested) {
+        return <span className="text-[#9CA3AF]">—</span>;
+      }
+
+      return (
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="themeRegular"
+            className="h-8 px-3"
+            onClick={() => onApprove(row.original._id)}
+            disabled={isMutating}
+          >
+            Approve
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-8 px-3 border-[#DCE5E0] text-[#494949]"
+            onClick={() => onReject(row.original._id)}
+            disabled={isMutating}
+          >
+            Reject
+          </Button>
+          <Button
+            type="button"
+            variant="outlineCancel"
+            className="h-8 px-3"
+            onClick={() => onDelete(row.original._id)}
+            disabled={isMutating}
+          >
+            Delete
+          </Button>
+        </div>
+      );
+    },
   },
 ];
