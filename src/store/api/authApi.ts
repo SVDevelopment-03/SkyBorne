@@ -59,14 +59,6 @@ export const authApi = createApi({
       }),
     }),
 
-    forgotPassword: builder.mutation({
-      query: (body) => ({
-        url: "/forgot-password",
-        method: "POST",
-        data: body,
-      }),
-    }),
-
     resetPassword: builder.mutation({
       query: (body) => ({
         url: "/reset-password",
@@ -92,14 +84,12 @@ export const authApi = createApi({
       providesTags: ["User"],
     }),
 
-   getDashboardStats: builder.query({
-  query: (params) => ({
-    url: "/dashboardStats",
-    method: "GET",
-    params, // ✅ THIS sends ?region=IN
-  }),
-}),
-
+    getDashboardStats: builder.query({
+      query: () => ({
+        url: "/dashboardStats",
+        method: "GET",
+      }),
+    }),
 
     // ✅ NOW CORRECT
     updateProfile: builder.mutation({
@@ -128,12 +118,14 @@ export const authApi = createApi({
       },
     }),
 
-    changePassword: builder.mutation({
-      query: (body) => ({
-        url: "/change-password",
-        method: "PUT",
-        data: body,
+    // Create an account deletion request (user -> admin review)
+    deleteAccount: builder.mutation({
+      query: () => ({
+        url: "/delete-account",
+        method: "DELETE",
       }),
+      // invalidate user so UI reloads
+      invalidatesTags: ["User"],
     }),
   }),
 });
@@ -145,12 +137,11 @@ export const {
   useUpdateProfileMutation,
   useGetDashboardStatsQuery,
   usePasswordResetRequestMutation,
-  useForgotPasswordMutation,
   useResetPasswordMutation,
-  useChangePasswordMutation,
   useSocialLoginMutation,
   useLoginMutation,
   useCreatePaymentMutation,
   useSendOtpMutation,
   useVerifyOtpMutation,
+  useDeleteAccountMutation,
 } = authApi;
