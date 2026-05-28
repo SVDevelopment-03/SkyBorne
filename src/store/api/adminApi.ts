@@ -22,6 +22,17 @@ export interface RecentActivity {
   type: "success" | "info" | "warning";
 }
 
+export interface RevenueByCountryRow {
+  country: string;
+  count: number;
+  amount: number;
+}
+
+export interface RevenueByCountryData {
+  rows: RevenueByCountryRow[];
+  grandTotal: RevenueByCountryRow;
+}
+
 export interface TopService {
   service: string;
   users: number;
@@ -145,6 +156,18 @@ export const adminApi = createApi({
       providesTags: ["AdminStats"],
     }),
 
+    // Get revenue grouped by country
+    getRevenueByCountry: builder.query<
+      { success: boolean; data: RevenueByCountryData },
+      void
+    >({
+      query: () => ({
+        url: "/stats/revenue-by-country",
+        method: "GET",
+      }),
+      providesTags: ["AdminStats"],
+    }),
+
     // Get account deletion requests
     getAccountDeletionRequests: builder.query<
       DeletionRequestsResponse,
@@ -206,6 +229,7 @@ export const {
   useGetOverviewStatsQuery,
   useGetUserGrowthQuery,
   useGetMonthlyRevenueQuery,
+  useGetRevenueByCountryQuery,
   useGetRecentActivitiesQuery,
   useGetTopServicesQuery,
   useGetPendingApprovalsQuery,
