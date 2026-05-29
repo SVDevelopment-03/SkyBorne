@@ -36,10 +36,53 @@ export interface Payment {
   createdAt: string;
 }
 
+export interface AccountDeletionRequest {
+  _id: string;
+  userId: string;
+  email: string;
+  fullName: string;
+  reason?: string;
+  status: "requested" | "approved" | "rejected";
+  requestedAt: string;
+  processedAt?: string | null;
+  reviewedAt?: string | null;
+  reviewedBy?: string | null;
+  rejectionReason?: string | null;
+  metadata?: {
+    gateway?: string;
+    plan?: string | null;
+  };
+}
+
+export interface DeletionRequestsResponse {
+  success: boolean;
+  data: {
+    items: AccountDeletionRequest[];
+    pagination: {
+      currentPage: number;
+      totalPages: number;
+      total: number;
+      limit: number;
+    };
+  };
+}
+
+export interface AdminActionResponse<T> {
+  success: boolean;
+  message: string;
+  data: T;
+  notifications?: {
+    pushSent?: boolean;
+    emailSent?: boolean;
+    pushError?: string;
+    emailError?: string;
+  };
+}
+
 export const adminApi = createApi({
   reducerPath: "adminApi",
   baseQuery: axiosBaseQuery(),
-  tagTypes: ["AdminStats"],
+  tagTypes: ["AdminStats", "DeletionRequests"],
 
   endpoints: (builder) => ({
     // Get overview stats
@@ -116,6 +159,57 @@ export const adminApi = createApi({
       }),
       providesTags: ["AdminStats"],
     }),
+
+    // Get account deletion requests
+    getAccountDeletionRequests: builder.query<
+      DeletionRequestsResponse,
+      { page?: number; limit?: number; status?: "all" | "requested" | "approved" | "rejected" }
+    >({
+      query: (params) => ({
+        url: "/account-deletion-requests",
+        method: "GET",
+        params: {
+          page: params.page || 1,
+          limit: params.limit || 10,
+          status: params.status || "all",
+        },
+      }),
+      providesTags: ["DeletionRequests"],
+    }),
+
+    approveAccountDeletionRequest: builder.mutation<
+      AdminActionResponse<AccountDeletionRequest>,
+      string
+    >({
+      query: (requestId) => ({
+        url: `/account-deletion-requests/${requestId}/approve`,
+        method: "POST",
+      }),
+      invalidatesTags: ["DeletionRequests", "AdminStats"],
+    }),
+
+    rejectAccountDeletionRequest: builder.mutation<
+      AdminActionResponse<AccountDeletionRequest>,
+      { requestId: string; reason?: string }
+    >({
+      query: ({ requestId, reason }) => ({
+        url: `/account-deletion-requests/${requestId}/reject`,
+        method: "POST",
+        data: reason ? { reason } : undefined,
+      }),
+      invalidatesTags: ["DeletionRequests", "AdminStats"],
+    }),
+
+    deleteAccountDeletionRequest: builder.mutation<
+      AdminActionResponse<AccountDeletionRequest>,
+      string
+    >({
+      query: (requestId) => ({
+        url: `/account-deletion-requests/${requestId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["DeletionRequests", "AdminStats"],
+    }),
   }),
 });
 
@@ -126,4 +220,8 @@ export const {
   useGetRecentActivitiesQuery,
   useGetTopServicesQuery,
   useGetPendingApprovalsQuery,
+  useGetAccountDeletionRequestsQuery,
+  useApproveAccountDeletionRequestMutation,
+  useRejectAccountDeletionRequestMutation,
+  useDeleteAccountDeletionRequestMutation,
 } = adminApi;

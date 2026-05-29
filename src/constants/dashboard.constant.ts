@@ -113,6 +113,12 @@ export const AdminNav = {
       items: [],
     },
     {
+      title: "Account Deletion Requests",
+      url: "/account-deletion-requests",
+      icon: User,
+      items: [],
+    },
+    {
       title: "Region Management",
       url: "/regions",
       icon: Globe,
