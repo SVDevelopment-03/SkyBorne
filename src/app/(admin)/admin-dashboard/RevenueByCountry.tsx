@@ -4,7 +4,7 @@ import React, { useMemo, useState } from "react";
 import { FileDown, Loader2 } from "lucide-react";
 import {
   useGetRevenueByCountryQuery,
-  type CountryRevenueRow,
+  type RevenueByCountryRow,
 } from "@/store/api/adminApi";
 import { Typography } from "@/components/ui/heading";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,7 +18,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-type RevenueRowLike = CountryRevenueRow & {
+type RevenueRowLike = RevenueByCountryRow & {
+  activeUsers?: number | string;
   user?: number | string;
   users?: number | string;
 };

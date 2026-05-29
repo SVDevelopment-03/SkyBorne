@@ -69,7 +69,7 @@ function DeleteAccountButton() {
       const reason = String(result.value || "").trim();
       const response = await deleteAccount(reason ? { reason } : undefined).unwrap();
 
-      const status = response?.data?.status || response?.status || response?.data?.result?.status;
+      const status = response?.data?.status || response?.status;
 
       if (status === "requested") {
         toast.success("Deletion requested — pending admin review");

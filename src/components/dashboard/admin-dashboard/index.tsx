@@ -73,10 +73,10 @@ const AdminDashboard = () => {
         {
           icon: <DollarSign className="w-6 h-6 text-[#B95E82]" />,
           label: "Revenue (USD)",
-          value: `$${(statsData.data.totalRevenue.value ).toFixed(2)}`,
-          change: statsData.data.totalRevenue.change,
+          value: `$${(statsData.data.monthlyRevenue.value).toFixed(2)}`,
+          change: statsData.data.monthlyRevenue.change,
           changeType:
-            statsData.data.totalRevenue.change >= 0
+            statsData.data.monthlyRevenue.change >= 0
               ? ("positive" as const)
               : ("negative" as const),
         },
