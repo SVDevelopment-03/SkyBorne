@@ -67,7 +67,10 @@ API.interceptors.request.use(
   (config: CustomAxiosRequestConfig) => {
     const token = getAccessToken();
     if (token) {
-      config.headers.set("Authorization", `Bearer ${token}`);
+      config.headers = config.headers || {};
+      // headers may be a plain object in some environments
+      // use bracket notation to avoid relying on a Headers-like API
+      (config.headers as Record<string, unknown>)["Authorization"] = `Bearer ${token}`;
     }
 
     return config;
@@ -107,8 +110,9 @@ API.interceptors.response.use(
           return Promise.reject(error);
         }
 
+        const refreshUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "")}/refresh-token`;
         const refresh = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}refresh-token`,
+          refreshUrl,
           { refreshToken: refreshToken },
           { withCredentials: true }
         );
@@ -117,7 +121,8 @@ API.interceptors.response.use(
 
         setAccessToken(newToken);
 
-        originalRequest.headers.set("Authorization", `Bearer ${newToken}`);
+        originalRequest.headers = originalRequest.headers || {};
+        (originalRequest.headers as Record<string, unknown>)["Authorization"] = `Bearer ${newToken}`;
 
         return API(originalRequest);
       } catch (refreshError) {

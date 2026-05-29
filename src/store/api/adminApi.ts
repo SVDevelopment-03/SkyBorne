@@ -56,6 +56,9 @@ export interface AccountDeletionRequest {
   status: "requested" | "approved" | "rejected";
   requestedAt: string;
   processedAt?: string | null;
+  reviewedAt?: string | null;
+  reviewedBy?: string | null;
+  rejectionReason?: string | null;
   metadata?: {
     gateway?: string;
     plan?: string | null;

@@ -9,6 +9,8 @@ export interface AccountDeletionRequestRow {
   status: "requested" | "approved" | "rejected";
   requestedAt: string;
   processedAt?: string | null;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
   gateway?: string;
   plan?: string | null;
 }
@@ -92,9 +94,20 @@ export const columns = ({
   },
   {
     accessorKey: "processedAt",
-    header: "Processed At",
+    header: "Reviewed At",
     cell: ({ row }) => (
-      <span className="text-[#666666]">{formatDate(row.original.processedAt)}</span>
+      <span className="text-[#666666]">
+        {formatDate(row.original.processedAt ?? row.original.reviewedAt)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "rejectionReason",
+    header: "Review Note",
+    cell: ({ row }) => (
+      <div className="max-w-[280px] text-sm text-[#666666]">
+        {row.original.rejectionReason || "—"}
+      </div>
     ),
   },
   {

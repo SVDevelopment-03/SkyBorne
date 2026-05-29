@@ -3,6 +3,21 @@
 import { createApi } from "@reduxjs/toolkit/query/react";
 import { axiosBaseQuery } from "../axiosBaseQuery";
 
+interface DeleteAccountRequestBody {
+  reason?: string;
+}
+
+interface DeleteAccountResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    status?: "requested" | "approved" | "rejected";
+    requestedAt?: string;
+    processedAt?: string | null;
+  };
+  status?: "requested" | "approved" | "rejected";
+}
+
 export const authApi = createApi({
   reducerPath: "authApi",
   baseQuery: axiosBaseQuery(),
@@ -119,10 +134,11 @@ export const authApi = createApi({
     }),
 
     // Create an account deletion request (user -> admin review)
-    deleteAccount: builder.mutation({
-      query: () => ({
+    deleteAccount: builder.mutation<DeleteAccountResponse, DeleteAccountRequestBody | void>({
+      query: (body) => ({
         url: "/delete-account",
         method: "DELETE",
+        data: body?.reason ? { reason: body.reason } : undefined,
       }),
       // invalidate user so UI reloads
       invalidatesTags: ["User"],

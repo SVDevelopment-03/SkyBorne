@@ -44,6 +44,12 @@ function DeleteAccountButton() {
       title: "Delete Account",
       html,
       icon: "warning",
+      input: "textarea",
+      inputLabel: "Reason for deletion (optional)",
+      inputPlaceholder: "Share any feedback for the admin team...",
+      inputAttributes: {
+        "aria-label": "Reason for account deletion",
+      },
       showCancelButton: true,
       confirmButtonText: "Delete",
       cancelButtonText: "Cancel",
@@ -60,7 +66,8 @@ function DeleteAccountButton() {
     if (!result.isConfirmed) return;
 
     try {
-      const response = await deleteAccount(undefined).unwrap();
+      const reason = String(result.value || "").trim();
+      const response = await deleteAccount(reason ? { reason } : undefined).unwrap();
 
       const status = response?.data?.status || response?.status || response?.data?.result?.status;
 
