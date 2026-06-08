@@ -34,6 +34,8 @@ const RevenueByCountryTable = () => {
   const { data, isLoading, error } = useGetRevenueByCountryQuery();
   const [isExporting, setIsExporting] = useState(false);
 
+  console.log("data", data)
+
   const tableData = data?.data;
 
   const totalActiveUsers = useMemo(() => {
