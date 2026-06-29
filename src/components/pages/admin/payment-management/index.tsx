@@ -48,6 +48,7 @@ export interface AdminPayment {
   amount: number;
   localAmount?: number;
   currency: string;
+  localCurrency?: string;
   stripeSubscriptionId: string;
   transactionId?: string;
   plan: string;
@@ -124,7 +125,8 @@ function AdminPayments() {
   const formatCurrency = (amount: number, currency: string = "USD") => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: currency,
+      currency,
+      currencyDisplay: "narrowSymbol",
     }).format(amount);
   };
 
@@ -287,11 +289,16 @@ function AdminPayments() {
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }) => (
-        <div className="text-sm text-[#1A1A1A] font-semibold">
-          {formatCurrency(row.original.amount, row.original.currency)}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const amount = row.original.localAmount ?? row.original.amount;
+        const currency = row.original.localCurrency ?? row.original.currency;
+
+        return (
+          <div className="text-sm text-[#1A1A1A] font-semibold">
+            {formatCurrency(amount, currency)}
+          </div>
+        );
+      },
     },
     {
       accessorKey: "status",
