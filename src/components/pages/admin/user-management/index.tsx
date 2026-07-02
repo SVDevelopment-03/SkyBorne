@@ -112,7 +112,7 @@ const UserManagement = () => {
     plan: u.plan || "N/A",
     subscriptionStatus:
       u?.subscription?.status || u?.subscriptionStatus || "N/A",
-    cancelledAt: u?.cancelledAt || null,
+    cancelledAt: u?.subscription?.cancelledAt || u?.cancelledAt || null,
     status: u.isActive ? "active" : "inactive",
     createdAt: u.createdAt,
   }));
