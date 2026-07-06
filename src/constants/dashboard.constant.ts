@@ -215,6 +215,12 @@ export const AdminNav = {
       icon: MessageSquare,
       items: [],
     },
+    {
+      title: "Credits",
+      url: "/reports",
+      icon: BarChart3,
+      items: [],
+    },
 {
       title: "Deletion Requests",
       url: "/account-deletion-requests",
