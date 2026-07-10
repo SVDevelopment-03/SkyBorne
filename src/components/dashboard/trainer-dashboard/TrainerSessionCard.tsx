@@ -90,12 +90,16 @@ const handleJoin = async (joinMode: "browser" | "app" = "browser") => {
       );
     } else {
       popup.close();
-      toast.error("Join URL not found");
+      toast.error("Join URL not found. Please verify your subscription and available credits.");
     }
   } catch (err: any) {
     console.error("Join meeting error:", err);
     popup?.close();
-    toast.error(err?.data?.message || err?.message || "Failed to join meeting");
+    const message =
+      err?.data?.message ||
+      err?.message ||
+      "Failed to join meeting. Please check your subscription and try again.";
+    toast.error(message);
   }
 };
 

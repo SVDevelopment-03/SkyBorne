@@ -99,7 +99,7 @@ const handleJoin = async (joinMode: "browser" | "app" = "browser") => {
       joinMode === "app" ? appAccessUrl || joinUrl : joinUrl;
 
     if (!targetUrl) {
-      toast.error("Access URL not found");
+      toast.error("Access URL not found. Please verify your subscription and available credits.");
       popup.close();
       return;
     }
@@ -117,7 +117,11 @@ const handleJoin = async (joinMode: "browser" | "app" = "browser") => {
   } catch (err: any) {
     console.error("Join meeting error:", err);
     popup?.close();
-    toast.error(err?.data?.message || err?.message || "Failed to join meeting");
+    const message =
+      err?.data?.message ||
+      err?.message ||
+      "Failed to join meeting. Please check your subscription and try again.";
+    toast.error(message);
   }
 };
 

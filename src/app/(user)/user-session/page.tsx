@@ -547,32 +547,55 @@ const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" =
   } catch (err: any) {
     console.error("Join meeting error:", err);
     popup?.close();
-    toast.error(
-      err?.data?.message || err?.message || "Failed to join meeting",
-    );
+    const message =
+      err?.data?.message ||
+      err?.message ||
+      "Failed to join meeting. Please check your subscription and try again.";
+    toast.error(message);
   }
 };
 
   const handleViewRecording = async (session: Session) => {
-    if (!session._id) {
-      toast.error("Missing meeting information");
+    if (!session._id || !user?.id) {
+      toast.error("Missing meeting or user information");
       return;
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-    const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-    const fallbackRecordingUrl = baseUrl
-      ? `${normalizedBase}meetings/${session._id}/recording`
-      : `/api/v1/meetings/${session._id}/recording`;
+    try {
+      const res = await joinMeeting({
+        meetingId: session._id,
+        userId: user?.id,
+        region: userRegion?.region,
+      }).unwrap();
 
-    if (!session.recordingUrl) {
-      toast.error("Recording not yet available");
-      return;
+      const recordingUrl =
+        res?.data?.recordUrl ||
+        res?.data?.accessUrl ||
+        (() => {
+          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
+          const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
+          return baseUrl
+            ? `${normalizedBase}meetings/${session._id}/recording`
+            : `/api/v1/meetings/${session._id}/recording`;
+        })();
+
+      if (!recordingUrl) {
+        toast.error(
+          "Recording URL not found. Please try again later or contact support."
+        );
+        return;
+      }
+
+      setVideoUrl(recordingUrl);
+      setShowVideoPlayer(true);
+    } catch (err: any) {
+      console.error("View recording error:", err);
+      const message =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to load recording. Please check your subscription and try again.";
+      toast.error(message);
     }
-
-    const recordingUrl = fallbackRecordingUrl;
-    setVideoUrl(recordingUrl);
-    setShowVideoPlayer(true);
   };
 
   if (isLoading) {

@@ -317,9 +317,11 @@ export default function TrainerSessions() {
     } catch (err: any) {
       console.error("Join meeting error:", err);
       popup?.close();
-      toast.error(
-        err?.data?.message || err?.message || "Failed to join meeting",
-      );
+      const message =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to join meeting. Please check your subscription and try again.";
+      toast.error(message);
     }
   };
   const handleViewRecording = async (session: Session) => {
@@ -333,18 +335,22 @@ export default function TrainerSessions() {
         userId: user?.id,
         region: userRegion?.region,
       }).unwrap();
-      const { recordUrl } = res?.data;
+      const recordUrl = res?.data?.recordUrl || res?.data?.accessUrl;
       if (!recordUrl) {
-        toast.error("Recording URL not found");
+        toast.error(
+          "Recording URL not found. Please try again later or contact support."
+        );
         return;
       }
       setVideoUrl(recordUrl);
       setShowVideoPlayer(true);
     } catch (err: any) {
       console.error("View recording error:", err);
-      toast.error(
-        err?.data?.message || err?.message || "Failed to load recording",
-      );
+      const message =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to load recording. Please check your subscription and try again.";
+      toast.error(message);
     }
   };
   const handleMarkClassCompleted = async (session: Session) => {
