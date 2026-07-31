@@ -464,7 +464,7 @@ function UserPayments() {
                   {isLoadingStats ? (
                     <Loader2 className="w-6 h-6 animate-spin" />
                   ) : (
-                    formatCurrency(stats.lastPaymentAmount || 0)
+                    formatCurrency(stats.nextPaymentAmount ?? stats.lastPaymentAmount ?? 0)
                   )}
                 </p>
               </div>
@@ -504,7 +504,7 @@ function UserPayments() {
                       </div>
                       <div className="flex items-center gap-2">
                         <DollarSign className="w-4 h-4" />
-                        <span>{formatCurrency(stats.lastPaymentAmount || 0)}</span>
+                        <span>{formatCurrency(stats.nextPaymentAmount ?? stats.lastPaymentAmount ?? 0)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Clock className="w-4 h-4" />
