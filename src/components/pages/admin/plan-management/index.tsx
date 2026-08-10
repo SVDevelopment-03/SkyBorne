@@ -37,13 +37,13 @@ const resolveServices = (plan: IAdminPlan): string[] => {
   const normalizedName = String(plan.name || "").toLowerCase().trim();
 
   if (normalizedName.includes("gold")) {
-    return ["Yoga / Zumba (Based on selected option)"];
+    return ["Yoga"];
   }
   if (normalizedName.includes("diamond")) {
-    return ["Yoga", "Zumba"];
+    return ["Yoga"];
   }
   if (normalizedName.includes("platinum")) {
-    return ["Yoga", "Zumba", "Specialty"];
+    return ["Yoga", "Specialty"];
   }
 
   return ["-"];

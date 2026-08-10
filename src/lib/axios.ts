@@ -37,14 +37,12 @@ const PUBLIC_ROUTES = [
   "/product",
   "/cart",
   "/yoga-detail",
-  "/zumba-detail",
   "/diet-detail",
   "/fitness-detail",
 ];
 
 const PUBLIC_ROUTE_PREFIXES = [
   "/yoga-detail/",
-  "/zumba-detail/",
   "/diet-detail/",
   "/fitness-detail/",
   "/product/",

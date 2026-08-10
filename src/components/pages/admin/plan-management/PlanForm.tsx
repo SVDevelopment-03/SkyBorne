@@ -59,17 +59,16 @@ const resolveFallbackServices = (
 
   const planName = String(plan?.name || "").toLowerCase().trim();
   const yoga = resolveServiceByKeyword(serviceOptions, "yoga");
-  const zumba = resolveServiceByKeyword(serviceOptions, "zumba");
   const specialty = resolveServiceByKeyword(serviceOptions, "special");
 
   if (planName.includes("gold")) {
-    return [yoga, zumba].filter((service): service is string => Boolean(service));
+    return [yoga].filter((service): service is string => Boolean(service));
   }
   if (planName.includes("diamond")) {
-    return [yoga, zumba].filter((service): service is string => Boolean(service));
+    return [yoga].filter((service): service is string => Boolean(service));
   }
   if (planName.includes("platinum")) {
-    return [yoga, zumba, specialty].filter(
+    return [yoga, specialty].filter(
       (service): service is string => Boolean(service),
     );
   }

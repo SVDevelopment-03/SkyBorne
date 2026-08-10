@@ -72,13 +72,6 @@ const Services = () => {
     order: 1,
   },
   {
-    title: "Zumba Dance",
-    description: "Group classes with music. Burn calories and enjoy dance.",
-    image: "/images/service2.jpg",
-    isActive: false,
-    order: 2,
-  },
-  {
     title: "Diet & Nutrition",
     description:
       "Recharge focus, relieve stress, and nourish with guided meditations & nutrition support.",

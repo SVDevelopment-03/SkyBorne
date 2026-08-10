@@ -25,10 +25,8 @@ const getClassesInfo = (
 ): string => {
   const classInfo = {
     "gold-yoga": billingType === "monthly" ? "2 Yoga" : "24 Yoga",
-    "gold-zumba": billingType === "monthly" ? "2 Zumba" : "24 Zumba",
-    "gold-mixed": billingType === "monthly" ? "1 Yoga + 1 Zumba" : "12 Yoga + 12 Zumba",
-    diamond: billingType === "monthly" ? "2 Yoga + 2 Zumba" : "24 Yoga + 24 Zumba",
-    platinum: billingType === "monthly" ? "2 Yoga + 2 Zumba + 1 Specialized" : "24 Yoga + 24 Zumba + 12 Specialized",
+    diamond: billingType === "monthly" ? "2 Yoga" : "24 Yoga",
+    platinum: billingType === "monthly" ? "2 Yoga + 1 Specialized" : "24 Yoga + 12 Specialized",
   };
   return classInfo[pkg as keyof typeof classInfo] || "Custom classes";
 };
@@ -39,14 +37,6 @@ const getPackageInfo = (
 ) => {
   const monthlyPrices = {
     "gold-yoga": {
-      name: "Gold Package",
-      monthlyPrice: 100,
-    },
-    "gold-zumba": {
-      name: "Gold Package",
-      monthlyPrice: 100,
-    },
-    "gold-mixed": {
       name: "Gold Package",
       monthlyPrice: 100,
     },

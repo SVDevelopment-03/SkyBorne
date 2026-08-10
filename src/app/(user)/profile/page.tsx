@@ -161,9 +161,7 @@ export default function UserProfile() {
   // Get plan display name
   const getPlanDisplayName = (plan: PackageType) => {
     const planMap = {
-      "gold-yoga": "Gold Yoga",
-      "gold-zumba": "Gold Zumba",
-      "gold-mixed": "Gold Mixed",
+      "gold-yoga": "Gold Package",
       diamond: "Diamond",
       platinum: "Platinum",
     };

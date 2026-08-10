@@ -48,8 +48,8 @@ export const Subscription = ({
   const displayPrice = calculatePrice();
 
   const gold = [<> 24 yoga classes</>];
-  const diamond = [<> 24 yoga classes</>, <> 24 zumba classes</>];
-  const platinum = [<> 24 yoga classes</>, <> 24 zumba classes</>, <> 12 special classes</>];
+  const diamond = [<> 24 yoga classes</>];
+  const platinum = [<> 24 yoga classes</>, <> 12 special classes</>];
 
     const yearlyPlan:any = {
       0: gold,

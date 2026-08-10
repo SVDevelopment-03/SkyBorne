@@ -101,14 +101,6 @@ export const SignupSubscriptionPlan = ({
       id: "1",
       title: "2 Yoga",
     },
-    {
-      id: "2",
-      title: "2 Zumba",
-    },
-    {
-      id: "3",
-      title: "Mixed(1 Yoga + 1 Zumba)",
-    },
   ];
   const isGold = name?.toLocaleLowerCase().startsWith("gold");
   return (

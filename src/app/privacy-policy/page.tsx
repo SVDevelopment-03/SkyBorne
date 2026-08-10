@@ -38,7 +38,7 @@ const page = () => {
           </p>
           <ul className="list-disc list-inside text-gray-700 mb-6 space-y-2">
             <li>Visit our website, www.skybornedrop.com, or use our mobile application.</li>
-            <li>Purchase or use a subscription for virtual fitness classes (e.g., Yoga, Zumba).</li>
+            <li>Purchase or use a subscription for virtual fitness classes (e.g., Yoga).</li>
             <li>Receive communications from us, including emails, SMS, or WhatsApp messages.</li>
             <li>Interact with us through third-party platforms (e.g., Zoom for classes, payment gateways).</li>
           </ul>

@@ -1,11 +1,7 @@
-import YogaDetail from '@/components/pages/public/yoga-detail'
-import ZumbaDetail from '@/components/pages/public/zumba-detail'
-import React from 'react'
+import { redirect } from 'next/navigation'
 
 const page = () => {
-  return (
-    <ZumbaDetail/>
-    )
+  redirect('/packages')
 }
 
 export default page

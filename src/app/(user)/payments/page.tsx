@@ -50,8 +50,6 @@ export interface Payment {
 
 const FIXED_PLAN_NAME_MAP: Record<string, string> = {
   "gold-yoga": "Gold Package",
-  "gold-zumba": "Gold Package",
-  "gold-mixed": "Gold Package",
   diamond: "Diamond Package",
   platinum: "Platinum Package",
 };

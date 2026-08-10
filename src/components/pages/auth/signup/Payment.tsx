@@ -21,8 +21,6 @@ interface PaymentProps {
 const getPackagePrice = (pkg: PackageType, billingType: "monthly" | "yearly" = "monthly"): number => {
   const monthlyPrices = {
     "gold-yoga": 100,
-    "gold-zumba": 100,
-    "gold-mixed": 100,
     diamond: 200,
     platinum: 300,
   };

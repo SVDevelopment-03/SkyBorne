@@ -7,8 +7,6 @@ import { IPlan } from "@/types/home.type";
 
 export type PackageType =
   | "gold-yoga"
-  | "gold-zumba"
-  | "gold-mixed"
   | "diamond"
   | "platinum";
 
@@ -100,14 +98,7 @@ const normalizePlanKey = (plan: IPlan): string => {
     return "gold-yoga";
   }
   if (count === 2 && services.length === 1 && services.includes("zumba")) {
-    return "gold-zumba";
-  }
-  if (
-    count === 2 &&
-    services.includes("yoga") &&
-    services.includes("zumba")
-  ) {
-    return "gold-mixed";
+    return "gold-yoga";
   }
   if (
     count === 4 &&
@@ -129,35 +120,27 @@ const normalizePlanKey = (plan: IPlan): string => {
   }
   if (normalizedName.includes("gold")) {
     if (normalizedName.includes("yoga")) return "gold-yoga";
-    if (normalizedName.includes("zumba")) return "gold-zumba";
-    if (normalizedName.includes("mixed")) return "gold-mixed";
+    if (normalizedName.includes("zumba")) return "gold-yoga";
+    if (normalizedName.includes("mixed")) return "gold-yoga";
 
     // Generic "Gold Package" fallback
-    return "gold-mixed";
+    return "gold-yoga";
   }
 
   return slugify(plan.name || "");
 };
 
-const BASE_PLAN_KEYS = new Set([
-  "gold-yoga",
-  "gold-zumba",
-  "gold-mixed",
-  "diamond",
-  "platinum",
-]);
+const BASE_PLAN_KEYS = new Set(["gold-yoga", "diamond", "platinum"]);
 
 const FALLBACK_CLASSES_TEXT: Record<
   string,
   { monthly: string; yearly: string }
 > = {
   "gold-yoga": { monthly: "2 Yoga", yearly: "24 Yoga" },
-  "gold-zumba": { monthly: "2 Zumba", yearly: "24 Zumba" },
-  "gold-mixed": { monthly: "1 Yoga + 1 Zumba", yearly: "12 Yoga + 12 Zumba" },
-  diamond: { monthly: "2 Yoga + 2 Zumba", yearly: "24 Yoga + 24 Zumba" },
+  diamond: { monthly: "2 Yoga", yearly: "24 Yoga" },
   platinum: {
-    monthly: "2 Yoga + 2 Zumba + 1 Specialized",
-    yearly: "24 Yoga + 24 Zumba + 12 Specialized",
+    monthly: "2 Yoga + 1 Specialized",
+    yearly: "24 Yoga + 12 Specialized",
   },
 };
 
@@ -271,8 +254,6 @@ const toTitleCase = (value: string): string =>
 
 const FIXED_PLAN_NAME_MAP: Record<string, string> = {
   "gold-yoga": "Gold Package",
-  "gold-zumba": "Gold Package",
-  "gold-mixed": "Gold Package",
   diamond: "Diamond Package",
   platinum: "Platinum Package",
 };
@@ -357,19 +338,10 @@ export function PackageSelection({
   }, [plansWithMeta]);
 
   const goldYogaPlan = planMap.get("gold-yoga");
-  const goldZumbaPlan = planMap.get("gold-zumba");
-  const goldMixedPlan = planMap.get("gold-mixed");
   const diamondPlan = planMap.get("diamond");
   const platinumPlan = planMap.get("platinum");
   const additionalPlans = plansWithMeta.filter(
-    (plan) =>
-      ![
-        "gold-yoga",
-        "gold-zumba",
-        "gold-mixed",
-        "diamond",
-        "platinum",
-      ].includes(plan.planKey),
+    (plan) => !["gold-yoga", "diamond", "platinum"].includes(plan.planKey),
   );
 
   const activeGoldOptions: GoldOption[] = [
@@ -377,19 +349,6 @@ export function PackageSelection({
       id: "gold-yoga",
       label: billingType === "monthly" ? "2 Yoga" : "24 Yoga",
       description: "",
-    },
-    {
-      id: "gold-zumba",
-      label: billingType === "monthly" ? "2 Zumba" : "24 Zumba",
-      description: "",
-    },
-    {
-      id: "gold-mixed",
-      label: "Mixed",
-      description:
-        billingType === "monthly"
-          ? "(1 Yoga + 1 Zumba)"
-          : "(12 Yoga + 12 Zumba)",
     },
   ];
 
@@ -401,10 +360,7 @@ export function PackageSelection({
     defaultGoldOption,
   );
 
-  const isCurrentGoldPlan =
-    currentPlan === "gold-yoga" ||
-    currentPlan === "gold-zumba" ||
-    currentPlan === "gold-mixed";
+  const isCurrentGoldPlan = currentPlan === "gold-yoga";
   const isDiamondPlan = (currentPlan || "").toLowerCase() === "diamond";
   const isPlatinumPlan = (currentPlan || "").toLowerCase() === "platinum";
 
@@ -413,11 +369,7 @@ export function PackageSelection({
   const renewalDate = formatDate(subscription?.endDate || "");
   const subscriptionStatus = subscription?.status || "inactive";
 
-  const goldMonthly =
-    Number(goldYogaPlan?.monthlyPrice) ||
-    Number(goldZumbaPlan?.monthlyPrice) ||
-    Number(goldMixedPlan?.monthlyPrice) ||
-    100;
+  const goldMonthly = Number(goldYogaPlan?.monthlyPrice) || 100;
   const diamondMonthly = Number(diamondPlan?.monthlyPrice || 200);
   const platinumMonthly = Number(platinumPlan?.monthlyPrice || 300);
 
@@ -451,13 +403,9 @@ export function PackageSelection({
 
       const classesMonthlyMap: Record<string, string> = {
         "gold-yoga": "2 Yoga",
-        "gold-zumba": "2 Zumba",
-        "gold-mixed": "1 Yoga + 1 Zumba",
       };
       const classesYearlyMap: Record<string, string> = {
         "gold-yoga": "24 Yoga",
-        "gold-zumba": "24 Zumba",
-        "gold-mixed": "12 Yoga + 12 Zumba",
       };
 
       onSelectPlanData({
@@ -706,7 +654,7 @@ export function PackageSelection({
                     )}
                   </h2>
                   <p className="text-sm text-gray-600 mb-2">
-                    Includes: {billingType === "monthly" ? "2 Yoga + 2 Zumba per Month" : "24 Yoga + 24 Zumba per Year (2 each/Month)"}
+                    Includes: {billingType === "monthly" ? "2 Yoga per Month" : "24 Yoga per Year"}
                   </p>
                   {billingType === "yearly" && (
                     <p className="text-xs text-green-600 font-semibold">
@@ -726,7 +674,7 @@ export function PackageSelection({
                     <li className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-[#b97d9f] shrink-0 mt-0.5" />
                       <span className="text-sm text-gray-800">
-                        {billingType === "monthly" ? "2 Zumba Classes" : "24 Zumba Classes"}
+                        {billingType === "monthly" ? "2 Yoga Classes" : "24 Yoga Classes"}
                       </span>
                     </li>
                   </ul>
@@ -770,7 +718,7 @@ export function PackageSelection({
                       )}
                     </h2>
                     <p className="text-sm opacity-90 mb-2">
-                      Includes: {billingType === "monthly" ? "2 Yoga + 2 Zumba + 1 Specialized per Month" : "24 Yoga + 24 Zumba + 12 Specialized per Year"}
+                      Includes: {billingType === "monthly" ? "2 Yoga + 1 Specialized per Month" : "24 Yoga + 12 Specialized per Year"}
                     </p>
                     {billingType === "yearly" && (
                       <p className="text-xs opacity-75 font-semibold">
@@ -790,7 +738,7 @@ export function PackageSelection({
                       <li className="flex items-start gap-3">
                         <Check className="w-5 h-5 shrink-0 mt-0.5" />
                         <span className="text-sm">
-                          {billingType === "monthly" ? "2 Zumba Classes" : "24 Zumba Classes"}
+                          {billingType === "monthly" ? "2 Yoga Classes" : "24 Yoga Classes"}
                         </span>
                       </li>
                       <li className="flex items-start gap-3">

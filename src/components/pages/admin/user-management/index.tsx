@@ -31,9 +31,7 @@ export interface DisplayUser extends UserRowData {
 
 const planOptions = [
   { value: "all", label: "All Plans" },
-  { value: "gold-yoga", label: "Gold Yoga" },
-  { value: "gold-zumba", label: "Gold Zumba" },
-  { value: "gold-mixed", label: "Gold Mixed" },
+  { value: "gold-yoga", label: "Gold Package" },
   { value: "diamond", label: "Diamond" },
   { value: "platinum", label: "Platinum" },
 ];

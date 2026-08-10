@@ -178,12 +178,6 @@ export const services = [
       "Gentle movement and mindful stillness blend tradition and innovation for all levels.",
   },
   {
-    id: 2,
-    src: "/images/service2.jpg",
-    title: "Zumba Dance",
-    description: "Group classes with music. Burn calories and enjoy dance.",
-  },
-  {
     id: 3,
     src: "/images/service3.jpg",
     title: "Diet & Nutrition",

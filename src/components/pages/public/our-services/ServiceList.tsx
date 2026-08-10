@@ -27,13 +27,6 @@ const ServiceList = () => {
       comingSoon:true
         
     },
-    {
-      id: "4",
-      image: "/images/services-4.jpg",
-      buttonText: "know more",
-      heading: "Zumba Dance",
-        url:'/zumba-detail'
-    },
   ];
   return (
     <div className="max-w-[1268px] w-full mx-auto">

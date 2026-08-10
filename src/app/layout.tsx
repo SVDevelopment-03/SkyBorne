@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     icon: '/skyborne-logo.png',
   },
   description:
-    "Skyborne Drop offers expert-led yoga, fitness, zumba, and nutrition for balanced living.",
+    "Skyborne Drop offers expert-led yoga, fitness, and nutrition for balanced living.",
 };
 
 export default function RootLayout({

@@ -71,7 +71,7 @@ const Page = () => {
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">2.1) Delivery and Third-Party Materials</h3>
         <p className="text-gray-700 mb-4 leading-relaxed">
-          Customer acknowledges and agrees that the <span className="px-1 py-0.5 font-medium">Services (Yoga, Zumba classes or any other classes which may be added in the future)</span> are reliant upon and operate in conjunction with Third-Party Materials (e.g., Zoom, Payment Gateways).
+          Customer acknowledges and agrees that the <span className="px-1 py-0.5 font-medium">Services (Yoga classes or any other classes which may be added in the future)</span> are reliant upon and operate in conjunction with Third-Party Materials (e.g., Zoom, Payment Gateways).
         </p>
 
         <h3 className="text-lg font-semibold text-gray-800 mt-6 mb-3">2.2) API Usage and Data Migration</h3>
