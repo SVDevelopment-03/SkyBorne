@@ -15,11 +15,7 @@ import { Toggle2 } from "@/components/ui/Toggle2";
 import { SearchIcon } from "@/icons/helpIcon";
 import { useDebounce } from "@/hooks/useDebounce";
 import CustomPagination from "@/components/ui/CustromPagination";
-import {
-  IAdminPlan,
-  useGetAdminPlansQuery,
-  useUpdatePlanStatusMutation,
-} from "@/store/api/planApi";
+import { useGetPlanProductsQuery } from "@/store/api/planProductApi";
 
 interface PlanRowData extends IAdminPlan {
   actions?: React.ReactNode;
@@ -71,39 +67,11 @@ const PlanManagement = () => {
   const [limit] = useState(10);
   const debouncedSearch = useDebounce(search, 400);
 
-  const { data, isLoading, refetch } = useGetAdminPlansQuery({
-    search: debouncedSearch,
-    page,
-    limit,
-  });
-  const [updatePlanStatus, { isLoading: isUpdatingStatus }] =
-    useUpdatePlanStatusMutation();
+  const { data, isLoading, refetch } = useGetPlanProductsQuery();
+  const plans = data?.data || [];
+  const totalPages = 1;
 
-  const plans = data?.data?.plans || [];
-  const totalPages = data?.data?.pagination?.totalPages || 1;
-
-  const handleStatusToggle = async (planId: string, currentStatus: boolean) => {
-    try {
-      await updatePlanStatus({
-        planId,
-        isActive: !currentStatus,
-      }).unwrap();
-      toast.success("Plan status updated");
-      refetch();
-    } catch (error: unknown) {
-      const message: string =
-        typeof error === "object" &&
-        error !== null &&
-        "data" in error &&
-        typeof (error as { data?: { message?: string } }).data?.message ===
-          "string"
-          ? (error as { data?: { message?: string } }).data?.message ??
-            "Failed to update plan status"
-          : "Failed to update plan status";
-
-      toast.error(message);
-    }
-  };
+  // PlanProduct doesn't have an isActive toggle yet. Use backend upsert to modify entries.
 
   const columns: ColumnDef<PlanRowData>[] = [
     {
@@ -133,24 +101,17 @@ const PlanManagement = () => {
       cell: ({ row }) => <span>{resolveClassCount(row.original)}</span>,
     },
     {
-      accessorKey: "isActive",
-      header: "Status",
+      accessorKey: "billingType",
+      header: "Billing",
       cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Toggle2
-            checked={row.original.isActive}
-            onChange={() =>
-              handleStatusToggle(row.original._id, row.original.isActive)
-            }
-          />
-          <span
-            className={`text-sm font-medium ${
-              row.original.isActive ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {row.original.isActive ? "Active" : "Inactive"}
-          </span>
-        </div>
+        <span className="capitalize">{row.original.billingType || "-"}</span>
+      ),
+    },
+    {
+      accessorKey: "appleProductIds",
+      header: "Apple SKUs",
+      cell: ({ row }) => (
+        <span>{(row.original.appleProductIds || []).length}</span>
       ),
     },
     {
@@ -160,7 +121,7 @@ const PlanManagement = () => {
         <Button
           variant="theme"
           size="sm"
-          onClick={() => router.push(`/edit-plan/${row.original._id}`)}
+          onClick={() => router.push(`/edit-plan-product/${row.original._id}`)}
           className="rounded-lg"
         >
           <Edit className="w-4 h-4" />
@@ -194,9 +155,29 @@ const PlanManagement = () => {
           <Button
             variant="themeRegular"
             className="rounded-[10px] py-3! w-full md:w-auto"
-            onClick={() => router.push("/create-plan")}
+            onClick={() => router.push("/create-plan-product")}
           >
             Add Plan
+          </Button>
+          <Button
+            variant="outline"
+            className="ml-2 rounded-[10px] py-3! w-full md:w-auto"
+            onClick={async () => {
+              try {
+                const resp = await fetch('/admin/migrate-plans', { method: 'POST' });
+                const json = await resp.json();
+                if (json?.success) {
+                  toast.success(json.message || 'Migration completed');
+                } else {
+                  toast.error(json?.message || 'Migration failed');
+                }
+                refetch();
+              } catch (err: any) {
+                toast.error(err?.message || 'Migration request failed');
+              }
+            }}
+          >
+            Migrate Legacy Plans
           </Button>
         </div>
 
