@@ -15,6 +15,7 @@ import { SearchIcon } from "@/icons/helpIcon";
 import { useDebounce } from "@/hooks/useDebounce";
 import CustomPagination from "@/components/ui/CustromPagination";
 import { useGetPlanProductsQuery, IPlanProduct } from "@/store/api/planProductApi";
+import API from "@/lib/axios";
 
 interface PlanRowData extends IPlanProduct {
   actions?: React.ReactNode;
@@ -110,30 +111,18 @@ const PlanManagement = () => {
             className="ml-2 rounded-[10px] py-3! w-full md:w-auto"
             onClick={async () => {
               try {
-                const url = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "")}/admin/migrate-plans`;
-                const resp = await fetch(url, {
-                  method: "POST",
-                  credentials: "include",
-                  headers: { "Accept": "application/json" },
-                });
-
-                const contentType = resp.headers.get("content-type") || "";
-                if (contentType.includes("application/json")) {
-                  const json = await resp.json();
-                  if (json?.success) {
-                    toast.success(json.message || "Migration completed");
-                  } else {
-                    toast.error(json?.message || "Migration failed");
-                  }
+                const resp = await API.post('/admin/migrate-plans');
+                const json = resp?.data;
+                if (json?.success) {
+                  toast.success(json.message || 'Migration completed');
                 } else {
-                  const text = await resp.text();
-                  toast.error("Migration failed: unexpected response from server");
-                  console.error("Migration non-JSON response:", text);
+                  toast.error(json?.message || 'Migration failed');
                 }
-
                 refetch();
               } catch (err: any) {
-                toast.error(err?.message || "Migration request failed");
+                const message = err?.response?.data?.message || err?.message || 'Migration request failed';
+                toast.error(message);
+                console.error('Migration error:', err?.response || err);
               }
             }}
           >
