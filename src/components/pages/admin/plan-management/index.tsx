@@ -110,16 +110,30 @@ const PlanManagement = () => {
             className="ml-2 rounded-[10px] py-3! w-full md:w-auto"
             onClick={async () => {
               try {
-                const resp = await fetch('/admin/migrate-plans', { method: 'POST' });
-                const json = await resp.json();
-                if (json?.success) {
-                  toast.success(json.message || 'Migration completed');
+                const url = `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "")}/admin/migrate-plans`;
+                const resp = await fetch(url, {
+                  method: "POST",
+                  credentials: "include",
+                  headers: { "Accept": "application/json" },
+                });
+
+                const contentType = resp.headers.get("content-type") || "";
+                if (contentType.includes("application/json")) {
+                  const json = await resp.json();
+                  if (json?.success) {
+                    toast.success(json.message || "Migration completed");
+                  } else {
+                    toast.error(json?.message || "Migration failed");
+                  }
                 } else {
-                  toast.error(json?.message || 'Migration failed');
+                  const text = await resp.text();
+                  toast.error("Migration failed: unexpected response from server");
+                  console.error("Migration non-JSON response:", text);
                 }
+
                 refetch();
               } catch (err: any) {
-                toast.error(err?.message || 'Migration request failed');
+                toast.error(err?.message || "Migration request failed");
               }
             }}
           >
