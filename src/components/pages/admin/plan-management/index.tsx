@@ -11,54 +11,14 @@ import CommonBreadcrump from "@/components/ui/CommonBreadcrump";
 import MainListHeading from "@/components/ui/MainListHeading";
 import { Button } from "@/components/ui/button";
 import { Input2 } from "@/components/ui/input";
-import { Toggle2 } from "@/components/ui/Toggle2";
 import { SearchIcon } from "@/icons/helpIcon";
 import { useDebounce } from "@/hooks/useDebounce";
 import CustomPagination from "@/components/ui/CustromPagination";
-import { useGetPlanProductsQuery } from "@/store/api/planProductApi";
+import { useGetPlanProductsQuery, IPlanProduct } from "@/store/api/planProductApi";
 
-interface PlanRowData extends IAdminPlan {
+interface PlanRowData extends IPlanProduct {
   actions?: React.ReactNode;
 }
-
-const resolveServices = (plan: IAdminPlan): string[] => {
-  const services = Array.isArray(plan.services)
-    ? plan.services.filter((service) => String(service || "").trim().length > 0)
-    : [];
-
-  if (services.length > 0) {
-    return services;
-  }
-
-  const normalizedName = String(plan.name || "").toLowerCase().trim();
-
-  if (normalizedName.includes("gold")) {
-    return ["Yoga"];
-  }
-  if (normalizedName.includes("diamond")) {
-    return ["Yoga"];
-  }
-  if (normalizedName.includes("platinum")) {
-    return ["Yoga", "Specialty"];
-  }
-
-  return ["-"];
-};
-
-const resolveClassCount = (plan: IAdminPlan): number => {
-  const count = Number(plan.classCountPerMonth || 0);
-  if (count > 0) {
-    return count;
-  }
-
-  const normalizedName = String(plan.name || "").toLowerCase().trim();
-
-  if (normalizedName.includes("gold")) return 2;
-  if (normalizedName.includes("diamond")) return 4;
-  if (normalizedName.includes("platinum")) return 5;
-
-  return 0;
-};
 
 const PlanManagement = () => {
   const router = useRouter();
@@ -75,30 +35,16 @@ const PlanManagement = () => {
 
   const columns: ColumnDef<PlanRowData>[] = [
     {
-      accessorKey: "name",
+      accessorKey: "displayName",
       header: "Plan Name",
       cell: ({ row }) => (
-        <span className="font-medium text-[#000000]">{row.original.name}</span>
+        <span className="font-medium text-[#000000]">{row.original.displayName || row.original.planKey}</span>
       ),
     },
     {
       accessorKey: "price",
       header: "Price",
       cell: ({ row }) => <span>${Number(row.original.price || 0)}</span>,
-    },
-    {
-      accessorKey: "services",
-      header: "Services",
-      cell: ({ row }) => (
-        <span className="capitalize">
-          {resolveServices(row.original).join(", ")}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "classCountPerMonth",
-      header: "Class Count",
-      cell: ({ row }) => <span>{resolveClassCount(row.original)}</span>,
     },
     {
       accessorKey: "billingType",
@@ -185,7 +131,7 @@ const PlanManagement = () => {
           <DataTable
             columns={columns as ColumnDef<PlanRowData, unknown>[]}
             data={plans as PlanRowData[]}
-            isLoadingData={isLoading || isUpdatingStatus}
+            isLoadingData={isLoading}
           />
         </div>
 
