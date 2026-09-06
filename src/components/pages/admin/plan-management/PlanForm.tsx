@@ -17,6 +17,10 @@ import {
   useCreatePlanMutation,
   useUpdatePlanMutation,
 } from "@/store/api/planApi";
+import {
+  IPlanProduct,
+  useUpsertPlanProductMutation,
+} from "@/store/api/planProductApi";
 import { useGetServicesQuery } from "@/store/api/publicApi";
 import {
   DropdownMenu,
@@ -31,8 +35,14 @@ interface PlanFormProps {
 
 interface PlanFormValues {
   name: string;
+  planKey: string;
+  description: string;
   services: string[];
   price: string;
+  currency: string;
+  billingType: "monthly" | "yearly";
+  appleProductIds: string;
+  stripePriceIds: string;
   serviceClassCounts: Record<string, string>;
 }
 
@@ -153,8 +163,23 @@ const formatServiceName = (value: string): string =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
+const slugifyPlanKey = (value: string): string =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80) || "plan";
+
+const parseIdList = (value: string): string[] =>
+  value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 const validationSchema = Yup.object({
   name: Yup.string().trim().required("Plan name is required"),
+  planKey: Yup.string().trim().required("Plan key is required"),
   services: Yup.array().of(Yup.string()).min(1, "Select at least one service"),
   price: Yup.number()
     .typeError("Price must be a number")
@@ -167,6 +192,8 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
   const [serviceCountError, setServiceCountError] = useState("");
   const [createPlan, { isLoading: isCreating }] = useCreatePlanMutation();
   const [updatePlan, { isLoading: isUpdating }] = useUpdatePlanMutation();
+  const [upsertPlanProduct, { isLoading: isSavingProduct }] =
+    useUpsertPlanProductMutation();
   const { data: serviceData, isLoading: isServicesLoading } =
     useGetServicesQuery(undefined);
   const isEditMode = !!initialPlan?._id;
@@ -189,11 +216,18 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
   const formik = useFormik<PlanFormValues>({
     initialValues: {
       name: initialPlan?.name || "",
+      planKey:
+        initialPlan?.name ? slugifyPlanKey(initialPlan.name) : "gold",
+      description: initialPlan?.description || "",
       services: initialServices,
       price:
         initialPlan?.price !== undefined && initialPlan?.price !== null
           ? String(initialPlan.price)
           : "0",
+      currency: "USD",
+      billingType: "monthly",
+      appleProductIds: "",
+      stripePriceIds: "",
       serviceClassCounts: initialServiceClassCounts,
     },
     validationSchema,
@@ -232,20 +266,39 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
           name: values.name.trim(),
           services: values.services,
           price: Number(values.price),
+          description: values.description.trim(),
           serviceClassCounts: normalizedServiceClassCounts,
           classCountPerMonth: totalClassesPerMonth,
         };
 
+        const planProductPayload: Partial<IPlanProduct> = {
+          planKey: values.planKey.trim() || slugifyPlanKey(values.name),
+          displayName: values.name.trim(),
+          description: values.description.trim(),
+          price: Number(values.price) || 0,
+          currency: values.currency.trim().toUpperCase() || "USD",
+          billingType: values.billingType,
+          appleProductIds: parseIdList(values.appleProductIds),
+          stripePriceIds: parseIdList(values.stripePriceIds),
+        };
+
+        let savedPlan: { _id?: string } | undefined;
+
         if (isEditMode && initialPlan?._id) {
-          await updatePlan({
-            planId: initialPlan._id,
-            body: payload,
-          }).unwrap();
+          savedPlan = (
+            await updatePlan({
+              planId: initialPlan._id,
+              body: payload,
+            }).unwrap()
+          )?.data;
           toast.success("Plan updated successfully");
         } else {
-          await createPlan(payload).unwrap();
+          savedPlan = (await createPlan(payload).unwrap())?.data;
           toast.success("Plan created successfully");
         }
+
+        await upsertPlanProduct(planProductPayload).unwrap();
+        toast.success("Plan product details saved");
 
         router.push("/plans");
       } catch (error: unknown) {
@@ -264,7 +317,7 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
     },
   });
 
-  const isLoading = isCreating || isUpdating;
+  const isLoading = isCreating || isUpdating || isSavingProduct;
   const selectedServices = formik.values.services;
   const totalMonthlyClasses = useMemo(
     () => sumServiceCounts(selectedServices, formik.values.serviceClassCounts),
@@ -281,7 +334,11 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
               id="name"
               name="name"
               value={formik.values.name}
-              onChange={formik.handleChange}
+              onChange={(event) => {
+                formik.handleChange(event);
+                if (!event.target.value) return;
+                formik.setFieldValue("planKey", slugifyPlanKey(event.target.value));
+              }}
               onBlur={formik.handleBlur}
               placeholder="Enter plan name"
               className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
@@ -291,6 +348,24 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
             )}
           </div>
 
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="planKey">Plan Key*</Label>
+            <Input2
+              id="planKey"
+              name="planKey"
+              value={formik.values.planKey}
+              onChange={formik.handleChange}
+              onBlur={formik.handleBlur}
+              placeholder="gold"
+              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
+            />
+            {formik.touched.planKey && formik.errors.planKey && (
+              <p className="text-sm text-red-600">{formik.errors.planKey}</p>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="price">Price*</Label>
             <Input2
@@ -308,6 +383,70 @@ export default function PlanForm({ initialPlan }: PlanFormProps) {
               <p className="text-sm text-red-600">{formik.errors.price}</p>
             )}
           </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="currency">Currency</Label>
+            <Input2
+              id="currency"
+              name="currency"
+              value={formik.values.currency}
+              onChange={formik.handleChange}
+              placeholder="USD"
+              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="billingType">Billing Type</Label>
+            <select
+              id="billingType"
+              name="billingType"
+              value={formik.values.billingType}
+              onChange={formik.handleChange}
+              className="bg-[#F2F0ED80] border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] rounded-[10px] px-3 py-3 text-base text-[#1F1F1F]"
+            >
+              <option value="monthly">Monthly</option>
+              <option value="yearly">Yearly</option>
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="appleProductIds">Apple Product IDs</Label>
+            <Input2
+              id="appleProductIds"
+              name="appleProductIds"
+              value={formik.values.appleProductIds}
+              onChange={formik.handleChange}
+              placeholder="com.skyborne.gold.monthly"
+              className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
+            />
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="stripePriceIds">Stripe Price IDs</Label>
+          <Input2
+            id="stripePriceIds"
+            name="stripePriceIds"
+            value={formik.values.stripePriceIds}
+            onChange={formik.handleChange}
+            placeholder="price_123, price_456"
+            className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
+          />
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="description">Description</Label>
+          <Input2
+            id="description"
+            name="description"
+            value={formik.values.description}
+            onChange={formik.handleChange}
+            placeholder="Plan description"
+            className="bg-[#F2F0ED80]! text-black border border-[#DCE5E0] shadow-[0px_1px_2px_0px_#0000000D] w-full h-11 rounded-[10px] pt-1.5 text-base! placeholder:text-[#929292]!"
+          />
         </div>
 
         <div className="flex flex-col gap-3">

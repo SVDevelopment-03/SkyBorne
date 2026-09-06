@@ -201,7 +201,7 @@ const PlanManagement = () => {
           <Button
             variant="themeRegular"
             className="rounded-[10px] py-3! w-full md:w-auto"
-            onClick={() => router.push("/create-plan-product")}
+            onClick={() => router.push("/create-plan")}
           >
             Add Plan
           </Button>
