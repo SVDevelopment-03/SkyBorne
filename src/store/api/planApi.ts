@@ -123,6 +123,17 @@ export const planApi = createApi({
         "Plan",
       ],
     }),
+
+    deletePlan: builder.mutation<
+      { success: boolean; message?: string },
+      string
+    >({
+      query: (planId) => ({
+        url: `/admin/plans/${planId}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["Plan"],
+    }),
   }),
 });
 
@@ -132,4 +143,5 @@ export const {
   useCreatePlanMutation,
   useUpdatePlanMutation,
   useUpdatePlanStatusMutation,
+  useDeletePlanMutation,
 } = planApi;

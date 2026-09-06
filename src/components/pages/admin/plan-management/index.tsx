@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Edit } from "lucide-react";
+import { Edit, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 
@@ -14,10 +14,14 @@ import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { useDebounce } from "@/hooks/useDebounce";
 import CustomPagination from "@/components/ui/CustromPagination";
-import { useGetPlanProductsQuery, IPlanProduct } from "@/store/api/planProductApi";
-import API from "@/lib/axios";
+import {
+  useGetAdminPlansQuery,
+  useUpdatePlanStatusMutation,
+  useDeletePlanMutation,
+  IAdminPlan,
+} from "@/store/api/planApi";
 
-interface PlanRowData extends IPlanProduct {
+interface PlanRowData extends IAdminPlan {
   actions?: React.ReactNode;
 }
 
@@ -26,20 +30,58 @@ const PlanManagement = () => {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 400);
 
-  const { data, isLoading, refetch } = useGetPlanProductsQuery();
-  const plans = data?.data || [];
-  const totalPages = 1;
+  const { data, isLoading, refetch } = useGetAdminPlansQuery({
+    search: debouncedSearch,
+    page,
+    limit,
+  });
 
-  // PlanProduct doesn't have an isActive toggle yet. Use backend upsert to modify entries.
+  const [updateStatus, { isLoading: isStatusLoading }] = useUpdatePlanStatusMutation();
+  const [deletePlan, { isLoading: isDeleteLoading }] = useDeletePlanMutation();
+
+  const plans = data?.data?.plans || [];
+  const totalPages = data?.data?.pagination?.totalPages || 1;
+
+  const handleStatusToggle = async (plan: IAdminPlan) => {
+    try {
+      const newStatus = !plan.isActive;
+      await updateStatus({
+        planId: plan._id,
+        isActive: newStatus,
+      }).unwrap();
+      toast.success(
+        `Plan ${newStatus ? "activated" : "deactivated"} successfully`
+      );
+      refetch();
+    } catch (error: any) {
+      const message = error?.data?.message || "Failed to update plan status";
+      toast.error(message);
+      console.error("Error updating status:", error);
+    }
+  };
+
+  const handleDeletePlan = async (planId: string) => {
+    try {
+      await deletePlan(planId).unwrap();
+      toast.success("Plan deleted successfully");
+      setDeleteConfirmId(null);
+      refetch();
+    } catch (error: any) {
+      const message = error?.data?.message || "Failed to delete plan";
+      toast.error(message);
+      console.error("Error deleting plan:", error);
+    }
+  };
 
   const columns: ColumnDef<PlanRowData>[] = [
     {
-      accessorKey: "displayName",
+      accessorKey: "name",
       header: "Plan Name",
       cell: ({ row }) => (
-        <span className="font-medium text-[#000000]">{row.original.displayName || row.original.planKey}</span>
+        <span className="font-medium text-[#000000]">{row.original.name}</span>
       ),
     },
     {
@@ -48,31 +90,85 @@ const PlanManagement = () => {
       cell: ({ row }) => <span>${Number(row.original.price || 0)}</span>,
     },
     {
-      accessorKey: "billingType",
-      header: "Billing",
+      accessorKey: "classCountPerMonth",
+      header: "Classes/Month",
       cell: ({ row }) => (
-        <span className="capitalize">{row.original.billingType || "-"}</span>
+        <span>{row.original.classCountPerMonth || 0}</span>
       ),
     },
     {
-      accessorKey: "appleProductIds",
-      header: "Apple SKUs",
+      accessorKey: "services",
+      header: "Services",
       cell: ({ row }) => (
-        <span>{(row.original.appleProductIds || []).length}</span>
+        <span className="text-sm">
+          {(row.original.services || []).length} service(s)
+        </span>
+      ),
+    },
+    {
+      accessorKey: "isActive",
+      header: "Status",
+      cell: ({ row }) => (
+        <button
+          onClick={() => handleStatusToggle(row.original)}
+          disabled={isStatusLoading}
+          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+            row.original.isActive
+              ? "bg-green-100 text-green-800 hover:bg-green-200"
+              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+          }`}
+        >
+          {row.original.isActive ? "Active" : "Inactive"}
+        </button>
       ),
     },
     {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <Button
-          variant="theme"
-          size="sm"
-          onClick={() => router.push(`/edit-plan-product/${row.original._id}`)}
-          className="rounded-lg"
-        >
-          <Edit className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="theme"
+            size="sm"
+            onClick={() => router.push(`/edit-plan/${row.original._id}`)}
+            className="rounded-lg"
+            disabled={isDeleteLoading}
+          >
+            <Edit className="w-4 h-4" />
+          </Button>
+          {deleteConfirmId === row.original._id ? (
+            <div className="flex gap-2">
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDeletePlan(row.original._id)}
+                disabled={isDeleteLoading}
+                className="rounded-lg"
+              >
+                {isDeleteLoading ? "..." : "Confirm"}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteConfirmId(null)}
+                disabled={isDeleteLoading}
+                className="rounded-lg"
+              >
+                Cancel
+              </Button>
+            </div>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDeleteConfirmId(row.original._id)}
+              disabled={isDeleteLoading}
+              className="rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
+        </div>
       ),
     },
   ];
@@ -102,31 +198,9 @@ const PlanManagement = () => {
           <Button
             variant="themeRegular"
             className="rounded-[10px] py-3! w-full md:w-auto"
-            onClick={() => router.push("/create-plan-product")}
+            onClick={() => router.push("/create-plan")}
           >
             Add Plan
-          </Button>
-          <Button
-            variant="outline"
-            className="ml-2 rounded-[10px] py-3! w-full md:w-auto"
-            onClick={async () => {
-              try {
-                const resp = await API.post('/admin/migrate-plans');
-                const json = resp?.data;
-                if (json?.success) {
-                  toast.success(json.message || 'Migration completed');
-                } else {
-                  toast.error(json?.message || 'Migration failed');
-                }
-                refetch();
-              } catch (err: any) {
-                const message = err?.response?.data?.message || err?.message || 'Migration request failed';
-                toast.error(message);
-                console.error('Migration error:', err?.response || err);
-              }
-            }}
-          >
-            Migrate Legacy Plans
           </Button>
         </div>
 
