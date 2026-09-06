@@ -14,14 +14,10 @@ import { Input2 } from "@/components/ui/input";
 import { SearchIcon } from "@/icons/helpIcon";
 import { useDebounce } from "@/hooks/useDebounce";
 import CustomPagination from "@/components/ui/CustromPagination";
-import {
-  useGetAdminPlansQuery,
-  useUpdatePlanStatusMutation,
-  useDeletePlanMutation,
-  IAdminPlan,
-} from "@/store/api/planApi";
+import { useGetPlanProductsQuery, IPlanProduct } from "@/store/api/planProductApi";
+import API from "@/lib/axios";
 
-interface PlanRowData extends IAdminPlan {
+interface PlanRowData extends IPlanProduct {
   actions?: React.ReactNode;
 }
 
@@ -33,55 +29,64 @@ const PlanManagement = () => {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const debouncedSearch = useDebounce(search, 400);
 
-  const { data, isLoading, refetch } = useGetAdminPlansQuery({
-    search: debouncedSearch,
-    page,
-    limit,
-  });
+  const { data, isLoading, refetch } = useGetPlanProductsQuery();
+  const plans = data?.data || [];
+  const totalPages = 1;
 
-  const [updateStatus, { isLoading: isStatusLoading }] = useUpdatePlanStatusMutation();
-  const [deletePlan, { isLoading: isDeleteLoading }] = useDeletePlanMutation();
-
-  const plans = data?.data?.plans || [];
-  const totalPages = data?.data?.pagination?.totalPages || 1;
-
-  const handleStatusToggle = async (plan: IAdminPlan) => {
+  const handleDeletePlan = async (planId: string, planKey: string) => {
     try {
-      const newStatus = !plan.isActive;
-      await updateStatus({
-        planId: plan._id,
-        isActive: newStatus,
-      }).unwrap();
-      toast.success(
-        `Plan ${newStatus ? "activated" : "deactivated"} successfully`
-      );
-      refetch();
-    } catch (error: any) {
-      const message = error?.data?.message || "Failed to update plan status";
+      const resp = await API.delete(`/plans/${planId}`, {
+        data: { planKey },
+      });
+      const json = resp?.data;
+      if (json?.success) {
+        toast.success(json.message || "Plan deleted successfully");
+        setDeleteConfirmId(null);
+        refetch();
+      } else {
+        toast.error(json?.message || "Failed to delete plan");
+      }
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || err?.message || "Delete request failed";
       toast.error(message);
-      console.error("Error updating status:", error);
+      console.error("Delete error:", err?.response || err);
     }
   };
 
-  const handleDeletePlan = async (planId: string) => {
+  const handleToggleStatus = async (plan: IPlanProduct) => {
     try {
-      await deletePlan(planId).unwrap();
-      toast.success("Plan deleted successfully");
-      setDeleteConfirmId(null);
-      refetch();
-    } catch (error: any) {
-      const message = error?.data?.message || "Failed to delete plan";
+      const currentStatus = (plan as any)?.isActive !== false;
+      const newStatus = !currentStatus;
+      
+      const resp = await API.patch(`/plans/${plan._id}/status`, {
+        isActive: newStatus,
+      });
+      const json = resp?.data;
+      if (json?.success) {
+        toast.success(
+          `Plan ${newStatus ? "activated" : "deactivated"} successfully`
+        );
+        refetch();
+      } else {
+        toast.error(json?.message || "Failed to update status");
+      }
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message || err?.message || "Status update failed";
       toast.error(message);
-      console.error("Error deleting plan:", error);
+      console.error("Status update error:", err?.response || err);
     }
   };
 
   const columns: ColumnDef<PlanRowData>[] = [
     {
-      accessorKey: "name",
+      accessorKey: "displayName",
       header: "Plan Name",
       cell: ({ row }) => (
-        <span className="font-medium text-[#000000]">{row.original.name}</span>
+        <span className="font-medium text-[#000000]">
+          {row.original.displayName || row.original.planKey}
+        </span>
       ),
     },
     {
@@ -90,37 +95,37 @@ const PlanManagement = () => {
       cell: ({ row }) => <span>${Number(row.original.price || 0)}</span>,
     },
     {
-      accessorKey: "classCountPerMonth",
-      header: "Classes/Month",
+      accessorKey: "billingType",
+      header: "Billing",
       cell: ({ row }) => (
-        <span>{row.original.classCountPerMonth || 0}</span>
+        <span className="capitalize">{row.original.billingType || "-"}</span>
       ),
     },
     {
-      accessorKey: "services",
-      header: "Services",
+      accessorKey: "appleProductIds",
+      header: "Apple SKUs",
       cell: ({ row }) => (
-        <span className="text-sm">
-          {(row.original.services || []).length} service(s)
-        </span>
+        <span>{(row.original.appleProductIds || []).length}</span>
       ),
     },
     {
       accessorKey: "isActive",
       header: "Status",
-      cell: ({ row }) => (
-        <button
-          onClick={() => handleStatusToggle(row.original)}
-          disabled={isStatusLoading}
-          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-            row.original.isActive
-              ? "bg-green-100 text-green-800 hover:bg-green-200"
-              : "bg-gray-100 text-gray-800 hover:bg-gray-200"
-          }`}
-        >
-          {row.original.isActive ? "Active" : "Inactive"}
-        </button>
-      ),
+      cell: ({ row }) => {
+        const isActive = (row.original as any)?.isActive !== false;
+        return (
+          <button
+            onClick={() => handleToggleStatus(row.original)}
+            className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+              isActive
+                ? "bg-green-100 text-green-800 hover:bg-green-200"
+                : "bg-gray-100 text-gray-800 hover:bg-gray-200"
+            }`}
+          >
+            {isActive ? "Active" : "Inactive"}
+          </button>
+        );
+      },
     },
     {
       id: "actions",
@@ -130,9 +135,8 @@ const PlanManagement = () => {
           <Button
             variant="theme"
             size="sm"
-            onClick={() => router.push(`/edit-plan/${row.original._id}`)}
+            onClick={() => router.push(`/edit-plan-product/${row.original._id}`)}
             className="rounded-lg"
-            disabled={isDeleteLoading}
           >
             <Edit className="w-4 h-4" />
           </Button>
@@ -141,17 +145,17 @@ const PlanManagement = () => {
               <Button
                 variant="destructive"
                 size="sm"
-                onClick={() => handleDeletePlan(row.original._id)}
-                disabled={isDeleteLoading}
+                onClick={() =>
+                  handleDeletePlan(row.original._id, row.original.planKey)
+                }
                 className="rounded-lg"
               >
-                {isDeleteLoading ? "..." : "Confirm"}
+                Confirm
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setDeleteConfirmId(null)}
-                disabled={isDeleteLoading}
                 className="rounded-lg"
               >
                 Cancel
@@ -162,7 +166,6 @@ const PlanManagement = () => {
               variant="ghost"
               size="sm"
               onClick={() => setDeleteConfirmId(row.original._id)}
-              disabled={isDeleteLoading}
               className="rounded-lg text-red-600 hover:text-red-700 hover:bg-red-50"
             >
               <Trash2 className="w-4 h-4" />
@@ -198,9 +201,34 @@ const PlanManagement = () => {
           <Button
             variant="themeRegular"
             className="rounded-[10px] py-3! w-full md:w-auto"
-            onClick={() => router.push("/create-plan")}
+            onClick={() => router.push("/create-plan-product")}
           >
             Add Plan
+          </Button>
+          <Button
+            variant="outline"
+            className="ml-2 rounded-[10px] py-3! w-full md:w-auto"
+            onClick={async () => {
+              try {
+                const resp = await API.post("/admin/migrate-plans");
+                const json = resp?.data;
+                if (json?.success) {
+                  toast.success(json.message || "Migration completed");
+                } else {
+                  toast.error(json?.message || "Migration failed");
+                }
+                refetch();
+              } catch (err: any) {
+                const message =
+                  err?.response?.data?.message ||
+                  err?.message ||
+                  "Migration request failed";
+                toast.error(message);
+                console.error("Migration error:", err?.response || err);
+              }
+            }}
+          >
+            Migrate Legacy Plans
           </Button>
         </div>
 
