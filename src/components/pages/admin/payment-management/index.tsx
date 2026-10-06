@@ -289,16 +289,12 @@ function AdminPayments() {
     {
       accessorKey: "amount",
       header: "Amount",
-      cell: ({ row }) => {
-        const amount = row.original.localAmount ?? row.original.amount;
-        const currency = row.original.localCurrency ?? row.original.currency;
-
-        return (
-          <div className="text-sm text-[#1A1A1A] font-semibold">
-            {formatCurrency(amount, currency)}
-          </div>
-        );
-      },
+      cell: ({ row }) => (
+        // `amount` is always the USD plan price; localAmount is what the customer was charged
+        <div className="text-sm text-[#1A1A1A] font-semibold">
+          {formatCurrency(row.original.amount, "USD")}
+        </div>
+      ),
     },
     {
       accessorKey: "status",
