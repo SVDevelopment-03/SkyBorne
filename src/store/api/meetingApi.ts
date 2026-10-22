@@ -258,6 +258,17 @@ export const meetingApi = createApi({
       }),
     }),
     // ---------------------------------------
+    // RECORDING PLAYBACK LINK
+    // A <video> tag can't send the login token, so the backend hands out a
+    // short-lived signed link for it. Fetched fresh each time (no cache).
+    // ---------------------------------------
+    getRecordingLink: builder.mutation({
+      query: (meetingId: string) => ({
+        url: `/meetings/${meetingId}/recording-link`,
+        method: "GET",
+      }),
+    }),
+    // ---------------------------------------
     // LEAVE MEETING
     // ---------------------------------------
     leaveMeeting: builder.mutation({
@@ -376,6 +387,7 @@ export const {
   useGetUpcomingMeetingsQuery,
   useLazyGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
+  useGetRecordingLinkMutation,
   useLeaveMeetingMutation,
   useCreateMeetingShareLinkMutation,
 } = meetingApi;

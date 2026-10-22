@@ -23,6 +23,7 @@ import {
   useLazyGetUpcomingMeetingsQuery,
   useLazyGetPastUserMeetingsQuery,
   useJoinMeetingMutation,
+  useGetRecordingLinkMutation,
   useLeaveMeetingMutation,
 } from "@/store/api/meetingApi";
 import useGetUser from "@/hooks/useGetUser";
@@ -152,8 +153,10 @@ export default function UserSessions() {
   const isPageLoadingRef = useRef(false);
 
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
+  const [getRecordingLink] = useGetRecordingLinkMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
-  const isLoading = isLoadingAllCount || isLoadingUpcomingCount || isLoadingPastCount;
+  const isLoading =
+    isLoadingAllCount || isLoadingUpcomingCount || isLoadingPastCount;
   const fetchError = allCountError || upcomingError || pastError;
   const refetchAll = () => {
     refetchAllCount();
@@ -211,7 +214,9 @@ export default function UserSessions() {
       setMeetings((prev) => {
         if (replace) return nextMeetings;
         const seen = new Set(prev.map((m: any) => String(m?._id)));
-        const deduped = nextMeetings.filter((m: any) => !seen.has(String(m?._id)));
+        const deduped = nextMeetings.filter(
+          (m: any) => !seen.has(String(m?._id)),
+        );
         return [...prev, ...deduped];
       });
     } catch (err) {
@@ -262,8 +267,14 @@ export default function UserSessions() {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [hasMore, isPageLoading, pageSkip, filter, searchQuery, userRegion?.region]);
-
+  }, [
+    hasMore,
+    isPageLoading,
+    pageSkip,
+    filter,
+    searchQuery,
+    userRegion?.region,
+  ]);
 
   useEffect(() => {
     if (!autoJoin) return;
@@ -431,7 +442,8 @@ export default function UserSessions() {
     if (isLoading) return;
 
     const matchedSession = sessions.find(
-      (session) => session._id === meetingIdParam || session.id === meetingIdParam,
+      (session) =>
+        session._id === meetingIdParam || session.id === meetingIdParam,
     );
 
     if (!matchedSession) {
@@ -441,12 +453,11 @@ export default function UserSessions() {
     }
 
     focusApplied.current = true;
-    
+
     setTimeout(() => {
       setFilter("all");
       setSearchQuery(matchedSession.name);
     }, 0);
-    
   }, [meetingIdParam, autoJoin, isLoading, sessions, userRegion?.region]);
 
   const filteredSessions = sessions.filter((session) => {
@@ -491,73 +502,33 @@ export default function UserSessions() {
     toast.success(`You're set for ${session.name}!`);
   };
 
-const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" = "browser") => {
-  if (String(session?.meetingStatus || "").toLowerCase() === "completed") {
-    toast.error("meeting is completed by trainer please watch recording");
-    return;
-  }
-
-  if (!session._id || !user?.id) {
-    toast.error("Missing meeting or user information");
-    return;
-  }
-  if (!userRegion?.region) {
-    toast.error("User region not available");
-    return;
-  }
-
-  // Open popup FIRST (synchronously from user interaction)
-  const popup = window.open(
-    "",
-    "zoomMeetingPopup",
-    "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
-  );
-
-  if (!popup) {
-    toast.error("Popup blocked. Please allow popups for this site.");
-    return;
-  }
-
-  try {
-    const res = await joinMeeting({
-      meetingId: session._id,
-      userId: user?.id,
-      region: userRegion?.region,
-    }).unwrap();
-    const { accessUrl: joinUrl, appAccessUrl, mode } = res?.data;
-    const targetUrl =
-      joinMode === "app" ? appAccessUrl || joinUrl : joinUrl;
-
-    if (!targetUrl) {
-      toast.error("Access URL not found");
-      popup.close();
+  const handleJoinMeeting = async (
+    session: Session,
+    joinMode: "browser" | "app" = "browser",
+  ) => {
+    if (String(session?.meetingStatus || "").toLowerCase() === "completed") {
+      toast.error("meeting is completed by trainer please watch recording");
       return;
     }
 
-    if (mode === "live") {
-      popup.location.href = targetUrl;
-      toast.success(
-        joinMode === "app" ? "Opening Zoom app..." : "Joining meeting...",
-      );
-    } else {
-      popup.close();
-      setVideoUrl(joinUrl);
-      setShowVideoPlayer(true);
-    }
-  } catch (err: any) {
-    console.error("Join meeting error:", err);
-    popup?.close();
-    const message =
-      err?.data?.message ||
-      err?.message ||
-      "Failed to join meeting. Please check your subscription and try again.";
-    toast.error(message);
-  }
-};
-
-  const handleViewRecording = async (session: Session) => {
     if (!session._id || !user?.id) {
       toast.error("Missing meeting or user information");
+      return;
+    }
+    if (!userRegion?.region) {
+      toast.error("User region not available");
+      return;
+    }
+
+    // Open popup FIRST (synchronously from user interaction)
+    const popup = window.open(
+      "",
+      "zoomMeetingPopup",
+      "width=1000,height=700,left=200,top=100,toolbar=no,menubar=no,scrollbars=yes,resizable=yes",
+    );
+
+    if (!popup) {
+      toast.error("Popup blocked. Please allow popups for this site.");
       return;
     }
 
@@ -567,21 +538,54 @@ const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" =
         userId: user?.id,
         region: userRegion?.region,
       }).unwrap();
+      const { accessUrl: joinUrl, appAccessUrl, mode } = res?.data;
+      const targetUrl = joinMode === "app" ? appAccessUrl || joinUrl : joinUrl;
 
-      const recordingUrl =
-        res?.data?.recordUrl ||
-        res?.data?.accessUrl ||
-        (() => {
-          const baseUrl = process.env.NEXT_PUBLIC_API_URL || "";
-          const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-          return baseUrl
-            ? `${normalizedBase}meetings/${session._id}/recording`
-            : `/api/v1/meetings/${session._id}/recording`;
-        })();
+      if (!targetUrl) {
+        toast.error("Access URL not found");
+        popup.close();
+        return;
+      }
+
+      if (mode === "live") {
+        popup.location.href = targetUrl;
+        toast.success(
+          joinMode === "app" ? "Opening Zoom app..." : "Joining meeting...",
+        );
+      } else {
+        popup.close();
+        setVideoUrl(joinUrl);
+        setShowVideoPlayer(true);
+      }
+    } catch (err: any) {
+      console.error("Join meeting error:", err);
+      popup?.close();
+      const message =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to join meeting. Please check your subscription and try again.";
+      toast.error(message);
+    }
+  };
+
+  const handleViewRecording = async (session: Session) => {
+    if (!session._id || !user?.id) {
+      toast.error("Missing meeting or user information");
+      return;
+    }
+
+    try {
+      // A <video> tag can't send the login token, so play a short-lived
+      // signed link from the backend instead of the plain recording URL.
+      // The link endpoint does the credit check itself (one credit for the
+      // first replay of a class), so the live-join call isn't needed here; it
+      // also refuses classes the trainer has marked completed.
+      const link = await getRecordingLink(session._id).unwrap();
+      const recordingUrl = link?.data?.url;
 
       if (!recordingUrl) {
         toast.error(
-          "Recording URL not found. Please try again later or contact support."
+          "Recording URL not found. Please try again later or contact support.",
         );
         return;
       }
@@ -893,16 +897,16 @@ const handleJoinMeeting = async (session: Session, joinMode: "browser" | "app" =
             })}
           </div>
 
-        <div className="flex items-center justify-center py-6">
-          {isPageLoading ? (
-            <div className="flex items-center gap-2 text-[#6B6B6B]">
-              <Loader className="w-5 h-5 text-[#b95e82] animate-spin" />
-              <span>Loading more sessions...</span>
-            </div>
-          ) : hasMore ? null : (
-            <p className="text-[#b4b4b4] text-sm">No more sessions</p>
-          )}
-        </div>
+          <div className="flex items-center justify-center py-6">
+            {isPageLoading ? (
+              <div className="flex items-center gap-2 text-[#6B6B6B]">
+                <Loader className="w-5 h-5 text-[#b95e82] animate-spin" />
+                <span>Loading more sessions...</span>
+              </div>
+            ) : hasMore ? null : (
+              <p className="text-[#b4b4b4] text-sm">No more sessions</p>
+            )}
+          </div>
 
           <div ref={sentinelRef} className="h-px w-full" />
         </div>

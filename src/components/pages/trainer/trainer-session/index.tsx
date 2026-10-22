@@ -20,6 +20,7 @@ import {
   useGetAllTrainerMeetingsQuery,
   useGetUpcomingMeetingsQuery,
   useJoinMeetingMutation,
+  useGetRecordingLinkMutation,
   useLeaveMeetingMutation,
   useUpdateMeetingMutation,
 } from "@/store/api/meetingApi";
@@ -160,6 +161,7 @@ export default function TrainerSessions() {
     sortOrder: "asc",
   });
   const [joinMeeting, { isLoading: isJoining }] = useJoinMeetingMutation();
+  const [getRecordingLink] = useGetRecordingLinkMutation();
   const [leaveMeeting] = useLeaveMeetingMutation();
   const [updateMeeting] = useUpdateMeetingMutation();
   useEffect(() => {
@@ -330,12 +332,8 @@ export default function TrainerSessions() {
       return;
     }
     try {
-      const res = await joinMeeting({
-        meetingId: session._id,
-        userId: user?.id,
-        region: userRegion?.region,
-      }).unwrap();
-      const recordUrl = res?.data?.recordUrl || res?.data?.accessUrl;
+      const link = await getRecordingLink(session._id).unwrap();
+      const recordUrl = link?.data?.url;
       if (!recordUrl) {
         toast.error(
           "Recording URL not found. Please try again later or contact support."
