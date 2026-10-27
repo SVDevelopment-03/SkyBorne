@@ -244,8 +244,8 @@ const getCustomPlanIcon = (monthlyPrice: number): string => {
   return "✨";
 };
 
-const toTitleCase = (value: string): string =>
-  value
+const toTitleCase = (value?: string): string =>
+  (value || "")
     .toLowerCase()
     .split(" ")
     .filter(Boolean)

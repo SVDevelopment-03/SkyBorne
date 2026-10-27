@@ -27,7 +27,7 @@ export const planProductApi = createApi({
   tagTypes: ["PlanProduct"],
   endpoints: (builder) => ({
     getPlanProducts: builder.query<GetPlansResponse, void>({
-      query: () => ({ url: "/plans", method: "GET" }),
+      query: () => ({ url: "/admin/plan-products", method: "GET" }),
       providesTags: ["PlanProduct"],
     }),
 
@@ -35,7 +35,7 @@ export const planProductApi = createApi({
       { success: boolean; message?: string; data?: any },
       Partial<IPlanProduct>
     >({
-      query: (body) => ({ url: "/plans", method: "POST", data: body }),
+      query: (body) => ({ url: "/admin/plan-products", method: "POST", data: body }),
       invalidatesTags: ["PlanProduct"],
     }),
   }),

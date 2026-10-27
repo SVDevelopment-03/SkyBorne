@@ -35,7 +35,7 @@ const PlanManagement = () => {
 
   const handleDeletePlan = async (planId: string, planKey: string) => {
     try {
-      const resp = await API.delete(`/plans/${planId}`, {
+      const resp = await API.delete(`/admin/plan-products/${planId}`, {
         data: { planKey },
       });
       const json = resp?.data;
@@ -59,7 +59,7 @@ const PlanManagement = () => {
       const currentStatus = (plan as any)?.isActive !== false;
       const newStatus = !currentStatus;
       
-      const resp = await API.patch(`/plans/${plan._id}/status`, {
+      const resp = await API.patch(`/admin/plan-products/${plan._id}/status`, {
         isActive: newStatus,
       });
       const json = resp?.data;
