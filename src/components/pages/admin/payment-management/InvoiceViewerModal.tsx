@@ -90,6 +90,7 @@ export function InvoiceViewerModal({
         }
       : calculateVatFromTotal(invoice.amount, vatRate)
     : { subtotal: 0, vatAmount: 0, total: 0, vatRate };
+  const aedTotals = invoice?.aedTotals;
   const taxLabel =
     invoice?.taxLabel ||
     (vatRate > 0 ? `VAT (${Math.round(vatRate * 100)}%)` : "Tax (0%)");
@@ -229,6 +230,9 @@ export function InvoiceViewerModal({
                   <p className="text-sm text-gray-600">
                     Meydan Freezone, Dubai, UAE
                   </p>
+                  {invoice.trn && (
+                    <p className="text-sm text-gray-600">TRN: {invoice.trn}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -277,18 +281,21 @@ export function InvoiceViewerModal({
                 <span className="text-gray-600">Subtotal:</span>
                 <span className="font-semibold text-gray-900">
                   {formatCurrency(totals.subtotal, currencyCode)}
+                  {aedTotals && ` | ${formatCurrency(aedTotals.subtotal, "AED")}`}
                 </span>
               </div>
               <div className="flex items-center justify-between mb-4">
                 <span className="text-gray-600">{taxLabel}:</span>
                 <span className="font-semibold text-gray-900">
                   {formatCurrency(totals.vatAmount, currencyCode)}
+                  {aedTotals && ` | ${formatCurrency(aedTotals.vatAmount, "AED")}`}
                 </span>
               </div>
               <div className="flex items-center justify-between bg-gray-50 p-3 rounded border border-gray-200">
                 <span className="font-semibold text-gray-900">Total:</span>
                 <span className="text-lg font-bold text-[#b95e82]">
                   {formatCurrency(totals.total, currencyCode)}
+                  {aedTotals && ` | ${formatCurrency(aedTotals.total, "AED")}`}
                 </span>
               </div>
             </div>

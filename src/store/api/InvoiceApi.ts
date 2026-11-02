@@ -21,6 +21,12 @@ interface InvoiceDetails {
   vatAmount?: number;
   total?: number;
   taxLabel?: string;
+  aedTotals?: {
+    subtotal: number;
+    vatAmount: number;
+    total: number;
+  } | null;
+  trn?: string | null;
 }
 
 interface InvoiceDetailsResponse {
