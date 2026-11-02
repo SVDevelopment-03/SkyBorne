@@ -216,6 +216,9 @@ export function InvoiceViewerModal({
                     {invoice.userName}
                   </p>
                   <p className="text-sm text-gray-600">{invoice.userEmail}</p>
+                  {invoice.userCountry && (
+                    <p className="text-sm text-gray-600">{invoice.userCountry}</p>
+                  )}
                 </div>
               </div>
               <div>

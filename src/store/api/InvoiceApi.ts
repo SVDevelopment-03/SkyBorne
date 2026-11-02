@@ -27,6 +27,7 @@ interface InvoiceDetails {
     total: number;
   } | null;
   trn?: string | null;
+  userCountry?: string | null;
 }
 
 interface InvoiceDetailsResponse {
